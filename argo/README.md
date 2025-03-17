@@ -1,101 +1,42 @@
-# README
+# Argo Workflows for Subsetting
 
-This directory contains docker builds for the CUAHSI Domain Subsetter
-"subsetting" routines. 
 
-Each directory contains the following files:
+Argo Workflows are containerized DAG workflows declared in yaml that run on Kubernetes.  Each node in the workflow is a docker container with S3 storage.
 
-- `Dockerfile` - the build definition for the standalone docker image  
-- `Dockerfile.argo` - the build definition for the argo docker image. This
-inherits the image created by *Dockerfile* and expects input arguments in the
-form of environment variables. This is necessary for CUAHSI's Argo workflow
-configuration.  
-- `./build.sh` - script for building the standalone docker image  
-- `./build-argo.sh` - script for building the argo-specific docker image.  
+*An example graph of the parflow subsetter workflow*
+![Alt text](.images/workflow-graph.png)
 
-## Execute Locally
+The `templates/` directory contains workflows which declare composable [templates](https://argo-workflows.readthedocs.io/en/latest/workflow-templates/).  They are referenced by the workflows in the `workflows/` directory with a [templateRef](https://argo-workflows.readthedocs.io/en/latest/workflow-templates/#referencing-other-workflowtemplates)
 
-Each directory contains a `test.sh` script that illustrates how the subsetting
-routines can be executed locally. Note that each of these requires static input
-data that must be collected by the user ahead of time.
+Artifact storage is S3 w/MinIO.  We use artifacts to store input and output files for our workflows.  Each user is given a bucket (TODO: configurable Version Control and Quotas) for storing output data of their workflows.  The output of one workflow may be used as input to subsequent workflow runs.
 
-## Execute in Argo 
+The 3 supported subsetter workflows (nwm1, nwm2, parflow) write the result to S3 storage in their own bucket at `/argo_workflows/{workflow_template}/{GUID}`.  A GUID is generated for each run of a subsetter workflow and is used as the workflow run name.  An example parflow subsetter output viewed in the MinIO viewer is shown below.
+![Example user bucket with parflow subsetter output](.images/minio-view-subsetter-ouput.png)
 
-The following tables outline the parameters executing the subsetting routines
-in CUAHSI's Argo Workflow CI (https://workflows.cuahsi.io/).
+The subsetter input datasets are stored on the [CUAHSI MinIO instance](https://console.minio.cuahsi.io).  This bucket has public read access.  The workflows use these datasets as input artifacts within a subsetter workflow.  A workflow conveninently maps an artifact to a path within a container that can be used as input our output locations to a program running in the container.
 
-### Parflow v.1
+*Example output declaration with configurable output locations.  [ArtifactRepositoryRef](https://argo-workflows.readthedocs.io/en/latest/artifact-repository-ref/) could be used to simplify artifact use.*
 
-**Custom Workflow**
-
-|Key| Value|
-|---|---|
-|container| cuahsi/parflow-subset-argo:v1|
-||
-|*Environment Variables* |
-|PFINPUT| /srv/input/pfconus.v1.0|
-|SHAPE| /srv/output/{**output-dir**}/{**watershed.shp**}|
-|OUTPUT| /srv/output/{**output-dir**} |
-|LABEL| {**job name**} |
-||
-|*Volumes*|
-|endpoint| https://storage.googleapis.com|
-|name| subsetter-static-input|
-|mount dir| /srv/input|
-|endpoint| https://storage.googleapis.com|
-|name| subsetter-outputs|
-|mount dir| /srv/output|
-
-- The **watershed** shapefile must be in the following coordinate reference system:
+```yaml
+outputs:
+        artifacts:
+          - name: subsetter-result
+            path: /output
+            s3:
+              endpoint: api.minio.cuahsi.io
+              bucket: '{{inputs.parameters.output-bucket}}'
+              accessKeySecret:
+                name: minio-credentials
+                key: accessKey
+              secretKeySecret:
+                name: minio-credentials
+                key: secretKey
+              key: '{{inputs.parameters.output-path}}'
 ```
-GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",637813 7.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532 925199433]]
-```
-- **output-dir** must be created as a GCP bucket prior to executing the workflow.
-- **job name** is the output name to use when saving subset outputs.
 
-### NWM v.1
+# `minio-credentials` access key/secret setup;
+1. Create an access key/secret in the minio UI at 
+2. Save the key/secret as a secret in kubernetes in the `workflows` namespace
+`kubectl create secret generic minio-credentials --namespace workflows --from-literal=accessKey='<key>' --from-literal=secretKey='<secret>`
 
-**Custom Workflow**
-
-|Key| Value|
-|---|---|
-|container| cuahsi/subset-wrfhydro-argo:v1|
-||
-|*Environment Variables* |
-|XMIN| {**xmin in lcc**}|
-|XMAX| {**xmax in lcc**}|
-|YMIN| {**ymin in lcc**}|
-|YMAX| {**ymax in lcc**}|
-|OUTPUT| /srv/output/{**output-dir**} |
-|NWMINPUT| /srv/domain/nwm.v1.2.4 |
-||
-|*Volumes*|
-|endpoint| https://storage.googleapis.com|
-|name| subsetter-static-input|
-|mount dir| /srv/domain|
-|endpoint| https://storage.googleapis.com|
-|name| subsetter-outputs|
-|mount dir| /srv/output|
-
-- Xmin, Xmax, Ymin, Ymax must be provided in the WRF-HYDRO/NWM coordinate
-  reference system. This is defined as:
-  ```
-  esri_pe_string = "PROJCS[\"Sphere_Lambert_Conformal_Conic\",GEOGCS[\"GCS_Sphere\",DATUM[\"D_Sphere\",SPHEROID[\"Sphere\",6370000.0,0.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Lambert_Conformal_Conic\"],PARAMETER[\"false_easting\",0.0],PARAMETER[\"false_northing\",0.0],PARAMETER[\"central_meridian\",-97.0],PARAMETER[\"standard_parallel_1\",30.0],PARAMETER[\"standard_parallel_2\",60.0],PARAMETER[\"latitude_of_origin\",40.0000076294],UNIT[\"Meter\",1.0]];-35691800 -29075200 126180232.640845;-100000 10000;-100000 10000;0.001;0.001;0.001;IsHighPrecision" ;
-  ```
-- output-dir must be created as a GCP bucket prior to executing the workflow.
-
-## Data Storage
-
-Input Data: `gs://subsetter-static-input`
-    - These are the static model input datasets that are used as  
-      inputs to the subsetting process.  
-
-Output Data: `gs://subsetter-outputs`
-    - These are the output subsets that are generated by the domain subsetter,  
-      i.e. user output files.  
-
-## Service Account
-
-- domain-subsetter@thredds.iam.gserviceaccount.com  
-  - View permission to Input Data bucket  
-  - Create permission on Output Data bucket  
+These workflows should eventually be setup to automatically sync to https://workflows.argo.cuahsi.io

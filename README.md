@@ -1,22 +1,33 @@
-# CONUS Subsetting
+# domain_subsetter_v2
 
-This is a CUAHSI service for providing access to static domain datasets for CONUS hydrologic models.
+## Getting Started
 
-## Run Service
-
-This service uses Docker to containerize dependencies for the subsetting operations. As such, we recommend that you use one of the pre-configured `docker-compose` files to run the service.
-
-### Development Mode
-
-```
-docker-compose -f docker/docker-compose.dev up -d
+### Clone the repo, checkout this branch
+```console
+git clone https://github.com/CUAHSI/domain-subsetter.git
+cd domain-subsetter
+git checkout develop_v2
 ```
 
-
-### Production Mode
-
-The production version of this service is configured with SSL.
-
+### API for local development
+```console
+cp .env.template .env
+make build
+make up
 ```
-docker-compose -f docker/docker-compose.prod up -d
+The API will be available at http://0.0.0.0:8000
+
+### Frontend for local development
+```console
+cp .env.template .env  #if you haven't already
+cd frontend
+npm install
+npm run dev
+```
+The frontend will be available at http://localhost:5173/domain-subsetter
+More detailed info is available in the [frontend readme](frontend/README.md)
+
+## Formatting
+```console
+make format
 ```
