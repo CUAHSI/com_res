@@ -1,0 +1,6 @@
+:8080 {
+  handle {
+    root * /srv/swotviz
+    file_server
+  }
+}

@@ -1,6 +1,6 @@
 #!/bin/sh
 ROOT_DIR=/srv
-# Replace env vars in files served by NGINX
+# Replace env vars in files served by CADDY
 for file in $ROOT_DIR/assets/*.js $ROOT_DIR/index.html;
 do
     echo "Processing $file ...";
