@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import paralaxImg from '@/assets/amistadreservoir_oli_20160805_lrg.jpg'
+import paralaxImg from '@/assets/bahiablanca_flood_oli2_20250130_lrg.jpg'
 // https://earthobservatory.nasa.gov/images/153230/dry-in-the-rio-grande-basin
 import { mdiLockOutline, mdiGestureTap, mdiMapPlus, mdiCloudUploadOutline, mdiShareAllOutline } from '@mdi/js'
 
