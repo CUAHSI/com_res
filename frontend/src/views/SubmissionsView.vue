@@ -2,13 +2,13 @@
   <h2 class="ma-2 text-center">Submissions</h2>
   <v-container v-if="refreshing || submissions.length > 0">
     <v-data-table :headers="headers" :items="submissions" :sort-by="sortBy">
-      <template v-slot:item.phase="{ value }">
-        <v-chip :color="getColor(value)">
-          {{ getChipValue(value) }}
+      <template v-slot:item="{ value }">
+        <v-chip :color="getColor(value.phase)">
+          {{ getChipValue(value.phase) }}
         </v-chip>
       </template>
 
-      <template v-slot:item.actions="{ item }">
+      <template v-slot:actions="{ item }">
         <div class="d-flex justify-space-between">
           <v-btn :icon="mdiRefresh" size="small" @click="refreshSubmission(item)" :loading="refreshingItem == item" />
           <v-btn><a @click="showArgo(item)">Metadata</a></v-btn>
@@ -52,8 +52,8 @@
 
       <v-card-text>
         <v-data-table :headers="logsHeaders" :items="logsArray">
-          <template v-slot:item.time="{ value }">
-            <v-chip>{{ value }}</v-chip>
+          <template v-slot:item="{ item }">
+            <v-chip>{{ item.time }}</v-chip>
           </template>
         </v-data-table>
 

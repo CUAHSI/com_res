@@ -179,7 +179,7 @@
           <p>Both <em>VisIt</em> <a
               href="https://wci.llnl.gov/simulation/computer-codes/visit/executables">https://wci.llnl.gov/simulation/computer-codes/visit/executables</a>
             and <em>ParaView</em> <a href="https://www.paraview.org/download/">https://www.paraview.org/download/</a>
-            support visualization of ParFlow output files </p>
+            support visualization of ParFlow output files</p>
         </v-expansion-panel-text>
       </v-expansion-panel>
       <v-expansion-panel>

@@ -28,34 +28,6 @@ const domainStore = useDomainsStore();
 const lat = ref(0);
 const lng = ref(0);
 
-
-const modelAction = modelsStore.$onAction(
-    ({
-        name, // name of the action
-        store, // store instance, same as `someStore`
-        args, // array of parameters passed to the action
-        after, // hook after the action returns or resolves
-        onError, // hook if the action throws or rejects
-    }) => {
-        // this will trigger if the action succeeds and after it has fully run.
-        // it waits for any returned promised
-        after((result) => {
-            if (store.selectedModel.input != "bbox") {
-                removeBbox()
-            } else {
-                updateMapBBox()
-            }
-        })
-
-        // this will trigger if the action throws or returns a promise that rejects
-        onError((error) => {
-            console.warn(
-                `Failed "${name}" after ${Date.now() - startTime}ms.\nError: ${error}.`
-            )
-        })
-    }
-)
-
 const Map = mapStore.mapObject
 
 onUpdated(() => {
@@ -212,62 +184,55 @@ onMounted(() => {
     mapStore.mapLoaded = true;
 })
 
-function resize_map() {
-    let pheight = document.getElementById('map').parent().height();
-    let pwidth = document.getElementById('map').parent().width();
-    document.getElementById("map").height(pheight).width(pwidth);
-    Map.map.invalidateSize();
-}
-
 /* 
  * LEAFLET HANDLERS 
  */
 
 
-async function getGageInfo(e) {
+async function getGageInfo() {
     // TODO: this function needs to be repaired
     console.log('skipping getGageInfo')
     return {}
-    // TESTING GAGE INFO BOX
-    // quick and dirty buffer around cursor
-    // bbox = lon_min, lat_min, lon_max, lat_max
-    let buf = 0.001;
+    // // TESTING GAGE INFO BOX
+    // // quick and dirty buffer around cursor
+    // // bbox = lon_min, lat_min, lon_max, lat_max
+    // let buf = 0.001;
 
-    let buffered_bbox = (e.latlng.lat - buf) + ','
-        + (e.latlng.lng - buf) + ','
-        + (e.latlng.lat + buf) + ','
-        + (e.latlng.lng + buf);
-    let defaultParameters = {
-        service: 'WFS',
-        request: 'GetFeature',
-        bbox: buffered_bbox,
-        typeName: 'usgs_gages:usgs_gages_4326',
-        SrsName: 'EPSG:4326',
-        outputFormat: 'ESRIGEOJSON'
-    };
-    let root = `${GIS_SERVICES_URL}/NHD/usgs_gages/MapServer/WFSServer`;
-    let parameters = L.Util.extend(defaultParameters);
-    let gageURL = root + L.Util.getParamString(parameters);
+    // let buffered_bbox = (e.latlng.lat - buf) + ','
+    //     + (e.latlng.lng - buf) + ','
+    //     + (e.latlng.lat + buf) + ','
+    //     + (e.latlng.lng + buf);
+    // let defaultParameters = {
+    //     service: 'WFS',
+    //     request: 'GetFeature',
+    //     bbox: buffered_bbox,
+    //     typeName: 'usgs_gages:usgs_gages_4326',
+    //     SrsName: 'EPSG:4326',
+    //     outputFormat: 'ESRIGEOJSON'
+    // };
+    // let root = `${GIS_SERVICES_URL}/NHD/usgs_gages/MapServer/WFSServer`;
+    // let parameters = L.Util.extend(defaultParameters);
+    // let gageURL = root + L.Util.getParamString(parameters);
 
-    let gage_meta = {};
-    console.log(gageURL)
-    let resp = await fetch(gageURL)
-    if (resp.ok) {
-        try {
-            let response = await resp.json()
-            if (response.features.length > 0) {
-                let atts = response.features[0].attributes;
-                let geom = response.features[0].geometry;
-                gage_meta.name = atts.STATION_NM;
-                gage_meta.num = atts.SITE_NO;
-                gage_meta.x = geom.x;
-                gage_meta.y = geom.y;
-            }
-        } catch (e) {
-            console.error("Error attempting json parse", e)
-        }
-    }
-    return gage_meta;
+    // let gage_meta = {};
+    // console.log(gageURL)
+    // let resp = await fetch(gageURL)
+    // if (resp.ok) {
+    //     try {
+    //         let response = await resp.json()
+    //         if (response.features.length > 0) {
+    //             let atts = response.features[0].attributes;
+    //             let geom = response.features[0].geometry;
+    //             gage_meta.name = atts.STATION_NM;
+    //             gage_meta.num = atts.SITE_NO;
+    //             gage_meta.x = geom.x;
+    //             gage_meta.y = geom.y;
+    //         }
+    //     } catch (e) {
+    //         console.error("Error attempting json parse", e)
+    //     }
+    // }
+    // return gage_meta;
 
 }
 
@@ -337,78 +302,78 @@ async function mapClick(e) {
 }
 
 
-function traceUpstream(usgs_gage) {
+// function traceUpstream(usgs_gage) {
 
-    console.log('traceUpstream --> selected gage = ' + usgs_gage);
+//     console.log('traceUpstream --> selected gage = ' + usgs_gage);
 
-    // clear any existing reaches from the map
-    if (Map.reaches.obj != null) {
-        Map.reaches.obj.clearLayers();
-    }
+//     // clear any existing reaches from the map
+//     if (Map.reaches.obj != null) {
+//         Map.reaches.obj.clearLayers();
+//     }
 
-    // query the upstream reaches via NLDI
-    $.ajax({
-        url: '/nldi-trace',
-        type: 'GET',
-        contentType: "application/json",
-        data: {
-            'site_provider': 'nwis',
-            'site': usgs_gage
-        },
-        success: function (response) {
-
-
-            // add the reaches to the map and replace the global reaches
-            // object with the newly selected reaches.
-            let reaches = L.geoJSON(response.features, { style: { color: 'green' } });
-            Map.reaches.start_id = reaches._leaflet_id;
-            Map.reaches.count = response.features.length;
-            Map.reaches.obj = reaches;
-            reaches.addTo(Map.map);
+//     // query the upstream reaches via NLDI
+//     $.ajax({
+//         url: '/nldi-trace',
+//         type: 'GET',
+//         contentType: "application/json",
+//         data: {
+//             'site_provider': 'nwis',
+//             'site': usgs_gage
+//         },
+//         success: function (response) {
 
 
-            // a list to store a single coordinate for each reach
-            let centroids = [];
+//             // add the reaches to the map and replace the global reaches
+//             // object with the newly selected reaches.
+//             let reaches = L.geoJSON(response.features, { style: { color: 'green' } });
+//             Map.reaches.start_id = reaches._leaflet_id;
+//             Map.reaches.count = response.features.length;
+//             Map.reaches.obj = reaches;
+//             reaches.addTo(Map.map);
 
 
-            // generate a list of points for each of the reaches
-            response.features.forEach(function (reach) {
+//             // a list to store a single coordinate for each reach
+//             let centroids = [];
 
-                // select the middle geometry feature.
-                // This is a hack and should be replaced with something better
-                geom_idx = Math.ceil(reach.geometry.coordinates.length / 2);
 
-                geom_coord = reach.geometry.coordinates[geom_idx];
-                centroids.push(geom_coord);
-            })
+//             // generate a list of points for each of the reaches
+//             response.features.forEach(function (reach) {
 
-            console.log('Number of reaches found = ' + centroids.length);
+//                 // select the middle geometry feature.
+//                 // This is a hack and should be replaced with something better
+//                 geom_idx = Math.ceil(reach.geometry.coordinates.length / 2);
 
-            // TODO: move this into a function since it's used in several places.
-            // query the HUC geometry for each of the reach coordinate points
-            // use this data to query ArcGIS WFS for the selected HUC object.
-            centroids.forEach(function (coord) {
-                let defaultParameters = {
-                    service: 'WFS',
-                    request: 'GetFeature',
-                    bbox: coord[0] + ',' + coord[1] + ',' + coord[0] + ',' + coord[1],
-                    typeName: 'HUC_WBD:HUC12_US',
-                    SrsName: 'EPSG:4326'
-                };
-                let root = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WFSServer`;
-                let parameters = L.Util.extend(defaultParameters);
-                let URL = root + L.Util.getParamString(parameters);
+//                 geom_coord = reach.geometry.coordinates[geom_idx];
+//                 centroids.push(geom_coord);
+//             })
 
-                //	   	// load the map and table elements async
-                // todo: highlight the unique set of HUCs, do not toggle.
-                //	   	toggleHucsAsync(URL, true, null);
-            })
-        },
-        error: function (error) {
-            console.log('error querying NLDI upstream: ' + error);
-        }
-    });
-}
+//             console.log('Number of reaches found = ' + centroids.length);
+
+//             // TODO: move this into a function since it's used in several places.
+//             // query the HUC geometry for each of the reach coordinate points
+//             // use this data to query ArcGIS WFS for the selected HUC object.
+//             centroids.forEach(function (coord) {
+//                 let defaultParameters = {
+//                     service: 'WFS',
+//                     request: 'GetFeature',
+//                     bbox: coord[0] + ',' + coord[1] + ',' + coord[0] + ',' + coord[1],
+//                     typeName: 'HUC_WBD:HUC12_US',
+//                     SrsName: 'EPSG:4326'
+//                 };
+//                 let root = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WFSServer`;
+//                 let parameters = L.Util.extend(defaultParameters);
+//                 let URL = root + L.Util.getParamString(parameters);
+
+//                 //	   	// load the map and table elements async
+//                 // todo: highlight the unique set of HUCs, do not toggle.
+//                 //	   	toggleHucsAsync(URL, true, null);
+//             })
+//         },
+//         error: function (error) {
+//             console.log('error querying NLDI upstream: ' + error);
+//         }
+//     });
+// }
 
 
 /*
@@ -428,47 +393,47 @@ function toggle_delete_button() {
     }
 }
 
-function addHucRow(huc_value) {
-    // Adds new rows to the HUC table
+// function addHucRow(huc_value) {
+//     // Adds new rows to the HUC table
 
-    // check if the id already exists in the table.
-    // if it does, don't add it again
-    let existing_row_id = getRowIdByName(huc_value);
-    if (existing_row_id != -999) {
-        return;
-    }
+//     // check if the id already exists in the table.
+//     // if it does, don't add it again
+//     let existing_row_id = getRowIdByName(huc_value);
+//     if (existing_row_id != -999) {
+//         return;
+//     }
 
-    let table = document.getElementById('huc-table');
-    let rid = table.rows.length;
-    let chkid = 'chkbx' + rid;
-    let row = table.insertRow(rid);
+//     let table = document.getElementById('huc-table');
+//     let rid = table.rows.length;
+//     let chkid = 'chkbx' + rid;
+//     let row = table.insertRow(rid);
 
-    cell1 = row.insertCell(0);
+//     cell1 = row.insertCell(0);
 
-    let lbl = document.createElement('label');
-    lbl.className = 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select mdl-js-ripple-effect--ignore-events is-upgraded';
-    lbl.setAttribute('for', chkid);
+//     let lbl = document.createElement('label');
+//     lbl.className = 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select mdl-js-ripple-effect--ignore-events is-upgraded';
+//     lbl.setAttribute('for', chkid);
 
-    let chk = document.createElement('input');
-    chk.type = 'checkbox';
-    chk.id = chkid;
-    chk.className = 'mdl-checkbox__input';
-    lbl.appendChild(chk);
+//     let chk = document.createElement('input');
+//     chk.type = 'checkbox';
+//     chk.id = chkid;
+//     chk.className = 'mdl-checkbox__input';
+//     lbl.appendChild(chk);
 
-    cell1.appendChild(lbl);
+//     cell1.appendChild(lbl);
 
-    let cell1 = row.insertCell(1);
-    cell1.className = 'mdl-data-table__cell--non-numeric';
-    cell1.innerHTML = huc_value;
+//     let cell1 = row.insertCell(1);
+//     cell1.className = 'mdl-data-table__cell--non-numeric';
+//     cell1.innerHTML = huc_value;
 
-    let cell2 = row.insertCell(2);
-    cell2.innerHTML = 'Loading';
+//     let cell2 = row.insertCell(2);
+//     cell2.innerHTML = 'Loading';
 
-    // toggle the delete button
-    toggle_delete_button();
+//     // toggle the delete button
+//     toggle_delete_button();
 
-    //   componentHandler.upgradeAllRegistered();
-}
+//     //   componentHandler.upgradeAllRegistered();
+// }
 
 function rmHucRow(row_id) {
     // Removes a row from the HUC table
@@ -493,17 +458,17 @@ function getRowIdByName(huc_value) {
     }
 }
 
-function getRowByName(huc_value) {
-    // Gets the row object for a given huc value
-    // Returns: the row object or -999 if it doesn't exist
+// function getRowByName(huc_value) {
+//     // Gets the row object for a given huc value
+//     // Returns: the row object or -999 if it doesn't exist
 
-    let row = document.getElementById("huc-table > tbody > tr:contains('" + huc_value + "')");
-    if (row.length == 0) {
-        return -999;
-    } else {
-        return row[0];
-    }
-}
+//     let row = document.getElementById("huc-table > tbody > tr:contains('" + huc_value + "')");
+//     if (row.length == 0) {
+//         return -999;
+//     } else {
+//         return row[0];
+//     }
+// }
 
 
 function clearSelection() {
@@ -549,7 +514,7 @@ function clearSelection() {
 * @param {array} hucids - HUC ids to query the bounding box for
 * @returns {array} - bounding box for all hucID in the Spherical Lambert Confromal Conic SRS
 */
-function getLccBounds(hucs) {}
+function getLccBounds() {}
 
 async function getNWMBbox(geometry){
   /**
@@ -807,12 +772,12 @@ function update_huc_ids(huclist) {
  * Displays a notification message at the bottom of the screen 
  * using this #notification element in base.html
  */
-function notify(message) {
-    let notify = document.querySelector('#notification');
-    let data = { message: message }
-    notify.MaterialSnackbar.showSnackbar(data);
+// function notify(message) {
+//     let notify = document.querySelector('#notification');
+//     let data = { message: message }
+//     notify.MaterialSnackbar.showSnackbar(data);
 
-}
+// }
 </script>
 <style scoped>
 #mapContainer {
