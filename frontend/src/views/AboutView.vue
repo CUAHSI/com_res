@@ -29,7 +29,7 @@
         the
         foundation onto which similar efforts can be applied to new versions of these models and other large-scale codes
         and
-        input data. We anticipate the CUAHSI Domain com_res will eventually become integrated into the larger <a
+        input data. We anticipate the CUAHSI com_res will eventually become integrated into the larger <a
           href="https://www.hydroframe.org/"><em>HydroFrame</em></a> infrastructure.</p>
     </v-sheet>
 
@@ -86,22 +86,16 @@ const members = [
     org: 'CUAHSI'
   },
   {
-    name: 'Devin Cowan',
-    image: 'https://www.cuahsi.org/uploads/team/img/_headshot/Devin-Cowan.jpg',
-    position: 'Research Programmer',
-    org: 'CUAHSI'
-  },
-  {
     name: 'Tony Castronova',
     image: 'https://www.cuahsi.org/uploads/team/img/_headshot/TCastronova.jpg',
     position: 'Senior Research Hydrologist',
     org: 'CUAHSI'
   },
   {
-    name: 'Danielle Tijerina-Kreuzer',
-    image: 'https://avatars.githubusercontent.com/u/42181890?v=4',
-    position: 'PhD Candidate',
-    org: 'Princeton University'
+    name: 'Devin Cowan',
+    image: 'https://www.cuahsi.org/uploads/team/img/_headshot/Devin-Cowan.jpg',
+    position: 'Research Programmer',
+    org: 'CUAHSI'
   },
   {
     name: 'Irene Garousi-Nejad',

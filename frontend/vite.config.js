@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     vuetify(),
   ],
   root: "./",
-  // for GH pages deployment, set VITE_APP_BASE=/domain-com_res/ in .env
+  // for GH pages deployment, set VITE_APP_BASE=/com_res/ in .env
   base: env.VITE_APP_BASE || "/",
   envDir: "../",
   resolve: {
