@@ -13,7 +13,7 @@ router = APIRouter()
 async def presigned_get_minio(workflow_params: WorkflowDep, user: User = Depends(current_active_user)):
     submission = workflow_params.user.get_submission(workflow_params.workflow_id)
     url = get_minio_client().presigned_get_object(
-        "subsetter-outputs", submission.output_path(user.bucket_name)
+        "com_res-outputs", submission.output_path(user.bucket_name)
     )
     return {'url': url}
 
@@ -22,7 +22,7 @@ async def presigned_get_minio(workflow_params: WorkflowDep, user: User = Depends
 async def presigned_get_url(workflow_params: WorkflowDep, user: User = Depends(current_active_user)):
     submission = workflow_params.user.get_submission(workflow_params.workflow_id)
     url = get_minio_client().presigned_get_object(
-        "subsetter-outputs", submission.output_path(user.bucket_name)
+        "com_res-outputs", submission.output_path(user.bucket_name)
     )
     return {'url': url}
 
@@ -36,7 +36,7 @@ async def presigned_put_minio(bucket: str, path: str):
 # @router.post('/extract/{workflow_id}')
 # async def extract_workflow_artifact(workflow_params: WorkflowDep) -> SubmissionResponseModel:
 #    workflow_id = str(uuid.uuid4())
-#    bucket = "subsetter-outputs"
+#    bucket = "com_res-outputs"
 #    submission = workflow_params.user.get_submission(workflow_params.workflow_id)
 #    path_key = f'{submission.workflow_name}/{submission.workflow_id}/subset.gz'
 #    api_instance.submit_workflow(

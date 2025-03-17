@@ -11,7 +11,7 @@ RUN python -m wget https://dl.min.io/client/mc/release/linux-amd64/mc
 RUN chmod +x mc
 RUN mv mc /usr/local/bin/mc
 
-COPY ./subsetter /subsetter
+COPY ./com_res /com_res
 
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
@@ -25,7 +25,7 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
 
-ENV PYTHONPATH "/subsetter/:${PYTHONPATH}"
+ENV PYTHONPATH "/com_res/:${PYTHONPATH}"
 
 EXPOSE 8000
 

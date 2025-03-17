@@ -49,7 +49,7 @@ spec:
               key: '{{inputs.parameters.output-path}}/aorc_output.gz'
       metadata: {}
       container:
-        image: us-central1-docker.pkg.dev/apps-320517/subsetter/aorc:0.0.2
+        image: us-central1-docker.pkg.dev/apps-320517/com_res/aorc:0.0.2
         env:
           - name: KEY
             value: AKIATL6IACWUADAFYDMC
@@ -90,7 +90,7 @@ spec:
       - name: end-date
         value: '2020-01-2'
       - name: output-bucket
-        value: subsetter_outputs
+        value: com_res_outputs
       - name: output_path
         value: sblack/qwerty
       - name: shape-file-path

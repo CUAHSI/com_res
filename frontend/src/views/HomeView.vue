@@ -5,7 +5,7 @@
         <div>
           <div class="text-center d-flex flex-column align-center">
             <div class="mb-4 text-h3">
-              Welcome to the CUAHSI Data Subsetter tool!
+              Welcome to the CUAHSI Data com_res tool!
             </div>
             <p class="font-weight-light text-center text-subtitle">
               The purpose of this web application is to leverage interactive

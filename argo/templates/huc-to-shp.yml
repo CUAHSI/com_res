@@ -29,7 +29,7 @@ spec:
       metadata: {}
       container:
         name: ''
-        image: us-central1-docker.pkg.dev/apps-320517/subsetter/huc-to-shp:0.0.4
+        image: us-central1-docker.pkg.dev/apps-320517/com_res/huc-to-shp:0.0.4
         args:
           - '{{inputs.parameters.hucs}}'
           - /output/watershed.shp
@@ -40,7 +40,7 @@ spec:
       - name: output-path
         value: qwerty
       - name: output-bucket
-        value: subsetter-outputs
+        value: com_res-outputs
       - name: hucs
         value: 102600070103,102600070104,102600090205,102600050206,102600070102
   templateDefaults:

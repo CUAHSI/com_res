@@ -89,14 +89,14 @@ RUN pip install \
 RUN pip install \
     GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}')
 
-# Compile parflowio and install parflow_subsetter
+# Compile parflowio and install parflow_com_res
 RUN git clone https://github.com/hydroframe/parflowio.git \
  && cd parflowio \
  && cmake -S . -B build -DBUILD_PYTHON=ON \
  && cmake --build build \
  && pip install build/python/parflowio/ \
- # install parflow_subsetter package
- && pip install parflow_subsetter
+ # install parflow_com_res package
+ && pip install parflow_com_res
 
 # Make directories for input and output data
 RUN mkdir /srv/input /srv/output /srv/shape /tmp/outputs

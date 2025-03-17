@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PFVOL="/Volumes/ColdStorage/subsetter/domain-data/pfconus.v1.0"
+PFVOL="/Volumes/ColdStorage/com_res/domain-data/pfconus.v1.0"
 IMAGE="cuahsi/parflow-subset-argo:v1_1"
 SHAPE="$(pwd)/shape"
 OUTPUT="$(pwd)/output"

@@ -29,7 +29,7 @@
         the
         foundation onto which similar efforts can be applied to new versions of these models and other large-scale codes
         and
-        input data. We anticipate the CUAHSI Domain Subsetter will eventually become integrated into the larger <a
+        input data. We anticipate the CUAHSI Domain com_res will eventually become integrated into the larger <a
           href="https://www.hydroframe.org/"><em>HydroFrame</em></a> infrastructure.</p>
     </v-sheet>
 

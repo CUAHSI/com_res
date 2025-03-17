@@ -62,7 +62,7 @@ spec:
       metadata: {}
       container:
         name: ''
-        image: us-central1-docker.pkg.dev/apps-320517/subsetter/nwm2:0.0.1
+        image: us-central1-docker.pkg.dev/apps-320517/com_res/nwm2:0.0.1
         command:
           - python
           - '-u'
@@ -80,7 +80,7 @@ spec:
             ephemeral-storage: 2Gi
             memory: 1Gi
         volumeMounts:
-          - name: subsetter-data-volume
+          - name: com_res-data-volume
             mountPath: /srv/domain
   entrypoint: nwm2-subset-with-extraction-template
   arguments:
@@ -96,9 +96,9 @@ spec:
       - name: output-path
         value: 'asdf'
       - name: output-bucket
-        value: 'subsetter-outputs'
+        value: 'com_res-outputs'
   volumes:
-    - name: subsetter-data-volume
+    - name: com_res-data-volume
       persistentVolumeClaim:
         claimName: subset-accelerator
   templateDefaults:

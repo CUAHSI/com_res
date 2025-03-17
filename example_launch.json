@@ -13,8 +13,8 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/app/api/subsetter",
-                    "remoteRoot": "/subsetter"
+                    "localRoot": "${workspaceFolder}/app/api/com_res",
+                    "remoteRoot": "/com_res"
                 }
             ]
         }

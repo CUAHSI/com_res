@@ -1,11 +1,11 @@
-# domain_subsetter_v2
+# domain_com_res_v2
 
 ## Getting Started
 
 ### Clone the repo, checkout this branch
 ```console
-git clone https://github.com/CUAHSI/domain-subsetter.git
-cd domain-subsetter
+git clone https://github.com/CUAHSI/domain-com_res.git
+cd domain-com_res
 git checkout develop_v2
 ```
 
@@ -24,7 +24,7 @@ cd frontend
 npm install
 npm run dev
 ```
-The frontend will be available at http://localhost:5173/domain-subsetter
+The frontend will be available at http://localhost:5173/domain-com_res
 More detailed info is available in the [frontend readme](frontend/README.md)
 
 ## Formatting

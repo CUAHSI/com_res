@@ -26,7 +26,7 @@
       <span v-if="!authStore.isLoggedIn">Please login to view your submissions.</span>
       <span v-else>
         You don't have any submissions yet.
-        Use the <router-link :to="{ path: `/` }">Subsetter Map</router-link> to create a submission.
+        Use the <router-link :to="{ path: `/` }">com_res Map</router-link> to create a submission.
       </span>
     </v-sheet>
   </v-container>

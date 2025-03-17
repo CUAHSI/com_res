@@ -112,7 +112,7 @@ async def submit_parflow(
         namespace=get_settings().argo_namespace,
         body=parflow_submission_body(
             hucs,
-            "subsetter-outputs",
+            "com_res-outputs",
             workflow_id,
             submission.output_path(user.bucket_name),
         ),
@@ -145,7 +145,7 @@ async def submit_nwm(
             x_west,
             y_north,
             x_east,
-            "subsetter-outputs",
+            "com_res-outputs",
             workflow_id,
             submission.output_path(user.bucket_name),
             model_versions[model_version],

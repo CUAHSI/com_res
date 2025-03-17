@@ -21,7 +21,7 @@
                 <v-card-title>Log In</v-card-title>
                 <v-card-text>
                     <p class="text-body-1">
-                        User accounts in the Subsetter are managed using CUAHSI SSO.
+                        User accounts in the com_res are managed using CUAHSI SSO.
                         You will be redirected to CUAHSI SSO where you can login or create an account.
                     </p>
                 </v-card-text>
@@ -66,7 +66,7 @@
             <v-card-title>Auth Token</v-card-title>
             <v-card-text>
                 <p class="text-body-1">
-                    Your auth token is a secret key that allows you to access the Subsetter API.
+                    Your auth token is a secret key that allows you to access the com_res API.
                 </p>
                 <v-text-field variant="outlined" v-on:focus="$event.target.select()" ref="clone" readonly
                     :value="token" />

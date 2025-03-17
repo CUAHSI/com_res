@@ -37,11 +37,11 @@ services:
       - 8181:8181
     restart: unless-stopped
     volumes:
-      - ./api/subsetter:/subsetter
+      - ./api/com_res:/com_res
     build:
       context: ./api/
       dockerfile: Dockerfile
-    working_dir: /subsetter
+    working_dir: /com_res
     command: python -m debugpy --listen 0.0.0.0:5678 -m uvicorn --host 0.0.0.0 --port 8000 --proxy-headers main:app --reload
     env_file:
       - .env

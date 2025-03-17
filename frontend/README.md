@@ -1,4 +1,4 @@
-# subsetter_v2
+# com_res_v2
 
 This template should help get you started developing with Vue 3 in Vite.
 

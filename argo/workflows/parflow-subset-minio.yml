@@ -98,7 +98,7 @@ spec:
             ephemeral-storage: 1Gi
             memory: 1Gi
         volumeMounts:
-          - name: subsetter-data-volume
+          - name: com_res-data-volume
             mountPath: /srv/input
   entrypoint: parflow-subset-huc
   arguments:
@@ -108,11 +108,11 @@ spec:
       - name: output-path
         value: abc123
       - name: output-bucket
-        value: subsetter-outputs
+        value: com_res-outputs
       - name: hucs
         value: 102600070103,102600070104,102600090205,102600050206,102600070102
   volumes:
-    - name: subsetter-data-volume
+    - name: com_res-data-volume
       persistentVolumeClaim:
         claimName: subset-accelerator
   templateDefaults:
