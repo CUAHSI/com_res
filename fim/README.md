@@ -24,6 +24,10 @@ To run this workflow you'll need to perform the following steps:
 
   `run.sh <args>`
 
+  A complete example is:
+
+  `run.sh 03020202 11237685,11238339,11237771 400,300,300`
+
   alternatively, you can run the image with the following command to run in debug mode:
 
   `run-interactive.sh`

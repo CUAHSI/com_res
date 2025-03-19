@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS=$1
+ARGS=$@
 
 docker run --rm -ti \
   -v $(pwd)/data/:/home/data \

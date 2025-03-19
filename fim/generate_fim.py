@@ -7,7 +7,10 @@ from typing import List
 from pathlib import Path
 from typing_extensions import Annotated
 
-app = typer.Typer()
+
+app = typer.Typer(
+    context_settings={"help_option_names": ["-h", "--help"]}, add_completion=False
+)
 
 
 def __write_flow_input_file(

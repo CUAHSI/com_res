@@ -9,7 +9,8 @@ RUN apt update \
  curl \
  libhdf5-dev \
  libnetcdf-dev \
- git 
+ git \
+ awscli
 
 USER $MAMBA_USER
 
