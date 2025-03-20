@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 import typer
+import numpy
+import rasterio
 import fimserve as fm
-from fimserve import runFIM
 from typing import List
 from pathlib import Path
+from fimserve import runFIM
+from rasterio import Affine
 from typing_extensions import Annotated
 
 
@@ -81,6 +84,71 @@ def __generate_fim(huc_id, flow_rate_filepath) -> None:
     runFIM.runfim(code_dir, output_dir, huc_id, flow_rate_filepath)
 
 
+def __crop_data(array, geotiff_profile):
+
+    # Identify the bounding box where values == 1
+    rows, cols = numpy.where(array == 1)
+
+    if rows.size == 0 or cols.size == 0:
+        raise ValueError("No values equal to 1 in the dataset.")
+
+    # Calculate new bounding box
+    row_min, row_max = rows.min(), rows.max()
+    col_min, col_max = cols.min(), cols.max()
+
+    # crop the data to the new extent
+    cropped_data = array[row_min : row_max + 1, col_min : col_max + 1]
+
+    # Update the transform to reflect the new bounding box
+    transform = geotiff_profile["transform"]
+    new_transform = transform * Affine.translation(col_min, row_min)
+
+    geotiff_profile.update(
+        {
+            "height": cropped_data.shape[0],
+            "width": cropped_data.shape[1],
+            "transform": new_transform,
+            "dtype": "float32",
+        }
+    )
+
+    return cropped_data, geotiff_profile
+
+
+def __clean_fim_geotiff(
+    geotiff_path: Path,
+) -> None:
+    """
+    Clean the geotiff created by the FIM mosaic process.
+    Replace all values greater than 0 with 1 and set all
+    values less than or equal to 0 to 0.
+
+    Arguments:
+        geotiff_path: Path - Path to the geotiff file
+    Returns:
+        None
+    """
+
+    # Load the geotiff into memory
+    cleaned_data = None
+    with rasterio.open(geotiff_path) as src:
+        # read the first band. Only one band should be present.
+        data = src.read(1)
+        profile = src.profile
+
+        # set all values greater than 0 to 1, otherwise NaN
+        cleaned_data = numpy.where(data <= 0, numpy.nan, 1)
+
+    # crop the data and set a new bounding box
+    cropped_data, cropped_profile = __crop_data(cleaned_data, profile)
+
+    # set datya type to float32 to account for nan values, -9999.0
+    cropped_profile.update(dtype=rasterio.float32, count=1)
+
+    with rasterio.open(geotiff_path, "w", **cropped_profile) as dst:
+        dst.write(cropped_data.astype(rasterio.float32), 1)
+
+
 @app.command(name="reachfim")
 def generate_reach_fim(
     huc_id: Annotated[
@@ -134,21 +202,29 @@ def generate_reach_fim(
     # download HUC data if it doesn't exist
     __download_huc_fim(huc_id)
 
+    # generate output file names if not provided
+    if len(output_labels) == 0:
+        output_labels = [f"flowrate_{r_id}" for r_id in r_ids]
+
     # write the input files that will be used to generate the FIM
     flow_rate_filepaths = []
     for i in range(0, len(r_ids)):
-        if len(output_labels) == 0:
-            # generate label from reach id
-            label = f"flowrate_{r_ids[i]}"
-        else:
-            label = output_labels[i]
-
         flow_rate_filepaths.append(
-            __write_flow_input_file([r_ids[i]], [f_rates[i]], label)
+            __write_flow_input_file([r_ids[i]], [f_rates[i]], output_labels[i])
         )
 
     for i in range(0, len(flow_rate_filepaths)):
+        # compute FIM using the moasic approach established
+        # by NOAA OWP.
         __generate_fim(huc_id, flow_rate_filepaths[i])
+
+        # clean the geotiff that was created by replacing
+        # all values less than or equal to 0 with 0 and all
+        # others with 1
+        __clean_fim_geotiff(
+            Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation")
+            / f"{output_labels[i]}_inundation.tif"
+        )
 
 
 if __name__ == "__main__":
