@@ -1,20 +1,19 @@
 import pulumi
 import pulumi_gcp as gcp
 from pulumi import Config
-from dotenv import load_dotenv
 import os
 
-# Load environment variables from ../.env file
-load_dotenv('../.env')
-
-# Read all environment variables from the .env file
-env_vars = [
-    {
-        "name": key,
-        "value": os.getenv(key)
-    }
-    for key in os.environ if os.getenv(key) is not None
-]
+# Read environment variables from ../.env file
+# do this without dotenv
+dotenv_path = os.path.join(os.path.dirname(__file__), "../.env")
+env_vars = []
+with open(dotenv_path) as f:
+    for line in f:
+        try:
+            key, value = line.strip().split("=")
+            env_vars.append({"name": key, "value": value})
+        except ValueError:
+            pass
 
 config = Config()
 
