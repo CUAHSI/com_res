@@ -2,5 +2,5 @@ config:
   gcp:project: com-res
   gcp:region: us-central1
   github:repo: CUAHSI/com_res
-  instance: dev
+  instance: test
   github:branch: develop
