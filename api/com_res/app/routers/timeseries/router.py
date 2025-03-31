@@ -1,17 +1,16 @@
 from datetime import date
-from .historical import AnalysisAssim
 
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
+
+from .historical import AnalysisAssim
 
 router = APIRouter()
 
 
 @router.get("/timeseries/nwm-historical")
 async def get_historical_nwm(
-    reach_id: str = Query(
-        ..., description="The unique NWM reach identifier.", example="5984765"
-    ),
+    reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     start_date: date = Query(
         ...,
         description="The start date for the data collectollection in YYYY-MM-DD format.",
