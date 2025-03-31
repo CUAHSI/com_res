@@ -15,6 +15,9 @@ from enum import Enum
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
+# import environment variables from config
+from config import get_settings
+
 
 class Offsets(Enum):
     """
@@ -31,9 +34,10 @@ class Offsets(Enum):
 
 
 class AnalysisAssim:
-    def __init__(self, api_key, api_url="https://nwm-api.ciroh.org"):
-        self.url = f"{api_url}/analysis-assim"
-        self.header = {"x-api-key": api_key}
+    def __init__(self):
+        __settings = get_settings()
+        self.url = f"{__settings.nwm_bigquery_url}/analysis-assim"
+        self.header = {"x-api-key": __settings.nwm_bigquery_key}
         self.df = None
 
         self.OFFSETS = [
@@ -132,6 +136,5 @@ class AnalysisAssim:
 
         # clean datetime columns and return
         df.time = pandas.to_datetime(df.time)
-        # df.reference_time = pandas.to_datetime(df.reference_time)
 
         self.df = df

@@ -1,9 +1,6 @@
 from datetime import date
 from .historical import AnalysisAssim
 
-# TODO: move creds into docker-compose
-from . import creds
-
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
@@ -49,7 +46,7 @@ async def get_historical_nwm(
     """
 
     # collect historical analysis and assimilation data
-    adata = AnalysisAssim(creds.key)
+    adata = AnalysisAssim()
     st = start_date.strftime("%Y-%m-%d")
     et = end_date.strftime("%Y-%m-%d")
     adata.collect_analysis_assim([reach_id], st, et, offsets=str(offset))
