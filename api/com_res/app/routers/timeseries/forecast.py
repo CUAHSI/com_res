@@ -8,14 +8,14 @@ Description: This script contains helper functions for collecting National
 Author(s): Tony Castronova <acastronova@cuahsi.org>
 """
 
+import concurrent.futures
 import io
-import pandas
-import requests
+from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from typing import List, Union
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 
+import pandas
+import requests
 
 # import environment variables from config
 from config import get_settings
@@ -49,9 +49,7 @@ class Forecasts:
             ForecastTypes.LONG: [0, 1, 2, 3],
         }
 
-    def filter_forecast_ensembles(
-        self, forecast_type: ForecastTypes, ensembles: Union[List[int], None] = None
-    ):
+    def filter_forecast_ensembles(self, forecast_type: ForecastTypes, ensembles: Union[List[int], None] = None):
         """
         Filters the ensembles, returning only those that exist in the given forecast type.
 
@@ -97,9 +95,7 @@ class Forecasts:
         with ThreadPoolExecutor(max_workers=5) as executor:
 
             # Submit all URLs to the executor
-            future_to_url = {
-                executor.submit(self.fetch_url, param): param for param in params_list
-            }
+            future_to_url = {executor.submit(self.fetch_url, param): param for param in params_list}
 
             # Process the results as they complete
             for future in concurrent.futures.as_completed(future_to_url):
@@ -132,9 +128,7 @@ class Forecasts:
         """
 
         # get ensembles
-        valid_ensembles = self.filter_forecast_ensembles(
-            forecast_type, ensembles=ensembles
-        )
+        valid_ensembles = self.filter_forecast_ensembles(forecast_type, ensembles=ensembles)
 
         # build a parameters to query
         params = [
@@ -155,10 +149,7 @@ class Forecasts:
         # filter out only the successful responses and
         # convert them into a single pandas dataframe
         successful_responses = [resp for resp in responses if resp.status_code == 200]
-        dfs = [
-            pandas.read_csv(io.StringIO(res.text), sep=",")
-            for res in successful_responses
-        ]
+        dfs = [pandas.read_csv(io.StringIO(res.text), sep=",") for res in successful_responses]
 
         if len(dfs) > 1:
             df = pandas.concat(dfs, ignore_index=True)

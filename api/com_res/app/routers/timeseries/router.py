@@ -1,19 +1,17 @@
 from datetime import date, datetime
 
-from fastapi import APIRouter, Query, HTTPException
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import HTMLResponse, JSONResponse
 
-from .historical import AnalysisAssim
 from .forecast import Forecasts, ForecastTypes
+from .historical import AnalysisAssim
 
 router = APIRouter()
 
 
 @router.get("/timeseries/nwm-historical")
 async def get_historical_nwm(
-    reach_id: str = Query(
-        ..., description="The unique NWM reach identifier.", example="5984765"
-    ),
+    reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     start_date: date = Query(
         ...,
         description="The start date for the data collectollection in YYYY-MM-DD format.",
@@ -63,9 +61,7 @@ async def get_historical_nwm(
 
 @router.get("/timeseries/nwm-forecast")
 async def get_forecast_nwm(
-    reach_id: str = Query(
-        ..., description="The unique NWM reach identifier.", example="5984765"
-    ),
+    reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     date_time: datetime = Query(
         ...,
         description="The date and time to collect forecast data for in UTC, in theYYYY-MM-DD HH:MM:SS format.",
@@ -105,7 +101,9 @@ async def get_forecast_nwm(
     try:
         ftype = ForecastTypes(forecast)
     except ValueError:
-        error_message = f'Invalid forecast type: {forecast}. Valid options are "short_range", "medium_range", or "long_range".'
+        error_message = (
+            f'Invalid forecast type: {forecast}. Valid options are "short_range", "medium_range", or "long_range".'
+        )
         return HTMLResponse(
             content=f"<h1>Error 404</h1><p>{error_message}</p>",
             status_code=404,
