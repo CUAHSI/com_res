@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     minio_secret_key: str
     minio_api_url: str
 
+    nwm_bigquery_key: str
+    nwm_bigquery_url: str
+
     cloud_run: bool = False
 
     OIDC_BASE_URL: str
