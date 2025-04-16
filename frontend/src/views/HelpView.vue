@@ -1,8 +1,26 @@
 <template>
   <h2 class="ma-2 text-center">Help</h2>
   <v-container>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ultricies leo in nunc tempor, vitae consectetur nibh interdum. Pellentesque porta sed velit quis congue. Nam quis dignissim lacus. Integer urna erat, ullamcorper sit amet aliquet vel, convallis nec turpis. In diam massa, imperdiet id pulvinar eu, pharetra non augue. Integer ac euismod odio. Vivamus eros lectus, euismod sed mauris sit amet, tempus molestie nulla. Etiam dictum velit ut consequat aliquam. Sed ut feugiat leo. Curabitur tincidunt imperdiet interdum. Suspendisse dictum lacus ante, eu ornare eros dignissim eu. Nam malesuada, dolor non aliquam molestie, dolor arcu iaculis orci, in faucibus elit urna non urna. Donec sollicitudin feugiat metus, nec vehicula odio faucibus vitae. Quisque sed lectus felis.
-  <br><br>
-    Pellentesque quis tortor eros. Quisque lacus ligula, fringilla eget sem a, semper auctor mauris. Cras convallis sagittis diam, id aliquam ex suscipit et. In consequat vitae nunc at accumsan. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Etiam sem diam, suscipit in massa nec, suscipit sodales leo. Nunc aliquam velit non accumsan mattis. Suspendisse venenatis, dolor nec vulputate semper, libero nisl efficitur arcu, quis malesuada felis diam id enim. Sed semper, est ut tristique suscipit, leo est ornare orci, et facilisis diam metus scelerisque odio. Aliquam molestie eros dolor, id accumsan odio ornare quis. Curabitur viverra aliquet arcu eget scelerisque. Pellentesque consequat mollis augue, sit amet elementum nisi aliquet ac. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Ut at sagittis nulla. Morbi tempor lectus id arcu porttitor tempus. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ultricies leo in nunc tempor,
+    vitae consectetur nibh interdum. Pellentesque porta sed velit quis congue. Nam quis dignissim
+    lacus. Integer urna erat, ullamcorper sit amet aliquet vel, convallis nec turpis. In diam massa,
+    imperdiet id pulvinar eu, pharetra non augue. Integer ac euismod odio. Vivamus eros lectus,
+    euismod sed mauris sit amet, tempus molestie nulla. Etiam dictum velit ut consequat aliquam. Sed
+    ut feugiat leo. Curabitur tincidunt imperdiet interdum. Suspendisse dictum lacus ante, eu ornare
+    eros dignissim eu. Nam malesuada, dolor non aliquam molestie, dolor arcu iaculis orci, in
+    faucibus elit urna non urna. Donec sollicitudin feugiat metus, nec vehicula odio faucibus vitae.
+    Quisque sed lectus felis.
+    <br /><br />
+    Pellentesque quis tortor eros. Quisque lacus ligula, fringilla eget sem a, semper auctor mauris.
+    Cras convallis sagittis diam, id aliquam ex suscipit et. In consequat vitae nunc at accumsan.
+    Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Etiam
+    sem diam, suscipit in massa nec, suscipit sodales leo. Nunc aliquam velit non accumsan mattis.
+    Suspendisse venenatis, dolor nec vulputate semper, libero nisl efficitur arcu, quis malesuada
+    felis diam id enim. Sed semper, est ut tristique suscipit, leo est ornare orci, et facilisis
+    diam metus scelerisque odio. Aliquam molestie eros dolor, id accumsan odio ornare quis.
+    Curabitur viverra aliquet arcu eget scelerisque. Pellentesque consequat mollis augue, sit amet
+    elementum nisi aliquet ac. Class aptent taciti sociosqu ad litora torquent per conubia nostra,
+    per inceptos himenaeos. Ut at sagittis nulla. Morbi tempor lectus id arcu porttitor tempus. Orci
+    varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
   </v-container>
 </template>

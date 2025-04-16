@@ -26,16 +26,12 @@
       </v-col>
     </v-row>
   </v-container>
-    <v-btn
-      @click="toggleModelSelectDrawer"
-      width="100%"
-      class="mb-2"
-    >
-      <v-icon
-        class="ma-1"
-        :icon="modelsStore.selectedModel ? mdiCheckCircleOutline : mdiNumeric1CircleOutline"
-      ></v-icon>
-    </v-btn>
+  <v-btn @click="toggleModelSelectDrawer" width="100%" class="mb-2">
+    <v-icon
+      class="ma-1"
+      :icon="modelsStore.selectedModel ? mdiCheckCircleOutline : mdiNumeric1CircleOutline"
+    ></v-icon>
+  </v-btn>
   <v-card
     v-show="!showModelSelect && !showDomainSelect"
     location="left"
