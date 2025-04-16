@@ -39,17 +39,12 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import { useAuthStore } from '../stores/auth'
 import imgUrl from '@/assets/com_res_icon.jpg'
 defineProps(['paths'])
 defineEmits(['toggleMobileNav'])
 
-const auth = useAuthStore()
 const { mdAndDown } = useDisplay()
 
-function login() {
-  auth.isLoggedIn = true
-}
 </script>
 
 <style lang="scss" scoped>
