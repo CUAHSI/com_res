@@ -1,8 +1,5 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
-  <v-card v-show="$route.meta.showMap" style="z-index: 9999" max-width="250">
-    {{ lat }}, {{ lng }}
-  </v-card>
 </template>
 <script setup>
 import 'leaflet/dist/leaflet.css'
@@ -18,15 +15,11 @@ import { useDomainsStore } from '@/stores/domains'
 import { GIS_SERVICES_URL } from '@/constants'
 import { API_BASE } from '@/constants'
 import { fetchWrapper } from '@/_helpers/fetchWrapper'
-import { ref } from 'vue'
 
 const mapStore = useMapStore()
 const modelsStore = useModelsStore()
 const alertStore = useAlertStore()
 const domainStore = useDomainsStore()
-
-const lat = ref(0)
-const lng = ref(0)
 
 const Map = mapStore.mapObject
 
@@ -35,7 +28,6 @@ onUpdated(() => {
 })
 onMounted(() => {
   let map = L.map('mapContainer').setView([38.2, -96], 5)
-  map.on('mousemove', updateMousePosition)
   Map.map = map
   Map.hucbounds = []
   Map.popups = []
@@ -635,11 +627,6 @@ async function toggleHucsAsync(url, remove_if_selected, remove) {
       duration: 1
     })
   }
-}
-
-function updateMousePosition(e) {
-  lat.value = e.latlng.lat.toFixed(5)
-  lng.value = e.latlng.lng.toFixed(5)
 }
 
 function updateMapBBox() {
