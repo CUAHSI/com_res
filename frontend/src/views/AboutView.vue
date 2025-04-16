@@ -3,15 +3,7 @@
   <v-container class="about">
     <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ultricies leo in nunc
-        tempor, vitae consectetur nibh interdum. Pellentesque porta sed velit quis congue. Nam quis
-        dignissim lacus. Integer urna erat, ullamcorper sit amet aliquet vel, convallis nec turpis.
-        In diam massa, imperdiet id pulvinar eu, pharetra non augue. Integer ac euismod odio.
-        Vivamus eros lectus, euismod sed mauris sit amet, tempus molestie nulla. Etiam dictum velit
-        ut consequat aliquam. Sed ut feugiat leo. Curabitur tincidunt imperdiet interdum.
-        Suspendisse dictum lacus ante, eu ornare eros dignissim eu. Nam malesuada, dolor non aliquam
-        molestie, dolor arcu iaculis orci, in faucibus elit urna non urna. Donec sollicitudin
-        feugiat metus, nec vehicula odio faucibus vitae. Quisque sed lectus felis.
+        {{ loremIpsum({ count: 3, units: 'paragraphs' }) }}
       </p>
     </v-sheet>
   </v-container>
@@ -57,6 +49,7 @@
 </style>
 
 <script setup>
+import { loremIpsum } from 'lorem-ipsum'
 const members = [
   {
     name: 'Tony Castronova',

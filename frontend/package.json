@@ -26,6 +26,7 @@
     "esri-leaflet": "^3.0.12",
     "leaflet": "^1.9.4",
     "leaflet-easybutton": "^2.4.0",
+    "lorem-ipsum": "^2.0.8",
     "pinia": "^2.1.6",
     "proj4": "^2.9.2",
     "swagger-ui": "^5.9.0",
