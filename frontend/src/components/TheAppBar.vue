@@ -44,7 +44,6 @@ defineProps(['paths'])
 defineEmits(['toggleMobileNav'])
 
 const { mdAndDown } = useDisplay()
-
 </script>
 
 <style lang="scss" scoped>
