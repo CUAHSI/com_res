@@ -4,6 +4,16 @@
   </v-overlay>
   <v-container v-if="!mdAndDown" fluid>
     <v-row fill-height style="height: calc(100vh - 165px)">
+      <v-btn
+        @click="toggleRiverDrawer"
+        color="secondary"
+        location="left"
+        style="z-index: 9999"
+        :style="{ transform: translateFilter(), position: 'absolute' }"
+        :icon="showRiverDrawer ? mdiChevronLeft : mdiChevronRight"
+        size="x-small"
+      >
+      </v-btn>
       <v-col v-if="showRiverDrawer" :cols="3" class="pa-0">
         <RiverDrawer v-if="showRiverDrawer" @toggle="toggleRiverDrawer" />
       </v-col>
@@ -31,6 +41,7 @@ import RiverDrawer from '../components/RiverDrawer.vue'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
+import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
@@ -43,6 +54,14 @@ const toggleRiverDrawer = async () => {
   await nextTick()
   mapStore.mapObject.map.invalidateSize(true)
   mapStore.mapObject.map.setView(center)
+}
+
+const translateFilter = () => {
+  if (showRiverDrawer.value) {
+    return 'translate(24vw, 0)'
+  } else {
+    return 'translate(0, 0)'
+  }
 }
 
 const getCols = computed(() => {

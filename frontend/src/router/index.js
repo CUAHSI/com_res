@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HelpView from '../views/HelpView.vue'
+import ResourcesView from '../views/ResourcesView.vue'
+import ContactView from '../views/ContactView.vue'
 import MapView from '../views/MapView.vue'
 import ApiView from '../views/ApiView.vue'
 import HomeView from '../views/HomeView.vue'
@@ -13,8 +14,8 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/map',
-      name: 'map',
+      path: '/maps',
+      name: 'maps',
       component: MapView,
       meta: {
         showMap: true
@@ -34,9 +35,14 @@ const router = createRouter({
       component: ApiView
     },
     {
-      path: '/help',
-      name: 'help',
-      component: HelpView
+      path: '/resources',
+      name: 'resources',
+      component: ResourcesView
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: ContactView
     }
   ]
 })

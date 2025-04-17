@@ -1,5 +1,5 @@
 <template>
-  <h2 class="ma-2 text-center">Help</h2>
+  <h2 class="ma-2 text-center">Resources</h2>
   <v-container>
     {{ loremIpsum({ count: 2, units: 'paragraphs', paragraphLowerBound: 7 }) }}
     <br /><br />

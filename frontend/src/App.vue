@@ -42,20 +42,20 @@ const paths = [
     label: 'Home'
   },
   {
-    attrs: { to: '/map' },
-    label: 'Map'
+    attrs: { to: '/maps' },
+    label: 'Maps'
   },
   {
-    attrs: { to: '/api' },
-    label: 'API'
+    attrs: { to: '/resources' },
+    label: 'Resources'
   },
   {
     attrs: { to: '/about' },
     label: 'About'
   },
   {
-    attrs: { to: '/help' },
-    label: 'Help'
+    attrs: { to: '/contact' },
+    label: 'Contact'
   }
 ]
 
