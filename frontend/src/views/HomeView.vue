@@ -1,17 +1,11 @@
 <template>
   <v-container fluid>
-    <v-row class="fill-height" align="center" justify="center">
-      <v-col class="text-center">
+    <v-row class="fill-height">
+      <v-col>
         <div>
-          <div class="text-center d-flex flex-column align-center">
-            <div class="mb-4 text-h3">Welcome to the CUAHSI Community Resilience tool!</div>
-            <p class="font-weight-light text-center text-subtitle">
-              The purpose of this web application is to leverage interactive technologies and cloud
-              services to offer a collaborative platform where users can explore, prepare, publish,
-              and share subsets of distributed, continental-scale geospatial datasets at watershed
-              scales. By combining modern cyberinfrastructure techniques with state-of-the-art
-              modeling tools, this application provides researchers with access to data subsets that
-              would otherwise demand significant computational resources.
+          <div>
+            <p class="font-weight-light text-subtitle">
+              {{ loremIpsum({ count: 2, units: 'paragraph' }) }}
             </p>
           </div>
         </div>
@@ -19,61 +13,53 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col class="steps mb-4 d-flex flex-wrap align-center justify-center">
-        <v-card v-for="step in steps" :key="step.text">
+      <v-col v-for="region in regions" :key="region.text">
+        <v-card class="pa-2" color="secondary" style="height: 400px">
+          <v-img
+            :src="region.image"
+            cover
+            :lazy-src="region.image"
+            style="max-height: 200px"
+          ></v-img>
           <v-card-title>
-            <v-icon :icon="step.icon"></v-icon>
-            <span>{{ step.text }}</span>
+            <span>{{ region.title }}</span>
           </v-card-title>
+          <v-card-text>
+            <span>{{ region.text }}</span>
+          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
-    <v-parallax :src="paralaxImg" height="80vh"> </v-parallax>
   </v-container>
 </template>
 
 <script setup>
-import paralaxImg from '@/assets/bahiablanca_flood_oli2_20250130_lrg.jpg'
-// https://earthobservatory.nasa.gov/images/153230/dry-in-the-rio-grande-basin
-import {
-  mdiLockOutline,
-  mdiGestureTap,
-  mdiMapPlus,
-  mdiCloudUploadOutline,
-  mdiShareAllOutline
-} from '@mdi/js'
+import { loremIpsum } from 'lorem-ipsum'
 
-const steps = [
+const regions = [
   {
-    icon: mdiLockOutline,
-    text: 'Log in with your CUAHSI credential',
+    image: 'https://picsum.photos/600/600?random=1',
+    title: 'Location 1',
+    text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1
   },
   {
-    icon: mdiGestureTap,
-    text: 'Select the dataset',
+    image: 'https://picsum.photos/600/600?random=2',
+    title: 'Location 2',
+    text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1
   },
   {
-    icon: mdiMapPlus,
-    text: 'Identify the domain',
-    flex: 1
-  },
-  {
-    icon: mdiCloudUploadOutline,
-    text: 'Submit the job to the Cloud',
-    flex: 1
-  },
-  {
-    icon: mdiShareAllOutline,
-    text: 'Download and share results via HydroShare',
+    image: 'https://picsum.photos/600/600?random=3',
+    title: 'Location 3',
+    text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1
   }
 ]
 </script>
 
 <style scoped>
-.steps {
+.regions {
   gap: 2rem 4rem;
 
   a {

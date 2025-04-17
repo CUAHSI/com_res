@@ -18,7 +18,7 @@
             :width="400"
             aspect-ratio="1"
             cover
-            lazy-src="https://www.hydroshare.org/static/static/img/home-page/carousel/bg3.jpg"
+            :lazy-src="`${member.image}`"
           >
             <template v-slot:placeholder>
               <div class="d-flex align-center justify-center fill-height">

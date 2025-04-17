@@ -32,7 +32,7 @@
     :style="getCardStyle()"
     class="v-flex pa-2"
     max-width="300"
-    color="surface-variant"
+    color="secondary"
     max-height="145"
   >
     <v-btn
