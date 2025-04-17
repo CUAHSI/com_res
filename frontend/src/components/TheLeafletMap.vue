@@ -11,7 +11,6 @@ import { onMounted, onUpdated } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useModelsStore } from '@/stores/models'
 import { useAlertStore } from '@/stores/alerts'
-import { useDomainsStore } from '@/stores/domains'
 import { GIS_SERVICES_URL } from '@/constants'
 import { API_BASE } from '@/constants'
 import { fetchWrapper } from '@/_helpers/fetchWrapper'
@@ -19,7 +18,6 @@ import { fetchWrapper } from '@/_helpers/fetchWrapper'
 const mapStore = useMapStore()
 const modelsStore = useModelsStore()
 const alertStore = useAlertStore()
-const domainStore = useDomainsStore()
 
 const Map = mapStore.mapObject
 
@@ -32,7 +30,6 @@ onMounted(() => {
   Map.hucbounds = []
   Map.popups = []
   Map.buffer = 20
-  domainStore.hucsAreSelected = false
   Map.huclayers = []
   Map.selected_hucs = []
   Map.reaches = {}
@@ -277,10 +274,6 @@ async function mapClick(e) {
     return
   }
 
-  // mark the huc as selected.
-  // this will allow the bbox to be drawn.
-  domainStore.hucsAreSelected = true
-
   // get the latitude and longitude of the click event.
   // use this data to query ArcGIS WFS for the selected HUC object.
   let defaultParameters = {
@@ -478,7 +471,6 @@ function clearSelection() {
     // clear the hucs in the html template
   }
   Map.selected_hucs = []
-  domainStore.hucsAreSelected = false
 
   // clear the HUC table
   // clearHucTable();
@@ -606,9 +598,6 @@ async function toggleHucsAsync(url, remove_if_selected, remove) {
     //getLccBounds(hucs);
 
     // update the hucs list
-    // this is used to create a shapefile
-    // that is exported along with the subset
-    update_huc_ids(hucs)
 
     // remove the specified id
     if (remove != null) {
@@ -715,7 +704,6 @@ function drawBbox() {
   }
 
   // TODO: Not sure if this is still needed
-  domainStore.boxIsValid = true
 }
 
 /**
@@ -735,15 +723,6 @@ function togglePolygon(hucID, geom) {
     Map.huclayers[hucID] = json_polygon
 
     json_polygon.addTo(Map.map)
-  }
-}
-
-function update_huc_ids(huclist) {
-  // convert huc array into csv string
-  let hucs = huclist.join(',')
-
-  if (hucs == '') {
-    domainStore.hucsAreSelected = false
   }
 }
 
