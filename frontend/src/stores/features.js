@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useModelsStore = defineStore('models', () => {
+export const useFeaturesStore = defineStore('models', () => {
   const models = ref([
     {
       id: 0,

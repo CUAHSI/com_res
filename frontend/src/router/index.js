@@ -3,8 +3,6 @@ import HelpView from '../views/HelpView.vue'
 import MapView from '../views/MapView.vue'
 import ApiView from '../views/ApiView.vue'
 import HomeView from '../views/HomeView.vue'
-import { useAuthStore } from '../stores/auth'
-import { useAlertStore } from '../stores/alerts'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -39,55 +37,8 @@ const router = createRouter({
       path: '/help',
       name: 'help',
       component: HelpView
-    },
-    {
-      path: '/submissions',
-      name: 'submissions',
-      component: () => import('../views/SubmissionsView.vue'),
-      meta: {
-        requiresAuth: true
-      }
-    },
-    {
-      path: '/auth-redirect',
-      name: 'auth-redirect',
-      component: () => import('../views/AuthRedirectView.vue'),
-      meta: {
-        hideNavigation: true
-      }
     }
   ]
 })
-
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
-  const alertStore = useAlertStore()
-
-  if (!authStore.isLoggedIn && to.meta.requiresAuth) {
-    // prevent redirect
-    next(from.path)
-    alertStore.displayAlert({
-      title: 'Not logged in',
-      text: `You must be logged in to access the ${to.name} page`,
-      type: 'error',
-      closable: true,
-      duration: 3
-    })
-  } else {
-    next()
-  }
-})
-
-// router.beforeEach(async (to) => {
-//   // redirect to login page if not logged in and trying to access a restricted page
-//   const publicPages = ['/'];
-//   const authRequired = !publicPages.includes(to.path);
-//   const auth = useAuthStore();
-
-//   if (authRequired && !auth.user) {
-//       auth.returnUrl = to.fullPath;
-//       return '/';
-//   }
-// });
 
 export default router

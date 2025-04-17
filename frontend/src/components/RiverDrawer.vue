@@ -1,6 +1,6 @@
 <template>
   <v-sheet class="mx-auto" elevation="8" style="height: calc(100vh - 165px); overflow-y: scroll">
-    <h2 class="ma-2 text-center">Datasets</h2>
+    <h2 class="ma-2 text-center">Name of Selected River</h2>
     <p class="ma-2">
       Click on each dataset to learn more. Select the checkbox fo rthe dataset you're interested in.
     </p>
@@ -54,24 +54,24 @@
 </template>
 
 <script setup>
-import { useModelsStore } from '@/stores/models'
+import { useFeaturesStore } from '@/stores/features'
 import { ref } from 'vue'
 
 const emit = defineEmits(['selectModel', 'toggle'])
 
-const modelsStore = useModelsStore()
-const models = modelsStore.models
+const featuresStore = useFeaturesStore()
+const models = featuresStore.models
 const selectedParent = ref({})
 const panel = ref([0])
 
 function selectModel(model) {
-  // modelsStore.selectedModel = model
-  modelsStore.updateModel(model)
+  // featuresStore.selectedModel = model
+  featuresStore.updateModel(model)
   emit('toggle')
 }
 
 function selectParent(parent, toggle) {
-  // modelsStore.selectedModel = model
+  // featuresStore.selectedModel = model
   selectedParent.value = parent
   panel.value = [0]
   toggle()
