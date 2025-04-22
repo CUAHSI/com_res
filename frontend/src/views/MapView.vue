@@ -36,8 +36,8 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onUpdated } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, nextTick, onUpdated, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import RiverDrawer from '../components/RiverDrawer.vue'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
@@ -47,7 +47,7 @@ import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
-const route = useRoute()
+const router = useRouter()
 const { mapObject } = storeToRefs(mapStore)
 
 const showRiverDrawer = ref(true)
@@ -66,9 +66,35 @@ const zoomToBounds = (bounds) => {
   }
 }
 
+onMounted(() => {
+  // update the route query params when the map is zoomed
+  try {
+    mapObject.value.map.on('zoomend', () => {
+      const bounds = mapObject.value.map.getBounds()
+      // convert the bounds to a format that can be used in the URL
+      const boundsString = JSON.stringify([
+        [bounds._southWest.lat, bounds._southWest.lng],
+        [bounds._northEast.lat, bounds._northEast.lng]
+      ])
+
+      const routeQuery = {
+        query: {
+          ...router.currentRoute.value.query,
+          bounds: boundsString
+        }
+      }
+      // update the URL without reloading the page
+      router.replace(routeQuery)
+    })
+  } catch (error) {
+    console.warn('Error setting up zoomend event listener:', error)
+  }
+})
+
 onUpdated(async () => {
   await nextTick()
   // check to see if map bounds and zoom are set on the route query params
+  const route = router.currentRoute.value
   const { bounds } = route.query
   if (bounds) {
     zoomToBounds(bounds)
