@@ -36,24 +36,51 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onUpdated } from 'vue'
+import { useRoute } from 'vue-router'
 import RiverDrawer from '../components/RiverDrawer.vue'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
+import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
+const route = useRoute()
+const { mapObject } = storeToRefs(mapStore)
 
 const showRiverDrawer = ref(true)
 
+const zoomToBounds = (bounds) => {
+  if (bounds) {
+    const parsedBounds = JSON.parse(bounds)
+    try {
+      console.log(`Zooming to bounds: ${parsedBounds}`)
+      mapObject.value.map.fitBounds(parsedBounds)
+    } catch (error) {
+      console.warn('Error parsing bounds:', error)
+    }
+  } else {
+    alert('No bounds provided')
+  }
+}
+
+onUpdated(async () => {
+  await nextTick()
+  // check to see if map bounds and zoom are set on the route query params
+  const { bounds } = route.query
+  if (bounds) {
+    zoomToBounds(bounds)
+  }
+})
+
 const toggleRiverDrawer = async () => {
-  const center = mapStore.mapObject.map.getCenter()
+  const center = mapObject.map.getCenter()
   showRiverDrawer.value = !showRiverDrawer.value
   await nextTick()
-  mapStore.mapObject.map.invalidateSize(true)
-  mapStore.mapObject.map.setView(center)
+  mapObject.value.map.invalidateSize(true)
+  mapObject.value.map.setView(center)
 }
 
 const translateFilter = () => {
