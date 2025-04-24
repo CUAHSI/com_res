@@ -2,6 +2,7 @@
   <v-overlay :model-value="!mapStore.mapLoaded" class="align-center justify-center">
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
+  <DataViewDrawer />
   <v-container v-if="!mdAndDown" fluid>
     <v-row fill-height style="height: calc(100vh - 165px)">
       <v-btn
@@ -44,6 +45,7 @@ import { useMapStore } from '@/stores/map'
 import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
+import DataViewDrawer from '../components/DataViewDrawer.vue'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()

@@ -14,7 +14,7 @@ export const useMapStore = defineStore('map', () => {
 
   const deselectFeature = (feature) => {
     try {
-      mapObject.value.reachesFeatures.setFeatureStyle(feature.id, {
+      mapObject.value.flowlinesFeatures.setFeatureStyle(feature.id, {
         color: featureOptions.value.defaultColor,
         weight: featureOptions.value.defaultWeight
       })
@@ -25,7 +25,7 @@ export const useMapStore = defineStore('map', () => {
 
   const selectFeature = (feature) => {
     try {
-      mapObject.value.reachesFeatures.setFeatureStyle(feature.id, {
+      mapObject.value.flowlinesFeatures.setFeatureStyle(feature.id, {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
@@ -35,7 +35,7 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const clearAllFeatures = () => {
-    mapObject.value.reachesFeatures.eachFeature(function (feature) {
+    mapObject.value.flowlinesFeatures.eachFeature(function (feature) {
       feature.setStyle({ color: featureOptions.value.defaultColor })
     })
   }

@@ -16,7 +16,7 @@ import { GIS_SERVICES_URL } from '@/constants'
 
 const mapStore = useMapStore()
 const { mapObject } = storeToRefs(mapStore)
-const featuresStore = useFeaturesStore()
+const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
 const minReachSelectionZoom = 11
@@ -162,6 +162,15 @@ onMounted(() => {
     .addTo(leaflet)
 
   mapObject.value.flowlinesFeatures = flowlinesFeatures
+
+  flowlinesFeatures.on('click', async function (e) {
+    const feature = e.layer.feature
+    featureStore.clearSelectedFeatures()
+    if (!featureStore.checkFeatureSelected(feature)) {
+      // Only allow one feature to be selected at a time
+      featureStore.selectFeature(feature)
+    }
+  })
 
   // layer toggling
   let mixed = {
@@ -332,7 +341,7 @@ function drawBbox() {
   let json_polygon = L.geoJSON(polygon, { style: style })
 
   mapObject.value.huclayers['BBOX'] = json_polygon
-  if (featuresStore?.selectedModel?.input == 'bbox') {
+  if (featureStore?.selectedModel?.input == 'bbox') {
     json_polygon.addTo(mapObject.value.leaflet)
   }
 
