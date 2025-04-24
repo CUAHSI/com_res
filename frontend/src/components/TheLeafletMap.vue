@@ -5,7 +5,7 @@
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
 import L from 'leaflet'
-import * as esriLeaflet from 'esri-leaflet'
+// import * as esriLeaflet from 'esri-leaflet'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, onUpdated } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -44,9 +44,8 @@ onMounted(() => {
 
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
-  // Initial OSM tile layer
-  let CartoDB_PositronNoLabels = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+  let CartoDB_DarkMatterNoLabels = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
     {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -55,34 +54,14 @@ onMounted(() => {
     }
   )
 
-  let url =
-    'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer'
-  // url = 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Labels/MapServer'
-
-  let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
-    url: url,
-    layers: 0,
-    transparent: 'true',
-    format: 'image/png'
-  })
-
-  url =
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
-  let Esri_WorldImagery = L.tileLayer(url, {
-    variant: 'World_Imagery',
-    attribution: 'Esri'
-  })
-
   const baselayers = {
-    CartoDB_PositronNoLabels,
-    Esri_WorldImagery
+    CartoDB_DarkMatterNoLabels
   }
 
-  Esri_WorldImagery.addTo(leaflet)
-  Esri_Hydro_Reference_Overlay.addTo(leaflet)
+  CartoDB_DarkMatterNoLabels.addTo(leaflet)
 
   // WMS LAYER
-  url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
+  let url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
 
   // HUC WMS Naming
   // --------------
@@ -154,8 +133,7 @@ onMounted(() => {
     'HUC 4': huc4,
     'HUC 10': huc10,
     'HUC 12': huc12,
-    'USGS Gages': gages,
-    'Esri Hydro Reference Overlay': Esri_Hydro_Reference_Overlay
+    'USGS Gages': gages
   }
 
   // /*
