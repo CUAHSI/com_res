@@ -41,7 +41,6 @@
 <script setup>
 import { loremIpsum } from 'lorem-ipsum'
 import { useRouter } from 'vue-router'
-import { defineEmits } from 'vue'
 
 const emit = defineEmits(['region-selected'])
 const router = useRouter()
