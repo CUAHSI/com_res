@@ -4,10 +4,10 @@
 <script setup>
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
-import L from 'leaflet'
-// import * as esriLeaflet from 'esri-leaflet'
+import L, { canvas } from 'leaflet'
+import * as esriLeaflet from 'esri-leaflet'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, onUpdated } from 'vue'
+import { onMounted, onUpdated, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
@@ -18,6 +18,8 @@ const mapStore = useMapStore()
 const { mapObject } = storeToRefs(mapStore)
 const featuresStore = useFeaturesStore()
 const alertStore = useAlertStore()
+
+const minReachSelectionZoom = 11
 
 onUpdated(() => {
   mapObject.value.leaflet.invalidateSize()
@@ -41,6 +43,7 @@ onMounted(() => {
   mapObject.value.huc10_max = 14
   mapObject.value.huc12_min = 10
   mapObject.value.huc12_max = 18
+  mapObject.value.flowlinesFeatures = ref({})
 
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
@@ -60,7 +63,7 @@ onMounted(() => {
 
   CartoDB_DarkMatterNoLabels.addTo(leaflet)
 
-  // WMS LAYER
+  // HUCS WMS LAYER
   let url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
 
   // HUC WMS Naming
@@ -127,13 +130,48 @@ onMounted(() => {
     })
     .addTo(leaflet)
 
+  // add the NOAA flowlines wms
+  url =
+    'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer'
+  let flowlines = L.tileLayer
+    .wms(url, {
+      layers: 0,
+      transparent: 'true',
+      format: 'image/png',
+      minZoom: 8,
+      maxZoom: 18
+    })
+    .addTo(leaflet)
+
+  // add static flowlines feature service
+  url =
+    'https://maps.water.noaa.gov/server/rest/services/reference/static_nwm_flowlines/FeatureServer/0/query'
+  const flowlinesFeatures = esriLeaflet
+    .featureLayer({
+      url: url,
+      renderer: canvas({ tolerance: 5 }),
+      simplifyFactor: 0.35,
+      precision: 5,
+      minZoom: minReachSelectionZoom,
+      maxZoom: 18,
+      color: mapStore.featureOptions.defaultColor,
+      weight: mapStore.featureOptions.defaultWeight,
+      opacity: mapStore.featureOptions.opacity
+      // fields: ["FID", "ZIP", "PO_NAME"],
+    })
+    .addTo(leaflet)
+
+  mapObject.value.flowlinesFeatures = flowlinesFeatures
+
   // layer toggling
   let mixed = {
     'HUC 2': huc2,
     'HUC 4': huc4,
     'HUC 10': huc10,
     'HUC 12': huc12,
-    'USGS Gages': gages
+    'USGS Gages': gages,
+    'Flowlines WMS': flowlines,
+    'Flowlines Features': flowlinesFeatures
   }
 
   // /*
