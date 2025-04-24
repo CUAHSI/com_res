@@ -2,7 +2,7 @@
   <v-navigation-drawer
     v-if="featureStore.activeFeature"
     location="right"
-    width="auto"
+    width="400"
     v-model="show"
     order="1"
   >
