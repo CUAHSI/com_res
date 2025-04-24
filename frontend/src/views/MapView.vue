@@ -57,7 +57,7 @@ const zoomToBounds = (bounds) => {
     const parsedBounds = JSON.parse(bounds)
     try {
       console.log(`Zooming to bounds: ${parsedBounds}`)
-      mapObject.value.map.fitBounds(parsedBounds)
+      mapObject.value.leaflet.fitBounds(parsedBounds)
     } catch (error) {
       console.warn('Error parsing bounds:', error)
     }
@@ -69,8 +69,8 @@ const zoomToBounds = (bounds) => {
 onMounted(() => {
   // update the route query params when the map is zoomed
   try {
-    mapObject.value.map.on('zoomend', () => {
-      const bounds = mapObject.value.map.getBounds()
+    mapObject.value.leaflet.on('zoomend', () => {
+      const bounds = mapObject.value.leaflet.getBounds()
       // convert the bounds to a format that can be used in the URL
       const boundsString = JSON.stringify([
         [bounds._southWest.lat, bounds._southWest.lng],
@@ -105,8 +105,8 @@ const toggleRiverDrawer = async () => {
   const center = mapObject.map.getCenter()
   showRiverDrawer.value = !showRiverDrawer.value
   await nextTick()
-  mapObject.value.map.invalidateSize(true)
-  mapObject.value.map.setView(center)
+  mapObject.value.leaflet.invalidateSize(true)
+  mapObject.value.leaflet.setView(center)
 }
 
 const translateFilter = () => {

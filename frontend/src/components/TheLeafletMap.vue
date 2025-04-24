@@ -8,41 +8,41 @@ import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, onUpdated } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import { GIS_SERVICES_URL } from '@/constants'
 
 const mapStore = useMapStore()
+const { mapObject } = storeToRefs(mapStore)
 const featuresStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
-const Map = mapStore.mapObject
-
 onUpdated(() => {
-  Map.map.invalidateSize()
+  mapObject.value.leaflet.invalidateSize()
 })
 onMounted(() => {
-  let map = L.map('mapContainer').setView([38.2, -96], 5)
-  Map.map = map
-  Map.hucbounds = []
-  Map.popups = []
-  Map.buffer = 20
-  Map.huclayers = []
-  Map.selected_hucs = []
-  Map.reaches = {}
-  Map.huc2_min = 0
-  Map.huc2_max = 7
-  Map.huc4_min = 6
-  Map.huc4_max = 10
-  Map.huc6_min = 6
-  Map.huc6_max = 10
-  Map.huc10_min = 9
-  Map.huc10_max = 14
-  Map.huc12_min = 10
-  Map.huc12_max = 18
+  let leaflet = L.map('mapContainer').setView([38.2, -96], 5)
+  mapObject.value.leaflet = leaflet
+  mapObject.value.hucbounds = []
+  mapObject.value.popups = []
+  mapObject.value.buffer = 20
+  mapObject.value.huclayers = []
+  mapObject.value.selected_hucs = []
+  mapObject.value.reaches = {}
+  mapObject.value.huc2_min = 0
+  mapObject.value.huc2_max = 7
+  mapObject.value.huc4_min = 6
+  mapObject.value.huc4_max = 10
+  mapObject.value.huc6_min = 6
+  mapObject.value.huc6_max = 10
+  mapObject.value.huc10_min = 9
+  mapObject.value.huc10_max = 14
+  mapObject.value.huc12_min = 10
+  mapObject.value.huc12_max = 18
 
-  Map.bbox = [99999999, 99999999, -99999999, -99999999]
+  mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
   // Initial OSM tile layer
   let CartoDB_PositronNoLabels = L.tileLayer(
@@ -78,8 +78,8 @@ onMounted(() => {
     Esri_WorldImagery
   }
 
-  Esri_WorldImagery.addTo(map)
-  Esri_Hydro_Reference_Overlay.addTo(map)
+  Esri_WorldImagery.addTo(leaflet)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet)
 
   // WMS LAYER
   url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
@@ -98,10 +98,10 @@ onMounted(() => {
       layers: 4,
       transparent: 'true',
       format: 'image/png',
-      minZoom: Map.huc2_min,
-      maxZoom: Map.huc2_max
+      minZoom: mapObject.value.huc2_min,
+      maxZoom: mapObject.value.huc2_max
     })
-    .addTo(map)
+    .addTo(leaflet)
 
   // HUC 4 Layer
   let huc4 = L.tileLayer
@@ -109,10 +109,10 @@ onMounted(() => {
       layers: 3,
       transparent: 'true',
       format: 'image/png',
-      minZoom: Map.huc4_min,
-      maxZoom: Map.huc4_max
+      minZoom: mapObject.value.huc4_min,
+      maxZoom: mapObject.value.huc4_max
     })
-    .addTo(map)
+    .addTo(leaflet)
 
   // HUC 12 Layer
   let huc12 = L.tileLayer
@@ -120,10 +120,10 @@ onMounted(() => {
       layers: 2,
       transparent: 'true',
       format: 'image/png',
-      minZoom: Map.huc12_min,
-      maxZoom: Map.huc12_max
+      minZoom: mapObject.value.huc12_min,
+      maxZoom: mapObject.value.huc12_max
     })
-    .addTo(map)
+    .addTo(leaflet)
 
   // HUC 10 Layer
   let huc10 = L.tileLayer
@@ -131,10 +131,10 @@ onMounted(() => {
       layers: 1,
       transparent: 'true',
       format: 'image/png',
-      minZoom: Map.huc10_min,
-      maxZoom: Map.huc10_max
+      minZoom: mapObject.value.huc10_min,
+      maxZoom: mapObject.value.huc10_max
     })
-    .addTo(map)
+    .addTo(leaflet)
 
   // add USGS gage layer to map
   url = `${GIS_SERVICES_URL}/NHD/usgs_gages/MapServer/WmsServer?`
@@ -146,7 +146,7 @@ onMounted(() => {
       minZoom: 9,
       maxZoom: 18
     })
-    .addTo(map)
+    .addTo(leaflet)
 
   // layer toggling
   let mixed = {
@@ -169,15 +169,15 @@ onMounted(() => {
       clearSelection()
     },
     'clear selected features'
-  ).addTo(map)
+  ).addTo(leaflet)
 
   // Layer Control
-  L.control.layers(baselayers, mixed).addTo(map)
+  L.control.layers(baselayers, mixed).addTo(leaflet)
 
   /*
    * LEAFLET EVENT HANDLERS
    */
-  map.on('click', function (e) {
+  leaflet.on('click', function (e) {
     mapClick(e)
   })
 
@@ -198,7 +198,7 @@ async function mapClick(e) {
   // exit early if not zoomed in enough.
   // this ensures that objects are not clicked until zoomed in
   let zoom = e.target.getZoom()
-  if (zoom < Map.selectable_zoom) {
+  if (zoom < mapObject.value.selectable_zoom) {
     return
   }
 }
@@ -206,17 +206,17 @@ async function mapClick(e) {
 function clearSelection() {
   // Clears the selected features on the map
 
-  for (let key in Map.hucbounds) {
+  for (let key in mapObject.value.hucbounds) {
     // clear the huc boundary list
-    delete Map.hucbounds[key]
+    delete mapObject.value.hucbounds[key]
 
     // clear the polygon overlays
-    Map.huclayers[key].clearLayers()
-    delete Map.huclayers[key]
+    mapObject.value.huclayers[key].clearLayers()
+    delete mapObject.value.huclayers[key]
 
     // clear the hucs in the html template
   }
-  Map.selected_hucs = []
+  mapObject.value.selected_hucs = []
 
   // clear the HUC table
   // clearHucTable();
@@ -248,8 +248,8 @@ function updateMapBBox() {
   let ymin = 9999999
   let xmax = -9999999
   let ymax = -9999999
-  for (let key in Map.hucbounds) {
-    let bounds = Map.hucbounds[key].wgs84_bbox
+  for (let key in mapObject.value.hucbounds) {
+    let bounds = mapObject.value.hucbounds[key].wgs84_bbox
     if (bounds.getWest() < xmin) {
       xmin = bounds.getWest()
     }
@@ -271,7 +271,7 @@ function updateMapBBox() {
   console.log('ymax', ymax)
 
   // save the map bbox
-  Map.bbox = [xmin, ymin, xmax, ymax]
+  mapObject.value.bbox = [xmin, ymin, xmax, ymax]
 
   // remove the old bounding box layer
   removeBbox()
@@ -282,10 +282,10 @@ function updateMapBBox() {
 
 function removeBbox() {
   // remove the bbox layer if it exists
-  if ('BBOX' in Map.huclayers) {
+  if ('BBOX' in mapObject.value.huclayers) {
     // remove the polygon overlay
-    Map.huclayers['BBOX'].clearLayers()
-    delete Map.huclayers['BBOX']
+    mapObject.value.huclayers['BBOX'].clearLayers()
+    delete mapObject.value.huclayers['BBOX']
   }
 }
 function drawBbox() {
@@ -304,20 +304,20 @@ function drawBbox() {
       type: 'Polygon',
       coordinates: [
         [
-          [Map.bbox[0], Map.bbox[1]],
-          [Map.bbox[0], Map.bbox[3]],
-          [Map.bbox[2], Map.bbox[3]],
-          [Map.bbox[2], Map.bbox[1]],
-          [Map.bbox[0], Map.bbox[1]]
+          [mapObject.value.bbox[0], mapObject.value.bbox[1]],
+          [mapObject.value.bbox[0], mapObject.value.bbox[3]],
+          [mapObject.value.bbox[2], mapObject.value.bbox[3]],
+          [mapObject.value.bbox[2], mapObject.value.bbox[1]],
+          [mapObject.value.bbox[0], mapObject.value.bbox[1]]
         ]
       ]
     }
   ]
   let json_polygon = L.geoJSON(polygon, { style: style })
 
-  Map.huclayers['BBOX'] = json_polygon
+  mapObject.value.huclayers['BBOX'] = json_polygon
   if (featuresStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(Map.map)
+    json_polygon.addTo(mapObject.value.leaflet)
   }
 
   // TODO: Not sure if this is still needed
