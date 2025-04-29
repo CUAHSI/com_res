@@ -2,57 +2,82 @@
   <v-overlay :model-value="!mapStore.mapLoaded" class="align-center justify-center">
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
-  <DataViewDrawer />
+
   <v-container v-if="!mdAndDown" fluid>
-    <v-row fill-height style="height: calc(100vh - 165px)">
-      <v-btn
-        @click="toggleRiverDrawer"
-        color="secondary"
-        location="left"
-        style="z-index: 9999"
-        :style="{ transform: translateFilter(), position: 'absolute' }"
-        :icon="showRiverDrawer ? mdiChevronLeft : mdiChevronRight"
-        size="x-small"
-      >
-      </v-btn>
-      <v-col v-if="showRiverDrawer" :cols="3" class="pa-0">
-        <RiverDrawer v-if="showRiverDrawer" @toggle="toggleRiverDrawer" />
-      </v-col>
-      <v-divider v-if="showRiverDrawer" vertical></v-divider>
-      <v-col :cols="getCols" class="pa-0">
+   <v-row fill-height style="height: calc(100vh - 165px)">
+      <v-col style="padding:0px; margin:0px">
         <TheLeafletMap />
       </v-col>
-    </v-row>
+   </v-row>
   </v-container>
   <v-container v-else>
     <v-row style="height: 40vh">
       <TheLeafletMap />
     </v-row>
-    <v-row style="height: 50vh">
-      <v-col>
-        <RiverDrawer />
-      </v-col>
-    </v-row>
   </v-container>
+
+  <v-card location="left" :style="getCardStyle()" max-width="500" max-height="145">
+    <v-btn style="margin-right:10px"
+           @click="toggleMetadata"
+          :color="showMetadata ? 'blue' : 'white'">
+      Metadata
+    </v-btn>
+    <v-btn style="margin-right:10px"
+           @click="toggleHistorical"
+          :color="showHistorical ? 'blue' : 'white'">
+      Historical
+    </v-btn>
+    <v-btn style="margin-right:10px"
+           @click="toggleForecast"
+          :color="showForecast ? 'blue' : 'white'">
+      Forecast
+    </v-btn>
+  </v-card>
+
+  <v-card location="left" max-width="500" max-height="800"
+    :style="{
+      transform: 'translate(1vw, -25vh)',
+      position: 'absolute',
+      backgroundColor: 'transparent',
+      'z-index': '9999'
+    }"
+    v-show="showHistorical"
+    >
+    <HistoricalPlot 
+      ref="historicalPlotRef"
+      :style="{width: '500px',
+               height: '300px',
+               padding: '0px 10px'}"
+      :timeseries="plot_timeseries"
+      :title="plot_title"/>
+  </v-card>
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onUpdated, onMounted } from 'vue'
+import { ref } from 'vue'
+import { nextTick, onUpdated, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import RiverDrawer from '../components/RiverDrawer.vue'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
 import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
-import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
-import DataViewDrawer from '../components/DataViewDrawer.vue'
+import HistoricalPlot from '@/components/HistoricalPlot.vue'
+import { useFeaturesStore } from '@/stores/features'
+import { useAlertStore } from '@/stores/alerts'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
 const router = useRouter()
 const { mapObject } = storeToRefs(mapStore)
 
-const showRiverDrawer = ref(true)
+const featureStore = useFeaturesStore()
+const alertStore = useAlertStore()
+
+const showMetadata = ref(false)
+const showHistorical = ref(false)
+const showForecast = ref(false)
+const historicalPlotRef = ref(null)
+
 
 const zoomToBounds = (bounds) => {
   if (bounds) {
@@ -103,28 +128,48 @@ onUpdated(async () => {
   }
 })
 
-const toggleRiverDrawer = async () => {
-  const center = mapObject.map.getCenter()
-  showRiverDrawer.value = !showRiverDrawer.value
-  await nextTick()
-  mapObject.value.leaflet.invalidateSize(true)
-  mapObject.value.leaflet.setView(center)
+const getCardStyle = () => {
+  if (!mdAndDown.value) {
+    return { 
+      transform: 'translate(4vw, -37vh)', // top left of map
+      position: 'absolute',
+      color: 'black',
+      backgroundColor: 'transparent',
+      'z-index': '9999' // make sure if floats above the map
+
+    }
+  }
+  // TODO: implement styling and layout for mobile
+  return {}
 }
 
-const translateFilter = () => {
-  if (showRiverDrawer.value) {
-    return 'translate(24vw, 0)'
+const toggleHistorical = async () => {
+
+  // get the feature id from the active feature
+  console.log(featureStore.activeFeature)
+  let reach_id = featureStore.activeFeature?.properties?.feature_id ?? null
+  if (reach_id === undefined || reach_id === null) {
+    // if no feature is selected show a popup dialog
+    alertStore.displayAlert({
+     title: 'No River Reach Selected',
+     text: 'You must select a river reach on the map to view historical streamflow data.',
+     type: 'error',
+     closable: true,
+     duration: 5
+   })
+
   } else {
-    return 'translate(0, 0)'
-  }
+
+    showHistorical.value = !showHistorical.value
+
+    // create an initial plot of the last 90 days
+    let start_date = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    let end_date = new Date(Date.now())
+    console.log(start_date, end_date)
+    let reach_name = featureStore.activeFeature.properties.name
+
+    await historicalPlotRef.value.getHistoricalData(reach_id.toString(), reach_name, start_date, end_date)
 }
 
-const getCols = computed(() => {
-  // if all drawers are open, the map should take up 7 columns
-  let cols = 12
-  if (showRiverDrawer.value) {
-    cols -= 3
-  }
-  return cols
-})
+}
 </script>

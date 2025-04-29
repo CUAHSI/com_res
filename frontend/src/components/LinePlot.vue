@@ -1,6 +1,6 @@
 <template>
   <v-sheet class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
-    <h3>{{ props.title }}</h3>
+    <h5>{{ props.title }}</h5>
     <div>
       <Line :data="chartData" :options="chartOptions" />
     </div>
@@ -68,6 +68,10 @@ const chartOptions = {
       }
     },
     y: {
+      title: {
+        display: true,
+        text: 'Streamflow (cfs)'
+      },
       ticks: {
         color: '#555'
       },
@@ -78,7 +82,7 @@ const chartOptions = {
   },
   plugins: {
     legend: {
-      display: true,
+      display: false,
       labels: {
         color: '#333'
       }
