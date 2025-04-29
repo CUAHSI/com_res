@@ -9,7 +9,6 @@
 
     <!-- content that will be rendered in the "historical" tab -->
     <v-sheet v-if="tab === 'tab-historical'" class="pa-4" style="padding: 5px !important">
-      <!-- color="green lighten-3" -->
       <LinePlot :timeseries="plot_timeseries" :title="plot_title" />
 
       <v-btn
@@ -44,7 +43,9 @@ const getHistoricalData = async () => {
     isLoading.value = true
     error.value = null
 
-    // TODO: get these values from other components on the page.
+    // TODO:: get these values from other components on the page.
+    // These are placeholders for now and will be replaced with actual values
+    // when we implement the logic to get the selected river and date range.
     const params = new URLSearchParams({
       reach_id: '5984765',
       start_date: '2024-10-01',
@@ -71,15 +72,9 @@ const getHistoricalData = async () => {
   } finally {
     isLoading.value = false
   }
-  // // Set timeseries data
-  // plot_timeseries.value = [
-  //   { x: '2025-04-01', y: 100 },
-  //   { x: '2025-04-02', y: 110 },
-  //   { x: '2025-04-03', y: 120 },
-  //   { x: '2025-04-04', y: 130 },
-  //   { x: '2025-04-05', y: 140 },
-  // ]
 
+  // TODO: This will be replaced with the actual title of the plot obtained
+  // from the map interface.
   // set plot title
   plot_title.value = 'Historical Data for River X'
 }
