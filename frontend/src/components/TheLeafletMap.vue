@@ -33,16 +33,6 @@ onMounted(() => {
   mapObject.value.huclayers = []
   mapObject.value.selected_hucs = []
   mapObject.value.reaches = {}
-  mapObject.value.huc2_min = 0
-  mapObject.value.huc2_max = 7
-  mapObject.value.huc4_min = 6
-  mapObject.value.huc4_max = 10
-  mapObject.value.huc6_min = 6
-  mapObject.value.huc6_max = 10
-  mapObject.value.huc10_min = 9
-  mapObject.value.huc10_max = 14
-  mapObject.value.huc12_min = 10
-  mapObject.value.huc12_max = 18
   mapObject.value.flowlinesFeatures = ref({})
 
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
@@ -73,61 +63,6 @@ onMounted(() => {
 
   Esri_WorldImagery.addTo(leaflet)
   Esri_Hydro_Reference_Overlay.addTo(leaflet)
-
-  // HUCS WMS LAYER
-  url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
-
-  // HUC WMS Naming
-  // --------------
-  // HUC12_US: 0
-  // HUC10_US: 1
-  // HUC_4_US: 2
-  // HUC2_US: 3
-  // --------------
-
-  // HUC 2 Layer
-  let huc2 = L.tileLayer
-    .wms(url, {
-      layers: 4,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: mapObject.value.huc2_min,
-      maxZoom: mapObject.value.huc2_max
-    })
-    .addTo(leaflet)
-
-  // HUC 4 Layer
-  let huc4 = L.tileLayer
-    .wms(url, {
-      layers: 3,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: mapObject.value.huc4_min,
-      maxZoom: mapObject.value.huc4_max
-    })
-    .addTo(leaflet)
-
-  // HUC 12 Layer
-  let huc12 = L.tileLayer
-    .wms(url, {
-      layers: 2,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: mapObject.value.huc12_min,
-      maxZoom: mapObject.value.huc12_max
-    })
-    .addTo(leaflet)
-
-  // HUC 10 Layer
-  let huc10 = L.tileLayer
-    .wms(url, {
-      layers: 1,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: mapObject.value.huc10_min,
-      maxZoom: mapObject.value.huc10_max
-    })
-    .addTo(leaflet)
 
   // add USGS gage layer to map
   url = `${GIS_SERVICES_URL}/NHD/usgs_gages/MapServer/WmsServer?`
@@ -185,10 +120,6 @@ onMounted(() => {
 
   // layer toggling
   let mixed = {
-    'HUC 2': huc2,
-    'HUC 4': huc4,
-    'HUC 10': huc10,
-    'HUC 12': huc12,
     'USGS Gages': gages,
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
