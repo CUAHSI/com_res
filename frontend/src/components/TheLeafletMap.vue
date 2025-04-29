@@ -47,24 +47,35 @@ onMounted(() => {
 
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
-  let CartoDB_DarkMatterNoLabels = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-    {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }
-  )
+  let url =
+    'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer'
+  // url = 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Labels/MapServer'
+
+  let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
+    url: url,
+    layers: 0,
+    transparent: 'true',
+    format: 'image/png'
+  })
+
+  url =
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+  let Esri_WorldImagery = L.tileLayer(url, {
+    variant: 'World_Imagery',
+    attribution: 'Esri',
+    maxZoom: minReachSelectionZoom,
+    minZoom: 0
+  })
 
   const baselayers = {
-    CartoDB_DarkMatterNoLabels
+    Esri_WorldImagery
   }
 
-  CartoDB_DarkMatterNoLabels.addTo(leaflet)
+  Esri_WorldImagery.addTo(leaflet)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet)
 
   // HUCS WMS LAYER
-  let url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
+  url = `${GIS_SERVICES_URL}/US_WBD/HUC_WBD/MapServer/WmsServer?`
 
   // HUC WMS Naming
   // --------------
@@ -139,7 +150,7 @@ onMounted(() => {
       transparent: 'true',
       format: 'image/png',
       minZoom: 8,
-      maxZoom: 18
+      maxZoom: minReachSelectionZoom
     })
     .addTo(leaflet)
 
@@ -179,6 +190,7 @@ onMounted(() => {
     'HUC 10': huc10,
     'HUC 12': huc12,
     'USGS Gages': gages,
+    'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
     'Flowlines Features': flowlinesFeatures
   }
