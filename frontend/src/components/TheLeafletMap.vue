@@ -70,51 +70,42 @@ onMounted(() => {
     'CartoDB Positron No Labels': CartoDB_PositronNoLabels
   }
 
-  Esri_WorldImagery.addTo(leaflet)
-  Esri_Hydro_Reference_Overlay.addTo(leaflet)
-
   // add USGS gage layer to map
   url = `${GIS_SERVICES_URL}/NHD/usgs_gages/MapServer/WmsServer?`
-  let gages = L.tileLayer
-    .wms(url, {
-      layers: 0,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: 9,
-      maxZoom: 18
-    })
-    .addTo(leaflet)
+  let gages = L.tileLayer.wms(url, {
+    layers: 0,
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: 9,
+    maxZoom: 18
+  })
 
   // add the NOAA flowlines wms
   url =
     'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer'
-  let flowlines = L.tileLayer
-    .wms(url, {
-      layers: 0,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: 8,
-      maxZoom: minReachSelectionZoom
-    })
-    .addTo(leaflet)
+  let flowlines = L.tileLayer.wms(url, {
+    layers: 0,
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: 8,
+    maxZoom: minReachSelectionZoom
+  })
 
   // add static flowlines feature service
   url =
     'https://maps.water.noaa.gov/server/rest/services/reference/static_nwm_flowlines/FeatureServer/0/query'
-  const flowlinesFeatures = esriLeaflet
-    .featureLayer({
-      url: url,
-      renderer: canvas({ tolerance: 5 }),
-      simplifyFactor: 0.35,
-      precision: 5,
-      minZoom: minReachSelectionZoom,
-      maxZoom: 18,
-      color: mapStore.featureOptions.defaultColor,
-      weight: mapStore.featureOptions.defaultWeight,
-      opacity: mapStore.featureOptions.opacity
-      // fields: ["FID", "ZIP", "PO_NAME"],
-    })
-    .addTo(leaflet)
+  const flowlinesFeatures = esriLeaflet.featureLayer({
+    url: url,
+    renderer: canvas({ tolerance: 5 }),
+    simplifyFactor: 0.35,
+    precision: 5,
+    minZoom: minReachSelectionZoom,
+    maxZoom: 18,
+    color: mapStore.featureOptions.defaultColor,
+    weight: mapStore.featureOptions.defaultWeight,
+    opacity: mapStore.featureOptions.opacity
+    // fields: ["FID", "ZIP", "PO_NAME"],
+  })
 
   mapObject.value.flowlinesFeatures = flowlinesFeatures
 
@@ -127,12 +118,80 @@ onMounted(() => {
     }
   })
 
+  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/0'
+  const roaringRiverFeatures = esriLeaflet.featureLayer({
+    url: url,
+    simplifyFactor: 0.35,
+    precision: 5,
+    // minZoom: 9,
+    // maxZoom: 18,
+    style: function () {
+      return {
+        weight: 0, // remove border
+        fillOpacity: 0.7,
+        fill: true
+      }
+    }
+    // fields: ["FID", "ZIP", "PO_NAME"],
+  })
+
+  roaringRiverFeatures.on('click', function (e) {
+    console.log(e.layer.feature.properties)
+    const popup = L.popup()
+    const content = `
+        <h3>${e.layer.feature.properties.names}</h3>
+        <h4>Lake ID: ${e.layer.feature.properties.lake_id}</h4>
+        <p>
+            <ul>
+                <li>SWORD Max Area: ${e.layer.feature.properties.max_area}</li>
+                <li>SWORD Basin: ${e.layer.feature.properties.basin_id}</li>
+            </ul>
+        </p>
+        <p>
+            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/SWOT/world_swot_lakes/FeatureServer/0/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
+        </p>
+        <h5>
+            More lake data coming soon...
+        </h5>
+        `
+    popup.setLatLng(e.latlng).setContent(content).openOn(leaflet)
+
+    roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
+      color: '#9D78D2'
+    })
+
+    popup.on('remove', function () {
+      roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
+        color: '#3388ff'
+      })
+    })
+  })
+
+  url = 'https://arcgis.cuahsi.org/arcgis/services/test/RoaringRiver/MapServer/WmsServer?'
+  let roaringRiverWMS = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 13 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png'
+    // minZoom: 0,
+    // maxZoom: 9
+  })
+
+  Esri_WorldImagery.addTo(leaflet)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet)
+  gages.addTo(leaflet)
+  flowlines.addTo(leaflet)
+  flowlinesFeatures.addTo(leaflet)
+  roaringRiverFeatures.addTo(leaflet)
+  roaringRiverWMS.addTo(leaflet)
+
   // layer toggling
   let mixed = {
     'USGS Gages': gages,
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
-    'Flowlines Features': flowlinesFeatures
+    'Flowlines Features': flowlinesFeatures,
+    'Roaring River Features': roaringRiverFeatures,
+    'Roaring River WMS': roaringRiverWMS
   }
 
   // /*
