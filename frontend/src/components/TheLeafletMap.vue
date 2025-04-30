@@ -22,11 +22,10 @@ const alertStore = useAlertStore()
 const minReachSelectionZoom = 11
 
 onUpdated(() => {
-  mapObject.value.leaflet.invalidateSize()
+  mapStore.leaflet.invalidateSize()
 })
 onMounted(() => {
-  let leaflet = L.map('mapContainer').setView([38.2, -96], 5)
-  mapObject.value.leaflet = leaflet
+  mapStore.leaflet = L.map('mapContainer').setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -151,7 +150,7 @@ onMounted(() => {
             <a href="https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
         </p>
         `
-    popup.setLatLng(e.latlng).setContent(content).openOn(leaflet)
+    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
 
     roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
       color: '#9D78D2'
@@ -173,13 +172,13 @@ onMounted(() => {
     // maxZoom: minReachSelectionZoom
   })
 
-  Esri_WorldImagery.addTo(leaflet)
-  Esri_Hydro_Reference_Overlay.addTo(leaflet)
-  gages.addTo(leaflet)
-  flowlines.addTo(leaflet)
-  roaringRiverWMS.addTo(leaflet)
-  roaringRiverFeatures.addTo(leaflet)
-  flowlinesFeatures.addTo(leaflet)
+  Esri_WorldImagery.addTo(mapStore.leaflet)
+  Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
+  gages.addTo(mapStore.leaflet)
+  flowlines.addTo(mapStore.leaflet)
+  roaringRiverWMS.addTo(mapStore.leaflet)
+  roaringRiverFeatures.addTo(mapStore.leaflet)
+  flowlinesFeatures.addTo(mapStore.leaflet)
 
   // layer toggling
   let mixed = {
@@ -202,15 +201,15 @@ onMounted(() => {
       clearSelection()
     },
     'clear selected features'
-  ).addTo(leaflet)
+  ).addTo(mapStore.leaflet)
 
   // Layer Control
-  L.control.layers(baselayers, mixed).addTo(leaflet)
+  L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
 
   /*
    * LEAFLET EVENT HANDLERS
    */
-  leaflet.on('click', function (e) {
+  mapStore.leaflet.on('click', function (e) {
     mapClick(e)
   })
 
@@ -350,7 +349,7 @@ function drawBbox() {
 
   mapObject.value.huclayers['BBOX'] = json_polygon
   if (featureStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(mapObject.value.leaflet)
+    json_polygon.addTo(mapStore.leaflet)
   }
 
   // TODO: Not sure if this is still needed

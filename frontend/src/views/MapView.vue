@@ -66,7 +66,6 @@ import { ref, watch, nextTick, onUpdated, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
-import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import { useFeaturesStore } from '@/stores/features'
@@ -75,7 +74,6 @@ import { useAlertStore } from '@/stores/alerts'
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
 const router = useRouter()
-const { mapObject } = storeToRefs(mapStore)
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -102,7 +100,7 @@ const zoomToBounds = (bounds) => {
     const parsedBounds = JSON.parse(bounds)
     try {
       console.log(`Zooming to bounds: ${parsedBounds}`)
-      mapObject.value.leaflet.fitBounds(parsedBounds)
+      mapStore.leaflet.fitBounds(parsedBounds)
     } catch (error) {
       console.warn('Error parsing bounds:', error)
     }
@@ -114,8 +112,8 @@ const zoomToBounds = (bounds) => {
 onMounted(() => {
   // update the route query params when the map is zoomed
   try {
-    mapObject.value.leaflet.on('zoomend', () => {
-      const bounds = mapObject.value.leaflet.getBounds()
+    mapStore.leaflet.on('zoomend', () => {
+      const bounds = mapStore.leaflet.getBounds()
       // convert the bounds to a format that can be used in the URL
       const boundsString = JSON.stringify([
         [bounds._southWest.lat, bounds._southWest.lng],

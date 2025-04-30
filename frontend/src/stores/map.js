@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 export const useMapStore = defineStore('map', () => {
+  const leaflet = shallowRef(null)
   const mapObject = ref(new Map())
   const featureOptions = ref({
     selectedColor: 'red',
@@ -40,5 +41,13 @@ export const useMapStore = defineStore('map', () => {
     })
   }
 
-  return { mapObject, mapLoaded, deselectFeature, selectFeature, clearAllFeatures, featureOptions }
+  return {
+    mapObject,
+    mapLoaded,
+    deselectFeature,
+    selectFeature,
+    clearAllFeatures,
+    featureOptions,
+    leaflet
+  }
 })
