@@ -16,50 +16,75 @@
     </v-row>
   </v-container>
 
-  <v-card location="left" :style="getCardStyle()" max-width="500" max-height="145">
-    <v-btn
-      style="margin-right: 10px"
-      @click="toggleMetadata"
-      :color="showMetadata ? 'blue' : 'white'"
-    >
-      Metadata
-    </v-btn>
-    <v-btn
-      style="margin-right: 10px"
-      @click="toggleHistorical"
-      :color="showHistorical ? 'blue' : 'white'"
-    >
-      Historical
-    </v-btn>
-    <v-btn
-      style="margin-right: 10px"
-      @click="toggleForecast"
-      :color="showForecast ? 'blue' : 'white'"
-    >
-      Forecast
-    </v-btn>
-  </v-card>
-
-  <v-card
-    location="left"
-    max-width="500"
-    max-height="800"
+  <div
+    id="div-plot-button"
     :style="{
-      transform: 'translate(1vw, -25vh)',
-      position: 'absolute',
-      backgroundColor: 'transparent',
-      'z-index': '9999'
+      width: '400px',
+      height: '50px',
+      position: 'relative',
+      'z-index': '99999',
+      transform: 'translate(3vw, -81.5vh)'
     }"
-    v-show="showHistorical"
   >
+    <!-- border: '1px solid black', -->
+
+    <v-card
+      location="left"
+      variant="flat"
+      :style="{
+        backgroundColor: 'transparent'
+      }"
+      max-width="500"
+      max-height="145"
+    >
+      <v-btn
+        style="margin-right: 10px"
+        @click="toggleMetadata"
+        :color="showMetadata ? 'blue' : 'white'"
+      >
+        Metadata
+      </v-btn>
+      <v-btn
+        style="margin-right: 10px"
+        @click="toggleHistorical"
+        :color="showHistorical ? 'blue' : 'white'"
+      >
+        Historical
+      </v-btn>
+      <v-btn
+        style="margin-right: 10px"
+        @click="toggleForecast"
+        :color="showForecast ? 'blue' : 'white'"
+      >
+        Forecast
+      </v-btn>
+    </v-card>
+  </div>
+
+  <div
+    id="div-plot-area"
+    :style="{
+      width: '500px',
+      position: 'relative',
+      'z-index': '99999',
+      transform: 'translate(0.5vw, -75vh)'
+    }"
+  >
+    <!-- border: '1px solid red', -->
+    <!-- height: '75%', -->
     <HistoricalPlot
+      v-show="showHistorical"
       ref="historicalPlotRef"
-      :style="{ width: '500px', height: '300px', padding: '0px 10px' }"
+      :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
     />
-  </v-card>
+
+    <ForecastPlot
+      v-show="showForecast"
+      ref="forecastPlotRef"
+      :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
+    />
+  </div>
 </template>
-<!-- :timeseries="plot_timeseries" -->
-<!-- :title="plot_title" -->
 
 <script setup>
 import { ref, watch, nextTick, onUpdated, onMounted } from 'vue'
@@ -68,6 +93,7 @@ import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
+import ForecastPlot from '@/components/ForecastPlot.vue'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 
@@ -82,6 +108,7 @@ const showMetadata = ref(false)
 const showHistorical = ref(false)
 const showForecast = ref(false)
 const historicalPlotRef = ref(null)
+const forecastPlotRef = ref(null)
 
 // Watch the feature_id from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -144,19 +171,19 @@ onUpdated(async () => {
   }
 })
 
-const getCardStyle = () => {
-  if (!mdAndDown.value) {
-    return {
-      transform: 'translate(4vw, -37vh)', // top left of map
-      position: 'absolute',
-      color: 'black',
-      backgroundColor: 'transparent',
-      'z-index': '9999' // make sure if floats above the map
-    }
-  }
-  // TODO: implement styling and layout for mobile
-  return {}
-}
+//const getCardStyle = () => {
+//  if (!mdAndDown.value) {
+//    return {
+//      transform: 'translate(4vw, -37vh)', // top left of map
+//      position: 'absolute',
+//      color: 'black',
+//      backgroundColor: 'transparent',
+//      'z-index': '9999' // make sure if floats above the map
+//    }
+//  }
+//  // TODO: implement styling and layout for mobile
+//  return {}
+//}
 
 const toggleHistorical = async () => {
   // get the feature id from the active feature
@@ -189,6 +216,34 @@ const toggleHistorical = async () => {
   }
 }
 
+const toggleForecast = async () => {
+  // get the feature id from the active feature
+  console.log(featureStore.activeFeature)
+  let reach_id = featureStore.activeFeature?.properties?.feature_id ?? null
+  if (reach_id === undefined || reach_id === null) {
+    // if no feature is selected show a popup dialog
+    alertStore.displayAlert({
+      title: 'No River Reach Selected',
+      text: 'You must select a river reach on the map to view historical streamflow data.',
+      type: 'error',
+      closable: true,
+      duration: 5
+    })
+  } else {
+    showForecast.value = !showForecast.value
+
+    let datetime = new Date(Date.now() - 24 * 60 * 60 * 1000) // yesterday
+    let reach_name = featureStore.activeFeature.properties.name
+
+    await forecastPlotRef.value.getForecastData(
+      reach_id.toString(),
+      reach_name,
+      datetime,
+      'medium_range',
+      '3'
+    )
+  }
+}
 const reachIdChanged = async (selected_reach) => {
   console.log('Reach ID CHANGED!!!')
   if (selected_reach === undefined || selected_reach === null) {
@@ -201,8 +256,7 @@ const reachIdChanged = async (selected_reach) => {
   // update the historical plot when the selected reach changes
   // only if the historical component is visible
   if (showHistorical.value) {
-    // update historical plot when the selected reach changes
-    let start_date = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    let start_date = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // 90 days ago
     let end_date = new Date(Date.now())
     let reach_name = featureStore.activeFeature.properties.name
 
@@ -211,6 +265,21 @@ const reachIdChanged = async (selected_reach) => {
       reach_name,
       start_date,
       end_date
+    )
+  }
+
+  // update the forecast plot when the selected reach changes
+  // only if the forecast component is visible
+  if (showForecast.value) {
+    let datetime = new Date(Date.now() - 24 * 60 * 60 * 1000) // yesterday
+    let reach_name = featureStore.activeFeature.properties.name
+
+    await forecastPlotRef.value.getForecastData(
+      selected_reach.toString(),
+      reach_name,
+      datetime,
+      'medium_range',
+      '3'
     )
   }
 }
