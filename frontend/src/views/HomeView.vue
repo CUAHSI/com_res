@@ -20,12 +20,7 @@
           style="height: 400px"
           @click="handleCardClick(region)"
         >
-          <v-img
-            :src="region.image"
-            cover
-            :lazy-src="region.image"
-            style="max-height: 200px"
-          ></v-img>
+          <v-img :src="region.image" :lazy-src="region.image" style="max-height: 200px"></v-img>
           <v-card-title>
             <span>{{ region.title }}</span>
           </v-card-title>
@@ -41,19 +36,20 @@
 <script setup>
 import { loremIpsum } from 'lorem-ipsum'
 import { useRouter } from 'vue-router'
+import roaringRiver from '@/assets/roaring_river.png'
 
 const emit = defineEmits(['region-selected'])
 const router = useRouter()
 
 const regions = [
   {
-    image: 'https://picsum.photos/600/600?random=1',
-    title: 'Southwest Region',
+    image: roaringRiver,
+    title: 'Roaring River',
     text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1,
     bounds: [
-      [32.7157, -117.1611], // northEast (San Diego, CA)
-      [29.4241, -98.4936] // southWest (San Antonio, TX)
+      [36.276939501306224, -454.2379760742188],
+      [36.721273880045004, -453.2533264160157]
     ]
   },
   {
