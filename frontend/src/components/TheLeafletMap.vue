@@ -117,67 +117,67 @@ onMounted(() => {
     }
   })
 
-  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2'
-  const roaringRiverFeatures = esriLeaflet.featureLayer({
-    url: url,
-    simplifyFactor: 0.35,
-    precision: 5,
-    // minZoom: 9,
-    // maxZoom: 18,
-    style: function () {
-      return {
-        // weight: 0, // remove border
-        // fillOpacity: 0.7,
-        fill: true
-      }
-    },
-    fields: ['FID', 'MeanDepth', 'LakeVolume', 'PopupTitle', 'PopupSubti']
-  })
+  // url = 'https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2'
+  // const roaringRiverFeatures = esriLeaflet.featureLayer({
+  //   url: url,
+  //   simplifyFactor: 0.35,
+  //   precision: 5,
+  //   // minZoom: 9,
+  //   // maxZoom: 18,
+  //   style: function () {
+  //     return {
+  //       // weight: 0, // remove border
+  //       // fillOpacity: 0.7,
+  //       fill: true
+  //     }
+  //   },
+  //   fields: ['FID', 'MeanDepth', 'LakeVolume', 'PopupTitle', 'PopupSubti']
+  // })
 
-  roaringRiverFeatures.on('click', function (e) {
-    console.log(e.layer.feature.properties)
-    const popup = L.popup()
-    const content = `
-        <h3>${e.layer.feature.properties.PopupTitle}</h3>
-        <h4>${e.layer.feature.properties.PopupSubti}</h4>
-        <p>
-            <ul>
-                <li>MeanDepth: ${e.layer.feature.properties.MeanDepth}</li>
-                <li>LakeVolume: ${e.layer.feature.properties.LakeVolume}</li>
-            </ul>
-        </p>
-        <p>
-            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
-        </p>
-        `
-    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
+  // roaringRiverFeatures.on('click', function (e) {
+  //   console.log(e.layer.feature.properties)
+  //   const popup = L.popup()
+  //   const content = `
+  //       <h3>${e.layer.feature.properties.PopupTitle}</h3>
+  //       <h4>${e.layer.feature.properties.PopupSubti}</h4>
+  //       <p>
+  //           <ul>
+  //               <li>MeanDepth: ${e.layer.feature.properties.MeanDepth}</li>
+  //               <li>LakeVolume: ${e.layer.feature.properties.LakeVolume}</li>
+  //           </ul>
+  //       </p>
+  //       <p>
+  //           <a href="https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
+  //       </p>
+  //       `
+  //   popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
 
-    roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
-      color: '#9D78D2'
-    })
+  //   roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
+  //     color: '#9D78D2'
+  //   })
 
-    popup.on('remove', function () {
-      roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
-        color: '#3388ff'
-      })
-    })
-  })
+  //   popup.on('remove', function () {
+  //     roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
+  //       color: '#3388ff'
+  //     })
+  //   })
+  // })
 
-  url = 'https://arcgis.cuahsi.org/arcgis/services/test/RoaringRiver/MapServer/WmsServer?'
-  let roaringRiverWMS = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 13 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minReachSelectionZoom
-    // maxZoom: minReachSelectionZoom
-  })
+  // url = 'https://arcgis.cuahsi.org/arcgis/services/test/RoaringRiver/MapServer/WmsServer?'
+  // let roaringRiverWMS = L.tileLayer.wms(url, {
+  //   layers: Array.from({ length: 13 }, (_, i) => i),
+  //   transparent: 'true',
+  //   format: 'image/png',
+  //   minZoom: minReachSelectionZoom
+  //   // maxZoom: minReachSelectionZoom
+  // })
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
   gages.addTo(mapStore.leaflet)
   flowlines.addTo(mapStore.leaflet)
-  roaringRiverWMS.addTo(mapStore.leaflet)
-  roaringRiverFeatures.addTo(mapStore.leaflet)
+  // roaringRiverWMS.addTo(mapStore.leaflet)
+  // roaringRiverFeatures.addTo(mapStore.leaflet)
   flowlinesFeatures.addTo(mapStore.leaflet)
 
   // layer toggling
@@ -185,9 +185,9 @@ onMounted(() => {
     'USGS Gages': gages,
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
-    'Flowlines Features': flowlinesFeatures,
-    'Roaring River Features': roaringRiverFeatures,
-    'Roaring River WMS': roaringRiverWMS
+    'Flowlines Features': flowlinesFeatures
+    // 'Roaring River Features': roaringRiverFeatures,
+    // 'Roaring River WMS': roaringRiverWMS
   }
 
   // /*
