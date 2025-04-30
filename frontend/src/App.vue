@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <AlertPopup v-bind="alertStore.displayed" :style="{'z-index':'999999'}"></AlertPopup>
+      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '999999' }"></AlertPopup>
       <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />
       <TheMobileNavDrawer
         @toggle-mobile-nav="toggleMobileNav"

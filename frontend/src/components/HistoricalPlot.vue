@@ -1,8 +1,5 @@
-
 <template>
-  <LinePlot :timeseries="plot_timeseries"
-            :title="plot_title"
-            :style="plot_style" />
+  <LinePlot :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
 </template>
 
 <script setup>
@@ -22,7 +19,6 @@ import {
   Filler
 } from 'chart.js'
 
-
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
 const plot_timeseries = ref([])
@@ -31,20 +27,11 @@ const plot_style = ref()
 const isLoading = ref(false)
 const error = ref(null)
 
-// Define the chart data to be rendered in the component
-const props = defineProps({
-  timeseries: {
-    type: Array,
-    required: true
-  },
-  title: {
-    type: String,
-    default: 'TEST'
-  },
-  options: {
-  }
-})
-
+const clearPlot = () => {
+  plot_timeseries.value = []
+  plot_title.value = ''
+  plot_style.value = {}
+}
 
 const getHistoricalData = async (reach_id, name, start_date, end_date) => {
   try {
@@ -65,8 +52,6 @@ const getHistoricalData = async (reach_id, name, start_date, end_date) => {
 
     const data = await response.json()
     plot_timeseries.value = Object.entries(data).map(([x, y]) => ({ x, y }))
-  
-
   } catch (err) {
     error.value = `Failed to load data: ${err.message}`
     console.error('API error:', err)
@@ -74,10 +59,11 @@ const getHistoricalData = async (reach_id, name, start_date, end_date) => {
     isLoading.value = false
   }
 
-  plot_title.value = 'Historical Streamflow - ' + name 
+  plot_title.value = 'Historical Streamflow - ' + name
 }
 
 defineExpose({
-  getHistoricalData
+  getHistoricalData,
+  clearPlot
 })
 </script>
