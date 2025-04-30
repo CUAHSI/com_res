@@ -118,7 +118,7 @@ onMounted(() => {
     }
   })
 
-  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/0'
+  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2'
   const roaringRiverFeatures = esriLeaflet.featureLayer({
     url: url,
     simplifyFactor: 0.35,
@@ -127,32 +127,29 @@ onMounted(() => {
     // maxZoom: 18,
     style: function () {
       return {
-        weight: 0, // remove border
-        fillOpacity: 0.7,
+        // weight: 0, // remove border
+        // fillOpacity: 0.7,
         fill: true
       }
-    }
-    // fields: ["FID", "ZIP", "PO_NAME"],
+    },
+    fields: ['FID', 'MeanDepth', 'LakeVolume', 'PopupTitle', 'PopupSubti']
   })
 
   roaringRiverFeatures.on('click', function (e) {
     console.log(e.layer.feature.properties)
     const popup = L.popup()
     const content = `
-        <h3>${e.layer.feature.properties.names}</h3>
-        <h4>Lake ID: ${e.layer.feature.properties.lake_id}</h4>
+        <h3>${e.layer.feature.properties.PopupTitle}</h3>
+        <h4>${e.layer.feature.properties.PopupSubti}</h4>
         <p>
             <ul>
-                <li>SWORD Max Area: ${e.layer.feature.properties.max_area}</li>
-                <li>SWORD Basin: ${e.layer.feature.properties.basin_id}</li>
+                <li>MeanDepth: ${e.layer.feature.properties.MeanDepth}</li>
+                <li>LakeVolume: ${e.layer.feature.properties.LakeVolume}</li>
             </ul>
         </p>
         <p>
-            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/SWOT/world_swot_lakes/FeatureServer/0/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
+            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
         </p>
-        <h5>
-            More lake data coming soon...
-        </h5>
         `
     popup.setLatLng(e.latlng).setContent(content).openOn(leaflet)
 
@@ -171,18 +168,18 @@ onMounted(() => {
   let roaringRiverWMS = L.tileLayer.wms(url, {
     layers: Array.from({ length: 13 }, (_, i) => i),
     transparent: 'true',
-    format: 'image/png'
-    // minZoom: 0,
-    // maxZoom: 9
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+    // maxZoom: minReachSelectionZoom
   })
 
   Esri_WorldImagery.addTo(leaflet)
   Esri_Hydro_Reference_Overlay.addTo(leaflet)
   gages.addTo(leaflet)
   flowlines.addTo(leaflet)
-  flowlinesFeatures.addTo(leaflet)
-  roaringRiverFeatures.addTo(leaflet)
   roaringRiverWMS.addTo(leaflet)
+  roaringRiverFeatures.addTo(leaflet)
+  flowlinesFeatures.addTo(leaflet)
 
   // layer toggling
   let mixed = {
