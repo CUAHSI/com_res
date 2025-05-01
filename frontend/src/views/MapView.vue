@@ -62,7 +62,7 @@
 <!-- :title="plot_title" -->
 
 <script setup>
-import { ref, watch, nextTick, onUpdated, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
@@ -95,20 +95,6 @@ watch(
   }
 )
 
-const zoomToBounds = (bounds) => {
-  if (bounds) {
-    const parsedBounds = JSON.parse(bounds)
-    try {
-      console.log(`Zooming to bounds: ${parsedBounds}`)
-      mapStore.leaflet.fitBounds(parsedBounds)
-    } catch (error) {
-      console.warn('Error parsing bounds:', error)
-    }
-  } else {
-    alert('No bounds provided')
-  }
-}
-
 onMounted(() => {
   // update the route query params when the map is zoomed
   try {
@@ -131,16 +117,6 @@ onMounted(() => {
     })
   } catch (error) {
     console.warn('Error setting up zoomend event listener:', error)
-  }
-})
-
-onUpdated(async () => {
-  await nextTick()
-  // check to see if map bounds and zoom are set on the route query params
-  const route = router.currentRoute.value
-  const { bounds } = route.query
-  if (bounds) {
-    zoomToBounds(bounds)
   }
 })
 
