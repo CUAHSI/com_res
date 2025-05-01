@@ -174,13 +174,23 @@ onMounted(() => {
     // maxZoom: minReachSelectionZoom
   })
 
+  url = 'https://arcgis.cuahsi.org/arcgis/services/DeSotoCity/MapServer/WmsServer?'
+  const desotoCityWMS = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 8 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+    // maxZoom: minReachSelectionZoom
+  })
+
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
   gages.addTo(mapStore.leaflet)
   flowlines.addTo(mapStore.leaflet)
+  flowlinesFeatures.addTo(mapStore.leaflet)
   roaringRiverWMS.addTo(mapStore.leaflet)
   roaringRiverFeatures.addTo(mapStore.leaflet)
-  flowlinesFeatures.addTo(mapStore.leaflet)
+  desotoCityWMS.addTo(mapStore.leaflet)
 
   // layer toggling
   let mixed = {
@@ -189,7 +199,8 @@ onMounted(() => {
     'Flowlines WMS': flowlines,
     'Flowlines Features': flowlinesFeatures,
     'Roaring River Features': roaringRiverFeatures,
-    'Roaring River WMS': roaringRiverWMS
+    'Roaring River WMS': roaringRiverWMS,
+    'DeSoto City WMS': desotoCityWMS
   }
 
   // /*

@@ -37,6 +37,7 @@
 import { loremIpsum } from 'lorem-ipsum'
 import { useRouter } from 'vue-router'
 import roaringRiver from '@/assets/roaring_river.png'
+import deSotoCity from '@/assets/de_soto_city.png'
 
 const emit = defineEmits(['region-selected'])
 const router = useRouter()
@@ -53,13 +54,13 @@ const regions = [
     ]
   },
   {
-    image: 'https://picsum.photos/600/600?random=2',
-    title: 'Northeast Region',
+    image: deSotoCity,
+    title: 'DeSoto City',
     text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1,
     bounds: [
-      [42.3601, -71.0589], // northEast (Boston, MA)
-      [40.7128, -74.006] // southWest (New York, NY)
+      [32.520183997176844, -97.60597229003908],
+      [32.96258644191747, -96.29310607910158]
     ]
   },
   {
@@ -78,6 +79,8 @@ const handleCardClick = (region) => {
 
   // Emit an event to the parent component with the selected region's bounds
   emit('region-selected', { bounds })
+
+  // TODO: add/remove the relevant wms layers to the map?
 
   // Use the router to navigate to the maps view
   router.push({
