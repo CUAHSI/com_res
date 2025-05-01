@@ -98,7 +98,7 @@ watch(
 onMounted(() => {
   // update the route query params when the map is zoomed
   try {
-    mapStore.leaflet.on('zoomend', () => {
+    mapStore.leaflet.on('zoomend moveend', () => {
       const bounds = mapStore.leaflet.getBounds()
       // convert the bounds to a format that can be used in the URL
       const boundsString = JSON.stringify([

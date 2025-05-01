@@ -3,6 +3,7 @@ import { ref, shallowRef } from 'vue'
 
 export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
+  const wmsLayers = ref([])
   const mapObject = ref(new Map())
   const featureOptions = ref({
     selectedColor: 'red',
@@ -59,6 +60,17 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
+  const toggleWMSLayer = (layerName) => {
+    // turn off all other wms layers and turn on the selected one
+    wmsLayers.value.forEach((wmsLayer) => {
+      if (wmsLayer.name !== layerName) {
+        wmsLayer.removeFrom(leaflet.value)
+      } else {
+        wmsLayer.addTo(leaflet.value)
+      }
+    })
+  }
+
   return {
     mapObject,
     mapLoaded,
@@ -67,6 +79,8 @@ export const useMapStore = defineStore('map', () => {
     clearAllFeatures,
     zoomToBounds,
     featureOptions,
-    leaflet
+    leaflet,
+    wmsLayers,
+    toggleWMSLayer
   }
 })

@@ -15,7 +15,7 @@ import { useAlertStore } from '@/stores/alerts'
 import { GIS_SERVICES_URL } from '@/constants'
 
 const mapStore = useMapStore()
-const { mapObject } = storeToRefs(mapStore)
+const { mapObject, wmsLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
@@ -171,26 +171,30 @@ onMounted(() => {
     transparent: 'true',
     format: 'image/png',
     minZoom: minReachSelectionZoom
-    // maxZoom: minReachSelectionZoom
   })
+  roaringRiverWMS.name = 'roaringRiverWMS'
+  wmsLayers.value.push(roaringRiverWMS)
 
   url = 'https://arcgis.cuahsi.org/arcgis/services/DeSotoCity/MapServer/WmsServer?'
-  const desotoCityWMS = L.tileLayer.wms(url, {
+  const deSotoCityWMS = L.tileLayer.wms(url, {
     layers: Array.from({ length: 8 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
     minZoom: minReachSelectionZoom
-    // maxZoom: minReachSelectionZoom
   })
+  deSotoCityWMS.name = 'deSotoCityWMS'
+  wmsLayers.value.push(deSotoCityWMS)
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
   gages.addTo(mapStore.leaflet)
   flowlines.addTo(mapStore.leaflet)
   flowlinesFeatures.addTo(mapStore.leaflet)
-  roaringRiverWMS.addTo(mapStore.leaflet)
   roaringRiverFeatures.addTo(mapStore.leaflet)
-  desotoCityWMS.addTo(mapStore.leaflet)
+
+  for (let layer of wmsLayers.value) {
+    layer.addTo(mapStore.leaflet)
+  }
 
   // layer toggling
   let mixed = {
@@ -200,7 +204,7 @@ onMounted(() => {
     'Flowlines Features': flowlinesFeatures,
     'Roaring River Features': roaringRiverFeatures,
     'Roaring River WMS': roaringRiverWMS,
-    'DeSoto City WMS': desotoCityWMS
+    'DeSoto City WMS': deSotoCityWMS
   }
 
   // /*

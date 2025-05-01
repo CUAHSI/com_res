@@ -38,14 +38,17 @@ import { loremIpsum } from 'lorem-ipsum'
 import { useRouter } from 'vue-router'
 import roaringRiver from '@/assets/roaring_river.png'
 import deSotoCity from '@/assets/de_soto_city.png'
+import { useMapStore } from '@/stores/map'
 
 const emit = defineEmits(['region-selected'])
 const router = useRouter()
+const mapStore = useMapStore()
 
 const regions = [
   {
     image: roaringRiver,
     title: 'Roaring River',
+    wmsName: 'roaringRiverWMS',
     text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1,
     bounds: [
@@ -56,11 +59,12 @@ const regions = [
   {
     image: deSotoCity,
     title: 'DeSoto City',
+    wmsName: 'deSotoCityWMS',
     text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1,
     bounds: [
-      [32.520183997176844, -97.60597229003908],
-      [32.96258644191747, -96.29310607910158]
+      [37.943656003248094, -90.98327636718751],
+      [38.35727256417359, -89.67041015625001]
     ]
   },
   {
@@ -80,7 +84,11 @@ const handleCardClick = (region) => {
   // Emit an event to the parent component with the selected region's bounds
   emit('region-selected', { bounds })
 
-  // TODO: add/remove the relevant wms layers to the map?
+  // add/remove wms from the map
+  const wmsName = region.wmsName
+  if (wmsName) {
+    mapStore.toggleWMSLayer(wmsName)
+  }
 
   // Use the router to navigate to the maps view
   router.push({
