@@ -29,7 +29,7 @@ build:
 	docker compose build
 
 .PHONY: build-all
-build:
+build-all:
 	docker compose build
 	cd frontend && npm install
 
