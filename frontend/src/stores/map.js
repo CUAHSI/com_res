@@ -42,9 +42,8 @@ export const useMapStore = defineStore('map', () => {
     })
   }
 
-  const zoomToBounds = (bounds) => {
-    if (bounds) {
-      const parsedBounds = JSON.parse(bounds)
+  const zoomToBounds = (parsedBounds) => {
+    if (parsedBounds) {
       try {
         console.log(`Zooming to bounds: ${parsedBounds}`)
         leaflet.value.fitBounds(parsedBounds)

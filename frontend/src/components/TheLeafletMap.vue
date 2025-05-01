@@ -172,7 +172,7 @@ onMounted(() => {
     format: 'image/png',
     minZoom: minReachSelectionZoom
   })
-  roaringRiverWMS.name = 'roaringRiverWMS'
+  roaringRiverWMS.name = 'roaringRiver'
   wmsLayers.value.push(roaringRiverWMS)
 
   url = 'https://arcgis.cuahsi.org/arcgis/services/DeSotoCity/MapServer/WmsServer?'
@@ -182,7 +182,7 @@ onMounted(() => {
     format: 'image/png',
     minZoom: minReachSelectionZoom
   })
-  deSotoCityWMS.name = 'deSotoCityWMS'
+  deSotoCityWMS.name = 'deSotoCity'
   wmsLayers.value.push(deSotoCityWMS)
 
   Esri_WorldImagery.addTo(mapStore.leaflet)

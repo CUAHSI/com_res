@@ -13,7 +13,7 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col v-for="region in regions" :key="region.text">
+      <v-col v-for="region in regionsStore.regions" :key="region.text">
         <v-card
           class="pa-2"
           color="secondary"
@@ -36,66 +36,23 @@
 <script setup>
 import { loremIpsum } from 'lorem-ipsum'
 import { useRouter } from 'vue-router'
-import roaringRiver from '@/assets/roaring_river.png'
-import deSotoCity from '@/assets/de_soto_city.png'
-import { useMapStore } from '@/stores/map'
+import { useRegionsStore } from '../stores/regions'
 
 const emit = defineEmits(['region-selected'])
 const router = useRouter()
-const mapStore = useMapStore()
+const regionsStore = useRegionsStore()
 
-const regions = [
-  {
-    image: roaringRiver,
-    title: 'Roaring River',
-    wmsName: 'roaringRiverWMS',
-    text: loremIpsum({ count: 1, units: 'paragraph' }),
-    flex: 1,
-    bounds: [
-      [36.30350540784278, -94.43161010742188],
-      [36.726227169488475, -93.11874389648438]
-    ]
-  },
-  {
-    image: deSotoCity,
-    title: 'DeSoto City',
-    wmsName: 'deSotoCityWMS',
-    text: loremIpsum({ count: 1, units: 'paragraph' }),
-    flex: 1,
-    bounds: [
-      [37.943656003248094, -90.98327636718751],
-      [38.35727256417359, -89.67041015625001]
-    ]
-  },
-  {
-    image: 'https://picsum.photos/600/600?random=3',
-    title: 'Florida Region',
-    wmsName: 'floridaRegionWMS',
-    text: loremIpsum({ count: 1, units: 'paragraph' }),
-    flex: 1,
-    bounds: [
-      [27.9944, -81.7603], // northEast (Central Florida)
-      [25.7617, -80.1918] // southWest (Miami, FL)
-    ]
-  }
-]
 const handleCardClick = (region) => {
   const bounds = region.bounds
 
   // Emit an event to the parent component with the selected region's bounds
   emit('region-selected', { bounds })
 
-  // add/remove wms from the map
-  const wmsName = region.wmsName
-  if (wmsName) {
-    mapStore.toggleWMSLayer(wmsName)
-  }
-
   // Use the router to navigate to the maps view
   router.push({
     name: 'maps',
     query: {
-      bounds: JSON.stringify(bounds)
+      region: region.name
     }
   })
 }

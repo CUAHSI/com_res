@@ -49,8 +49,7 @@
 <!-- :title="plot_title" -->
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
@@ -59,7 +58,6 @@ import { useAlertStore } from '@/stores/alerts'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
-const router = useRouter()
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -80,31 +78,6 @@ watch(
     }
   }
 )
-
-onMounted(() => {
-  // update the route query params when the map is zoomed
-  try {
-    mapStore.leaflet.on('zoomend moveend', () => {
-      const bounds = mapStore.leaflet.getBounds()
-      // convert the bounds to a format that can be used in the URL
-      const boundsString = JSON.stringify([
-        [bounds._southWest.lat, bounds._southWest.lng],
-        [bounds._northEast.lat, bounds._northEast.lng]
-      ])
-
-      const routeQuery = {
-        query: {
-          ...router.currentRoute.value.query,
-          bounds: boundsString
-        }
-      }
-      // update the URL without reloading the page
-      router.replace(routeQuery)
-    })
-  } catch (error) {
-    console.warn('Error setting up zoomend event listener:', error)
-  }
-})
 
 const getCardStyle = () => {
   if (!mdAndDown.value) {
