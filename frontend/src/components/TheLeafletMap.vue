@@ -48,6 +48,7 @@ onMounted(() => {
   let CartoDB_PositronNoLabels = L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
     {
+      noWrap: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
@@ -58,6 +59,7 @@ onMounted(() => {
   let url =
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
   let Esri_WorldImagery = L.tileLayer(url, {
+    noWrap: true,
     variant: 'World_Imagery',
     attribution: 'Esri',
     maxZoom: 18,
