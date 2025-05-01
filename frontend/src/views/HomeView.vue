@@ -70,6 +70,7 @@ const regions = [
   {
     image: 'https://picsum.photos/600/600?random=3',
     title: 'Florida Region',
+    wmsName: 'floridaRegionWMS',
     text: loremIpsum({ count: 1, units: 'paragraph' }),
     flex: 1,
     bounds: [

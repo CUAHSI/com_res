@@ -3,19 +3,6 @@
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
 
-  <v-container v-if="!mdAndDown" fluid>
-    <v-row fill-height style="height: calc(100vh - 165px)">
-      <v-col style="padding: 0px; margin: 0px">
-        <TheLeafletMap />
-      </v-col>
-    </v-row>
-  </v-container>
-  <v-container v-else>
-    <v-row style="height: 40vh">
-      <TheLeafletMap />
-    </v-row>
-  </v-container>
-
   <v-card location="left" :style="getCardStyle()" max-width="500" max-height="145">
     <v-btn
       style="margin-right: 10px"
@@ -64,7 +51,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
