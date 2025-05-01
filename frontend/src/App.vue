@@ -24,16 +24,19 @@
 </template>
 
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import TheAppBar from './components/TheAppBar.vue'
 import TheMobileNavDrawer from '@/components/TheMobileNavDrawer.vue'
 import AlertPopup from './components/AlertPopup.vue'
 import SnackBar from './components/SnackBar.vue'
 import TheFooter from './components/TheFooter.vue'
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useAlertStore } from './stores/alerts'
+import { useMapStore } from './stores/map'
 
+const router = useRouter()
 const alertStore = useAlertStore()
+const mapStore = useMapStore()
 
 let showMobileNavigation = ref(false)
 const paths = [
@@ -62,6 +65,19 @@ const paths = [
 function toggleMobileNav() {
   showMobileNavigation.value = !showMobileNavigation.value
 }
+
+watch(
+  () => router.currentRoute.value.path,
+  async (path) => {
+    if (path === '/maps') {
+      const { bounds } = router.currentRoute.value.query
+      if (bounds) {
+        await nextTick()
+        mapStore.zoomToBounds(bounds)
+      }
+    }
+  }
+)
 </script>
 
 <style scoped>

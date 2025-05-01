@@ -41,12 +41,31 @@ export const useMapStore = defineStore('map', () => {
     })
   }
 
+  const zoomToBounds = (bounds) => {
+    if (bounds) {
+      const parsedBounds = JSON.parse(bounds)
+      try {
+        console.log(`Zooming to bounds: ${parsedBounds}`)
+        leaflet.value.fitBounds(parsedBounds)
+        // prevent panning from bounds
+        leaflet.value.setMaxBounds(parsedBounds)
+        // prevent zooming out
+        leaflet.value.setMinZoom(leaflet.value.getZoom())
+      } catch (error) {
+        console.warn('Error parsing bounds:', error)
+      }
+    } else {
+      alert('No bounds provided')
+    }
+  }
+
   return {
     mapObject,
     mapLoaded,
     deselectFeature,
     selectFeature,
     clearAllFeatures,
+    zoomToBounds,
     featureOptions,
     leaflet
   }
