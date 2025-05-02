@@ -16,8 +16,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [36.30350540784278, -94.43161010742188],
-        [36.726227169488475, -93.11874389648438]
+        [36.28081425933677, -94.21875],
+        [36.74878811183201, -93.33160400390625]
       ]
     },
     {
@@ -27,8 +27,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [37.943656003248094, -90.98327636718751],
-        [38.35727256417359, -89.67041015625001]
+        [37.921451170095295, -90.9132385253906],
+        [38.3793451359944, -90.02609252929689]
       ]
     },
     {
@@ -53,7 +53,7 @@ export const useRegionsStore = defineStore('regions', () => {
     currentRegion.value = region
     mapStore.toggleWMSLayer(region.name)
     await nextTick()
-    mapStore.zoomToBounds(region.bounds)
+    mapStore.limitToBounds(region.bounds)
   }
 
   return {

@@ -42,7 +42,7 @@ export const useMapStore = defineStore('map', () => {
     })
   }
 
-  const zoomToBounds = (parsedBounds) => {
+  const limitToBounds = (parsedBounds) => {
     if (parsedBounds) {
       try {
         console.log(`Zooming to bounds: ${parsedBounds}`)
@@ -76,7 +76,7 @@ export const useMapStore = defineStore('map', () => {
     deselectFeature,
     selectFeature,
     clearAllFeatures,
-    zoomToBounds,
+    limitToBounds,
     featureOptions,
     leaflet,
     wmsLayers,
