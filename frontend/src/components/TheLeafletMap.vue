@@ -12,14 +12,13 @@ import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
-import { GIS_SERVICES_URL } from '@/constants'
 
 const mapStore = useMapStore()
 const { mapObject, wmsLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
-const minReachSelectionZoom = 11
+const minReachSelectionZoom = 9
 
 onUpdated(() => {
   mapStore.leaflet.invalidateSize()
@@ -71,16 +70,6 @@ onMounted(() => {
     'CartoDB Positron No Labels': CartoDB_PositronNoLabels
   }
 
-  // add USGS gage layer to map
-  url = `${GIS_SERVICES_URL}/NHD/usgs_gages/MapServer/WmsServer?`
-  let gages = L.tileLayer.wms(url, {
-    layers: 0,
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: 9,
-    maxZoom: 18
-  })
-
   // add the NOAA flowlines wms
   url =
     'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer'
@@ -119,7 +108,8 @@ onMounted(() => {
     }
   })
 
-  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2'
+  url =
+    'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/RoaringRiverStatePark/FeatureServer/1'
   const roaringRiverFeatures = esriLeaflet.featureLayer({
     url: url,
     simplifyFactor: 0.35,
@@ -149,7 +139,7 @@ onMounted(() => {
             </ul>
         </p>
         <p>
-            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/test/RoaringRiver/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
+            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/RoaringRiverStatePark/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
         </p>
         `
     popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
@@ -165,7 +155,8 @@ onMounted(() => {
     })
   })
 
-  url = 'https://arcgis.cuahsi.org/arcgis/services/test/RoaringRiver/MapServer/WmsServer?'
+  url =
+    'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/RoaringRiverStatePark/MapServer/WmsServer?'
   let roaringRiverWMS = L.tileLayer.wms(url, {
     layers: Array.from({ length: 13 }, (_, i) => i),
     transparent: 'true',
@@ -175,19 +166,61 @@ onMounted(() => {
   roaringRiverWMS.name = 'roaringRiver'
   wmsLayers.value.push(roaringRiverWMS)
 
-  url = 'https://arcgis.cuahsi.org/arcgis/services/DeSotoCity/MapServer/WmsServer?'
-  const deSotoCityWMS = L.tileLayer.wms(url, {
+  url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/DeSoto/MapServer/WmsServer?'
+  const deSotoWMS = L.tileLayer.wms(url, {
     layers: Array.from({ length: 8 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
     minZoom: minReachSelectionZoom
   })
-  deSotoCityWMS.name = 'deSotoCity'
-  wmsLayers.value.push(deSotoCityWMS)
+  deSotoWMS.name = 'deSoto'
+  wmsLayers.value.push(deSotoWMS)
+
+  url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/MountAscutney/MapServer/WmsServer?'
+  const mountAscutneyWMS = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+  })
+  mountAscutneyWMS.name = 'mountAscutney'
+  wmsLayers.value.push(mountAscutneyWMS)
+
+  url =
+    'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/SpringfieldGreeneCounty/MapServer/WmsServer?'
+  const springfieldGreeneCountyWMS = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+  })
+  springfieldGreeneCountyWMS.name = 'springfieldGreeneCounty'
+  wmsLayers.value.push(springfieldGreeneCountyWMS)
+
+  let region = 'TwoRiversOttauquechee'
+  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region}/MapServer/WmsServer?`
+  const TwoRiversOttauquechee = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+  })
+  TwoRiversOttauquechee.name = region
+  wmsLayers.value.push(TwoRiversOttauquechee)
+
+  region = 'Windham'
+  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region}/MapServer/WmsServer?`
+  const Windham = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+  })
+  Windham.name = region
+  wmsLayers.value.push(Windham)
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
-  gages.addTo(mapStore.leaflet)
   flowlines.addTo(mapStore.leaflet)
   flowlinesFeatures.addTo(mapStore.leaflet)
   roaringRiverFeatures.addTo(mapStore.leaflet)
@@ -198,13 +231,16 @@ onMounted(() => {
 
   // layer toggling
   let mixed = {
-    'USGS Gages': gages,
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
     'Flowlines Features': flowlinesFeatures,
     'Roaring River Features': roaringRiverFeatures,
     'Roaring River WMS': roaringRiverWMS,
-    'DeSoto City WMS': deSotoCityWMS
+    'DeSoto WMS': deSotoWMS,
+    'Mount Ascutney WMS': mountAscutneyWMS,
+    'Springfield Greene County WMS': springfieldGreeneCountyWMS,
+    'Two Rivers Ottauquechee WMS': TwoRiversOttauquechee,
+    'Windham WMS': Windham
   }
 
   // /*

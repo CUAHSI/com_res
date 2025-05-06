@@ -2,7 +2,11 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { loremIpsum } from 'lorem-ipsum'
 import roaringRiver from '@/assets/roaring_river.png'
-import deSotoCity from '@/assets/de_soto_city.png'
+import deSoto from '@/assets/de_soto.png'
+import springfieldGreeneCounty from '@/assets/springfield_greene_county.png'
+import mountAscutney from '@/assets/mount_ascutney.png'
+import TwoRiversOttauquechee from '@/assets/TwoRiversOttauquechee.png'
+import Windham from '@/assets/Windham.png'
 import { useMapStore } from '@/stores/map'
 import { nextTick } from 'vue'
 
@@ -21,9 +25,9 @@ export const useRegionsStore = defineStore('regions', () => {
       ]
     },
     {
-      image: deSotoCity,
-      title: 'DeSoto City',
-      name: 'deSotoCity',
+      image: deSoto,
+      title: 'DeSoto',
+      name: 'deSoto',
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
@@ -32,14 +36,47 @@ export const useRegionsStore = defineStore('regions', () => {
       ]
     },
     {
-      image: 'https://picsum.photos/600/600?random=3',
-      title: 'Florida Region',
-      name: 'floridaRegion',
+      image: mountAscutney,
+      title: 'Mount Ascutney',
+      name: 'mountAscutney',
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [27.9944, -81.7603], // northEast (Central Florida)
-        [25.7617, -80.1918] // southWest (Miami, FL)
+        [43.158110622265646, -73.86108398437501],
+        [43.695679697898825, -71.22436523437501]
+      ]
+    },
+    {
+      image: springfieldGreeneCounty,
+      title: 'Springfield Greene County',
+      name: 'springfieldGreeneCounty',
+      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      flex: 1,
+      bounds: [
+        [37.09407380187568, -93.89739990234376],
+        [37.41107339721063, -92.66693115234376]
+      ]
+    },
+    {
+      image: TwoRiversOttauquechee,
+      title: 'Two Rivers Ottauquechee',
+      name: 'TwoRiversOttauquechee',
+      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      flex: 1,
+      bounds: [
+        [43.49286979803711, -73.71688842773439],
+        [44.067939826463416, -71.25595092773439]
+      ]
+    },
+    {
+      image: Windham,
+      title: 'Windham',
+      name: 'Windham',
+      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      flex: 1,
+      bounds: [
+        [42.688659727756516, -73.96682739257814],
+        [43.27137193916127, -71.50588989257814]
       ]
     }
   ])
