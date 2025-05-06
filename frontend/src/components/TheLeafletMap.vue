@@ -281,6 +281,16 @@ onMounted(() => {
     mapClick(e)
   })
 
+  mapStore.leaflet.on('zoomend moveend', () => {
+    const bounds = mapStore.leaflet.getBounds()
+    // convert the bounds to a format that can be used in the URL
+    const boundsString = JSON.stringify([
+      [bounds._southWest.lat, bounds._southWest.lng],
+      [bounds._northEast.lat, bounds._northEast.lng]
+    ])
+    console.log('Bounds:', boundsString)
+  })
+
   mapStore.mapLoaded = true
 })
 

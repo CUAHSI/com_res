@@ -20,8 +20,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [36.28081425933677, -94.21875],
-        [36.74878811183201, -93.33160400390625]
+        [36.32563675305861, -94.43092346191406],
+        [36.74823792383878, -93.11943054199219]
       ]
     },
     {
@@ -31,8 +31,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [37.921451170095295, -90.9132385253906],
-        [38.3793451359944, -90.02609252929689]
+        [37.96260604160774, -91.12541198730469],
+        [38.37611542403604, -89.81391906738283]
       ]
     },
     {
@@ -42,8 +42,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [43.158110622265646, -73.86108398437501],
-        [43.695679697898825, -71.22436523437501]
+        [43.043801776082425, -73.84735107421876],
+        [43.807774213873806, -71.22436523437501]
       ]
     },
     {
@@ -53,8 +53,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [37.09407380187568, -93.89739990234376],
-        [37.41107339721063, -92.66693115234376]
+        [36.83346996591306, -94.59365844726564],
+        [37.67077737288316, -91.97067260742188]
       ]
     },
     {
@@ -64,8 +64,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [43.49286979803711, -73.71688842773439],
-        [44.067939826463416, -71.25595092773439]
+        [43.02071359427862, -75.10803222656251],
+        [44.53959000445632, -69.86206054687501]
       ]
     },
     {
@@ -75,8 +75,8 @@ export const useRegionsStore = defineStore('regions', () => {
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [42.688659727756516, -73.96682739257814],
-        [43.27137193916127, -71.50588989257814]
+        [42.20614200929957, -75.35797119140626],
+        [43.74530493763506, -70.11199951171876]
       ]
     }
   ])
