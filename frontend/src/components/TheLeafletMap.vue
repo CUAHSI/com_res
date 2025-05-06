@@ -12,11 +12,13 @@ import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
+import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
 const { mapObject, wmsLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
+const regionsStore = useRegionsStore()
 
 const minReachSelectionZoom = 9
 
@@ -166,15 +168,19 @@ onMounted(() => {
   roaringRiverWMS.name = 'roaringRiver'
   wmsLayers.value.push(roaringRiverWMS)
 
-  url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/DeSoto/MapServer/WmsServer?'
-  const deSotoWMS = L.tileLayer.wms(url, {
+  // TODO: DRC take this approach for all the other regions!
+  let name = 'DeSoto'
+  let bounds = regionsStore.getRegionBounds(name)
+  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${name}/MapServer/WmsServer?`
+  const DeSoto = L.tileLayer.wms(url, {
     layers: Array.from({ length: 8 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: minReachSelectionZoom,
+    bounds: bounds
   })
-  deSotoWMS.name = 'deSoto'
-  wmsLayers.value.push(deSotoWMS)
+  DeSoto.name = 'DeSoto'
+  wmsLayers.value.push(DeSoto)
 
   url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/MountAscutney/MapServer/WmsServer?'
   const mountAscutneyWMS = L.tileLayer.wms(url, {
@@ -236,7 +242,7 @@ onMounted(() => {
     'Flowlines Features': flowlinesFeatures,
     'Roaring River Features': roaringRiverFeatures,
     'Roaring River WMS': roaringRiverWMS,
-    'DeSoto WMS': deSotoWMS,
+    'DeSoto WMS': DeSoto,
     'Mount Ascutney WMS': mountAscutneyWMS,
     'Springfield Greene County WMS': springfieldGreeneCountyWMS,
     'Two Rivers Ottauquechee WMS': TwoRiversOttauquechee,

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { loremIpsum } from 'lorem-ipsum'
 import roaringRiver from '@/assets/roaring_river.png'
-import deSoto from '@/assets/de_soto.png'
+import DeSoto from '@/assets/DeSoto.png'
 import springfieldGreeneCounty from '@/assets/springfield_greene_county.png'
 import mountAscutney from '@/assets/mount_ascutney.png'
 import TwoRiversOttauquechee from '@/assets/TwoRiversOttauquechee.png'
@@ -25,9 +25,9 @@ export const useRegionsStore = defineStore('regions', () => {
       ]
     },
     {
-      image: deSoto,
+      image: DeSoto,
       title: 'DeSoto',
-      name: 'deSoto',
+      name: 'DeSoto',
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
@@ -93,9 +93,19 @@ export const useRegionsStore = defineStore('regions', () => {
     mapStore.limitToBounds(region.bounds)
   }
 
+  const getRegionBounds = (regionName) => {
+    const region = regions.value.find((region) => region.name === regionName)
+    if (!region) {
+      console.error(`Region ${regionName} not found`)
+      return null
+    }
+    return region.bounds
+  }
+
   return {
     regions,
     currentRegion,
-    setRegion
+    setRegion,
+    getRegionBounds
   }
 })
