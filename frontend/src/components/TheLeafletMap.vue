@@ -12,13 +12,17 @@ import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
+import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
 const { mapObject, wmsLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
+const regionsStore = useRegionsStore()
 
-const minReachSelectionZoom = 9
+const minReachSelectionZoom = 11
+const minWMSZoom = 9
+const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
 
 onUpdated(() => {
   mapStore.leaflet.invalidateSize()
@@ -155,68 +159,79 @@ onMounted(() => {
     })
   })
 
-  url =
-    'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/RoaringRiverStatePark/MapServer/WmsServer?'
-  let roaringRiverWMS = L.tileLayer.wms(url, {
+  let name = 'RoaringRiverStatePark'
+  let bounds = regionsStore.getRegionBounds(name)
+  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
+  let RoaringRiverStatePark = L.tileLayer.wms(url, {
     layers: Array.from({ length: 13 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: 9,
+    bounds: bounds
   })
-  roaringRiverWMS.name = 'roaringRiver'
-  wmsLayers.value.push(roaringRiverWMS)
+  RoaringRiverStatePark.name = name
+  wmsLayers.value.push(RoaringRiverStatePark)
 
-  url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/DeSoto/MapServer/WmsServer?'
-  const deSotoWMS = L.tileLayer.wms(url, {
+  name = 'DeSoto'
+  bounds = regionsStore.getRegionBounds(name)
+  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
+  const DeSoto = L.tileLayer.wms(url, {
     layers: Array.from({ length: 8 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: minWMSZoom,
+    bounds: bounds
   })
-  deSotoWMS.name = 'deSoto'
-  wmsLayers.value.push(deSotoWMS)
+  DeSoto.name = name
+  wmsLayers.value.push(DeSoto)
 
-  url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/MountAscutney/MapServer/WmsServer?'
-  const mountAscutneyWMS = L.tileLayer.wms(url, {
+  name = 'MountAscutney'
+  bounds = regionsStore.getRegionBounds(name)
+  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
+  const MountAscutney = L.tileLayer.wms(url, {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: minWMSZoom,
+    bounds: bounds
   })
-  mountAscutneyWMS.name = 'mountAscutney'
-  wmsLayers.value.push(mountAscutneyWMS)
+  MountAscutney.name = name
+  wmsLayers.value.push(MountAscutney)
 
-  url =
-    'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/SpringfieldGreeneCounty/MapServer/WmsServer?'
-  const springfieldGreeneCountyWMS = L.tileLayer.wms(url, {
+  name = 'SpringfieldGreeneCounty'
+  bounds = regionsStore.getRegionBounds(name)
+  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
+  const SpringfieldGreeneCounty = L.tileLayer.wms(url, {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: minWMSZoom
   })
-  springfieldGreeneCountyWMS.name = 'springfieldGreeneCounty'
-  wmsLayers.value.push(springfieldGreeneCountyWMS)
+  SpringfieldGreeneCounty.name = name
+  wmsLayers.value.push(SpringfieldGreeneCounty)
 
-  let region = 'TwoRiversOttauquechee'
-  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region}/MapServer/WmsServer?`
+  name = 'TwoRiversOttauquechee'
+  bounds = regionsStore.getRegionBounds(name)
+  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
   const TwoRiversOttauquechee = L.tileLayer.wms(url, {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: minWMSZoom
   })
-  TwoRiversOttauquechee.name = region
+  TwoRiversOttauquechee.name = name
   wmsLayers.value.push(TwoRiversOttauquechee)
 
-  region = 'Windham'
-  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region}/MapServer/WmsServer?`
+  name = 'Windham'
+  bounds = regionsStore.getRegionBounds(name)
+  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
   const Windham = L.tileLayer.wms(url, {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: minWMSZoom
   })
-  Windham.name = region
+  Windham.name = name
   wmsLayers.value.push(Windham)
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
@@ -235,12 +250,12 @@ onMounted(() => {
     'Flowlines WMS': flowlines,
     'Flowlines Features': flowlinesFeatures,
     'Roaring River Features': roaringRiverFeatures,
-    'Roaring River WMS': roaringRiverWMS,
-    'DeSoto WMS': deSotoWMS,
-    'Mount Ascutney WMS': mountAscutneyWMS,
-    'Springfield Greene County WMS': springfieldGreeneCountyWMS,
-    'Two Rivers Ottauquechee WMS': TwoRiversOttauquechee,
-    'Windham WMS': Windham
+    'Roaring River State Park': RoaringRiverStatePark,
+    'DeSoto WMS': DeSoto,
+    'Mount Ascutney': MountAscutney,
+    'Springfield Greene County': SpringfieldGreeneCounty,
+    'Two Rivers Ottauquechee': TwoRiversOttauquechee,
+    Windham: Windham
   }
 
   // /*
@@ -264,6 +279,16 @@ onMounted(() => {
    */
   mapStore.leaflet.on('click', function (e) {
     mapClick(e)
+  })
+
+  mapStore.leaflet.on('zoomend moveend', () => {
+    const bounds = mapStore.leaflet.getBounds()
+    // convert the bounds to a format that can be used in the URL
+    const boundsString = JSON.stringify([
+      [bounds._southWest.lat, bounds._southWest.lng],
+      [bounds._northEast.lat, bounds._northEast.lng]
+    ])
+    console.log('Bounds:', boundsString)
   })
 
   mapStore.mapLoaded = true
