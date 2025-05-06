@@ -33,7 +33,7 @@ const props = defineProps({
   },
   title: {
     type: String,
-    default: '<Plot Title Here>'
+    default: ''
   }
 })
 const chartData = computed(() => ({
