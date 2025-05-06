@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { loremIpsum } from 'lorem-ipsum'
 import roaringRiver from '@/assets/roaring_river.png'
-import deSotoCity from '@/assets/de_soto_city.png'
+import deSoto from '@/assets/de_soto.png'
 import { useMapStore } from '@/stores/map'
 import { nextTick } from 'vue'
 
@@ -21,9 +21,9 @@ export const useRegionsStore = defineStore('regions', () => {
       ]
     },
     {
-      image: deSotoCity,
-      title: 'DeSoto City',
-      name: 'deSotoCity',
+      image: deSoto,
+      title: 'DeSoto',
+      name: 'deSoto',
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
@@ -33,13 +33,13 @@ export const useRegionsStore = defineStore('regions', () => {
     },
     {
       image: 'https://picsum.photos/600/600?random=3',
-      title: 'Florida Region',
-      name: 'floridaRegion',
+      title: 'Mount Ascutney',
+      name: 'mountAscutney',
       text: loremIpsum({ count: 1, units: 'paragraph' }),
       flex: 1,
       bounds: [
-        [27.9944, -81.7603], // northEast (Central Florida)
-        [25.7617, -80.1918] // southWest (Miami, FL)
+        [43.158110622265646, -73.86108398437501],
+        [43.695679697898825, -71.22436523437501]
       ]
     }
   ])
