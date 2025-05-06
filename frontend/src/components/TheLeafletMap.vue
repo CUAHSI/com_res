@@ -197,6 +197,17 @@ onMounted(() => {
   springfieldGreeneCountyWMS.name = 'springfieldGreeneCounty'
   wmsLayers.value.push(springfieldGreeneCountyWMS)
 
+  let region = 'TwoRiversOttauquechee'
+  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region}/MapServer/WmsServer?`
+  const TwoRiversOttauquechee = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: 9
+  })
+  TwoRiversOttauquechee.name = region
+  wmsLayers.value.push(TwoRiversOttauquechee)
+
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
   flowlines.addTo(mapStore.leaflet)
@@ -216,7 +227,8 @@ onMounted(() => {
     'Roaring River WMS': roaringRiverWMS,
     'DeSoto WMS': deSotoWMS,
     'Mount Ascutney WMS': mountAscutneyWMS,
-    'Springfield Greene County WMS': springfieldGreeneCountyWMS
+    'Springfield Greene County WMS': springfieldGreeneCountyWMS,
+    'Two Rivers Ottauquechee WMS': TwoRiversOttauquechee
   }
 
   // /*

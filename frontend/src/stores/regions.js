@@ -5,6 +5,7 @@ import roaringRiver from '@/assets/roaring_river.png'
 import deSoto from '@/assets/de_soto.png'
 import springfieldGreeneCounty from '@/assets/springfield_greene_county.png'
 import mountAscutney from '@/assets/mount_ascutney.png'
+import TwoRiversOttauquechee from '@/assets/TwoRiversOttauquechee.png'
 import { useMapStore } from '@/stores/map'
 import { nextTick } from 'vue'
 
@@ -53,6 +54,17 @@ export const useRegionsStore = defineStore('regions', () => {
       bounds: [
         [37.09407380187568, -93.89739990234376],
         [37.41107339721063, -92.66693115234376]
+      ]
+    },
+    {
+      image: TwoRiversOttauquechee,
+      title: 'Two Rivers Ottauquechee',
+      name: 'TwoRiversOttauquechee',
+      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      flex: 1,
+      bounds: [
+        [43.49286979803711, -73.71688842773439],
+        [44.067939826463416, -71.25595092773439]
       ]
     }
   ])
