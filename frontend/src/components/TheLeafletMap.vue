@@ -178,13 +178,24 @@ onMounted(() => {
 
   url = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/MountAscutney/MapServer/WmsServer?'
   const mountAscutneyWMS = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 8 }, (_, i) => i),
+    layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: minReachSelectionZoom
+    minZoom: 9
   })
   mountAscutneyWMS.name = 'mountAscutney'
   wmsLayers.value.push(mountAscutneyWMS)
+
+  url =
+    'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/SpringfieldGreeneCounty/MapServer/WmsServer?'
+  const springfieldGreeneCountyWMS = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: 9
+  })
+  springfieldGreeneCountyWMS.name = 'springfieldGreeneCounty'
+  wmsLayers.value.push(springfieldGreeneCountyWMS)
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
@@ -204,7 +215,8 @@ onMounted(() => {
     'Roaring River Features': roaringRiverFeatures,
     'Roaring River WMS': roaringRiverWMS,
     'DeSoto WMS': deSotoWMS,
-    'Mount Ascutney WMS': mountAscutneyWMS
+    'Mount Ascutney WMS': mountAscutneyWMS,
+    'Springfield Greene County WMS': springfieldGreeneCountyWMS
   }
 
   // /*

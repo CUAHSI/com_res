@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { loremIpsum } from 'lorem-ipsum'
 import roaringRiver from '@/assets/roaring_river.png'
 import deSoto from '@/assets/de_soto.png'
+import springfieldGreeneCounty from '@/assets/springfield_greene_county.png'
+import mountAscutney from '@/assets/mount_ascutney.png'
 import { useMapStore } from '@/stores/map'
 import { nextTick } from 'vue'
 
@@ -32,7 +34,7 @@ export const useRegionsStore = defineStore('regions', () => {
       ]
     },
     {
-      image: 'https://picsum.photos/600/600?random=3',
+      image: mountAscutney,
       title: 'Mount Ascutney',
       name: 'mountAscutney',
       text: loremIpsum({ count: 1, units: 'paragraph' }),
@@ -40,6 +42,17 @@ export const useRegionsStore = defineStore('regions', () => {
       bounds: [
         [43.158110622265646, -73.86108398437501],
         [43.695679697898825, -71.22436523437501]
+      ]
+    },
+    {
+      image: springfieldGreeneCounty,
+      title: 'Springfield Greene County',
+      name: 'springfieldGreeneCounty',
+      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      flex: 1,
+      bounds: [
+        [37.09407380187568, -93.89739990234376],
+        [37.41107339721063, -92.66693115234376]
       ]
     }
   ])
