@@ -18,7 +18,7 @@ const { mapObject, wmsLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
-const minReachSelectionZoom = 11
+const minReachSelectionZoom = 9
 
 onUpdated(() => {
   mapStore.leaflet.invalidateSize()
@@ -181,7 +181,7 @@ onMounted(() => {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: 9
+    minZoom: minReachSelectionZoom
   })
   mountAscutneyWMS.name = 'mountAscutney'
   wmsLayers.value.push(mountAscutneyWMS)
@@ -192,7 +192,7 @@ onMounted(() => {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: 9
+    minZoom: minReachSelectionZoom
   })
   springfieldGreeneCountyWMS.name = 'springfieldGreeneCounty'
   wmsLayers.value.push(springfieldGreeneCountyWMS)
@@ -203,10 +203,21 @@ onMounted(() => {
     layers: Array.from({ length: 7 }, (_, i) => i),
     transparent: 'true',
     format: 'image/png',
-    minZoom: 9
+    minZoom: minReachSelectionZoom
   })
   TwoRiversOttauquechee.name = region
   wmsLayers.value.push(TwoRiversOttauquechee)
+
+  region = 'Windham'
+  url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region}/MapServer/WmsServer?`
+  const Windham = L.tileLayer.wms(url, {
+    layers: Array.from({ length: 7 }, (_, i) => i),
+    transparent: 'true',
+    format: 'image/png',
+    minZoom: minReachSelectionZoom
+  })
+  Windham.name = region
+  wmsLayers.value.push(Windham)
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
@@ -228,7 +239,8 @@ onMounted(() => {
     'DeSoto WMS': deSotoWMS,
     'Mount Ascutney WMS': mountAscutneyWMS,
     'Springfield Greene County WMS': springfieldGreeneCountyWMS,
-    'Two Rivers Ottauquechee WMS': TwoRiversOttauquechee
+    'Two Rivers Ottauquechee WMS': TwoRiversOttauquechee,
+    'Windham WMS': Windham
   }
 
   // /*
