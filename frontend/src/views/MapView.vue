@@ -65,13 +65,14 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
+import TheLeafletMap from '@/components/TheLeafletMap.vue'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
@@ -96,23 +97,6 @@ watch(
     }
   }
 )
-
-onMounted(() => {
-  // update the route query params when the map is zoomed
-  try {
-    mapStore.leaflet.on('zoomend moveend', () => {
-      const bounds = mapStore.leaflet.getBounds()
-      // convert the bounds to a format that can be used in the URL
-      const boundsString = JSON.stringify([
-        [bounds._southWest.lat, bounds._southWest.lng],
-        [bounds._northEast.lat, bounds._northEast.lng]
-      ])
-      console.log('Bounds:', boundsString)
-    })
-  } catch (error) {
-    console.warn('Error setting up zoomend event listener:', error)
-  }
-})
 
 const toggle = async (component_name) => {
   console.log(component_name)
