@@ -3,6 +3,7 @@ import { ref, shallowRef } from 'vue'
 
 export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
+  const wmsLayers = ref([])
   const mapObject = ref(new Map())
   const featureOptions = ref({
     selectedColor: 'red',
@@ -41,13 +42,44 @@ export const useMapStore = defineStore('map', () => {
     })
   }
 
+  const limitToBounds = (parsedBounds) => {
+    if (parsedBounds) {
+      try {
+        console.log(`Zooming to bounds: ${parsedBounds}`)
+        leaflet.value.fitBounds(parsedBounds)
+        // prevent panning from bounds
+        leaflet.value.setMaxBounds(parsedBounds)
+        // prevent zooming out
+        leaflet.value.setMinZoom(leaflet.value.getZoom())
+      } catch (error) {
+        console.warn('Error parsing bounds:', error)
+      }
+    } else {
+      alert('No bounds provided')
+    }
+  }
+
+  const toggleWMSLayer = (layerName) => {
+    // turn off all other wms layers and turn on the selected one
+    wmsLayers.value.forEach((wmsLayer) => {
+      if (wmsLayer.name !== layerName) {
+        wmsLayer.removeFrom(leaflet.value)
+      } else {
+        wmsLayer.addTo(leaflet.value)
+      }
+    })
+  }
+
   return {
     mapObject,
     mapLoaded,
     deselectFeature,
     selectFeature,
     clearAllFeatures,
+    limitToBounds,
     featureOptions,
-    leaflet
+    leaflet,
+    wmsLayers,
+    toggleWMSLayer
   }
 })

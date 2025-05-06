@@ -65,9 +65,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onUpdated, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import TheLeafletMap from '@/components/TheLeafletMap.vue'
+import { ref, watch, onMounted } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
@@ -77,7 +75,6 @@ import { useAlertStore } from '@/stores/alerts'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
-const router = useRouter()
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -100,52 +97,20 @@ watch(
   }
 )
 
-const zoomToBounds = (bounds) => {
-  if (bounds) {
-    const parsedBounds = JSON.parse(bounds)
-    try {
-      console.log(`Zooming to bounds: ${parsedBounds}`)
-      mapStore.leaflet.fitBounds(parsedBounds)
-    } catch (error) {
-      console.warn('Error parsing bounds:', error)
-    }
-  } else {
-    alert('No bounds provided')
-  }
-}
-
 onMounted(() => {
   // update the route query params when the map is zoomed
   try {
-    mapStore.leaflet.on('zoomend', () => {
+    mapStore.leaflet.on('zoomend moveend', () => {
       const bounds = mapStore.leaflet.getBounds()
       // convert the bounds to a format that can be used in the URL
       const boundsString = JSON.stringify([
         [bounds._southWest.lat, bounds._southWest.lng],
         [bounds._northEast.lat, bounds._northEast.lng]
       ])
-
-      const routeQuery = {
-        query: {
-          ...router.currentRoute.value.query,
-          bounds: boundsString
-        }
-      }
-      // update the URL without reloading the page
-      router.replace(routeQuery)
+      console.log('Bounds:', boundsString)
     })
   } catch (error) {
     console.warn('Error setting up zoomend event listener:', error)
-  }
-})
-
-onUpdated(async () => {
-  await nextTick()
-  // check to see if map bounds and zoom are set on the route query params
-  const route = router.currentRoute.value
-  const { bounds } = route.query
-  if (bounds) {
-    zoomToBounds(bounds)
   }
 })
 
