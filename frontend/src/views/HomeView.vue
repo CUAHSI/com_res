@@ -13,7 +13,7 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col v-for="region in regions" :key="region.text">
+      <v-col v-for="region in regionsStore.regions" :key="region.text">
         <v-card
           class="pa-2"
           color="secondary"
@@ -36,43 +36,12 @@
 <script setup>
 import { loremIpsum } from 'lorem-ipsum'
 import { useRouter } from 'vue-router'
-import roaringRiver from '@/assets/roaring_river.png'
+import { useRegionsStore } from '../stores/regions'
 
 const emit = defineEmits(['region-selected'])
 const router = useRouter()
+const regionsStore = useRegionsStore()
 
-const regions = [
-  {
-    image: roaringRiver,
-    title: 'Roaring River',
-    text: loremIpsum({ count: 1, units: 'paragraph' }),
-    flex: 1,
-    bounds: [
-      [36.276939501306224, -454.2379760742188],
-      [36.721273880045004, -453.2533264160157]
-    ]
-  },
-  {
-    image: 'https://picsum.photos/600/600?random=2',
-    title: 'Northeast Region',
-    text: loremIpsum({ count: 1, units: 'paragraph' }),
-    flex: 1,
-    bounds: [
-      [42.3601, -71.0589], // northEast (Boston, MA)
-      [40.7128, -74.006] // southWest (New York, NY)
-    ]
-  },
-  {
-    image: 'https://picsum.photos/600/600?random=3',
-    title: 'Florida Region',
-    text: loremIpsum({ count: 1, units: 'paragraph' }),
-    flex: 1,
-    bounds: [
-      [27.9944, -81.7603], // northEast (Central Florida)
-      [25.7617, -80.1918] // southWest (Miami, FL)
-    ]
-  }
-]
 const handleCardClick = (region) => {
   const bounds = region.bounds
 
@@ -83,7 +52,7 @@ const handleCardClick = (region) => {
   router.push({
     name: 'maps',
     query: {
-      bounds: JSON.stringify(bounds)
+      region: region.name
     }
   })
 }

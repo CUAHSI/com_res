@@ -57,3 +57,5 @@ ssl/
 minikube/
 *.bak
 old/
+
+.eslintcache
