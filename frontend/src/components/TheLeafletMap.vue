@@ -85,29 +85,30 @@ onMounted(() => {
     maxZoom: minReachSelectionZoom
   })
 
-  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/DeSoto/FeatureServer/0'
-  const desotoFlowlines = esriLeaflet.featureLayer({
-    url: url,
-    simplifyFactor: 0.35,
-    precision: 5,
-    minZoom: minWMSZoom,
-    renderer: canvas({ tolerance: 5 }),
-    color: mapStore.featureOptions.defaultColor,
-    weight: mapStore.featureOptions.defaultWeight,
-    opacity: mapStore.featureOptions.opacity,
-    fields: ['FID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
-  })
+  function createFlowlinesFeatureLayer(region) {
+    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/0`
+    const featureLayer = esriLeaflet.featureLayer({
+      url: url,
+      simplifyFactor: 0.35,
+      precision: 5,
+      minZoom: minWMSZoom,
+      renderer: canvas({ tolerance: 5 }),
+      color: mapStore.featureOptions.defaultColor,
+      weight: mapStore.featureOptions.defaultWeight,
+      opacity: mapStore.featureOptions.opacity,
+      fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
+    })
 
-  desotoFlowlines.on('click', function (e) {
-    const feature = e.layer.feature
-    console.log('Feature clicked:', feature)
-    featureStore.clearSelectedFeatures()
-    if (!featureStore.checkFeatureSelected(feature)) {
-      // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature)
-    }
-    const popup = L.popup()
-    const content = `
+    featureLayer.on('click', function (e) {
+      const feature = e.layer.feature
+      console.log('Feature clicked:', feature)
+      featureStore.clearSelectedFeatures()
+      if (!featureStore.checkFeatureSelected(feature)) {
+        // Only allow one feature to be selected at a time
+        featureStore.selectFeature(feature)
+      }
+      const popup = L.popup()
+      const content = `
         <h3>${e.layer.feature.properties.PopupTitle}</h3>
         <h4>${e.layer.feature.properties.PopupSubti}</h4>
         <p>
@@ -116,23 +117,13 @@ onMounted(() => {
                 <li>Length: ${e.layer.feature.properties.LENGTHKM.toFixed(4)} km</li>
             </ul>
         </p>
-        <p>
-            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/DeSoto/FeatureServer/0/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
-        </p>
         `
-    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
-
-    desotoFlowlines.setFeatureStyle(e.layer.feature.id, {
-      color: '#9D78D2'
+      popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
     })
+    return featureLayer
+  }
 
-    popup.on('remove', function () {
-      desotoFlowlines.setFeatureStyle(e.layer.feature.id, {
-        color: '#3388ff'
-      })
-    })
-  })
-
+  const desotoFlowlines = createFlowlinesFeatureLayer({ name: 'DeSoto' })
   mapObject.value.flowlinesFeatures = desotoFlowlines
 
   let name = 'RoaringRiverStatePark'
