@@ -98,7 +98,7 @@ onMounted(() => {
     color: mapStore.featureOptions.defaultColor,
     weight: mapStore.featureOptions.defaultWeight,
     opacity: mapStore.featureOptions.opacity
-    // fields: ["FID", "ZIP", "PO_NAME"],
+    // fields: ["FID", "PopupTitle", "PopupSubti", "SLOPE", "LENGTHKM"],
   })
 
   mapObject.value.flowlinesFeatures = flowlinesFeatures
@@ -110,6 +110,17 @@ onMounted(() => {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
+    console.log('Selected feature:', feature)
+    const popup = L.popup()
+    const content = `
+        <h3>${e.layer.feature.properties.name}</h3>
+        <p>
+            <ul>
+                <li>High Water Threshold: ${e.layer.feature.properties.high_water_threshold.toFixed(2)}</li>
+            </ul>
+        </p>
+        `
+    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
   })
 
   url =

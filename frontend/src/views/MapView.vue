@@ -15,13 +15,6 @@
         max-height="145"
       >
         <v-btn
-          style="margin-right: 10px"
-          @click="toggleMetadata"
-          :color="showMetadata ? 'blue' : 'white'"
-        >
-          Metadata
-        </v-btn>
-        <v-btn
           id="btn-show-historical"
           style="margin-right: 10px"
           @click="toggle('historical')"
@@ -80,7 +73,6 @@ const mapStore = useMapStore()
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
-const showMetadata = ref(false)
 const showHistorical = ref(false)
 const showForecast = ref(false)
 const historicalPlotRef = ref(null)
@@ -146,8 +138,7 @@ const reachIdChanged = async (selected_reach) => {
   }
 
   // get the active reach name, this is necessary to update
-  // the data displayed in the historical, forecast, and
-  // metadata components.
+  // the data displayed in the historical and forecast components
   let reach_name = featureStore.activeFeature.properties.name
 
   // update the historical plot when the selected reach changes
