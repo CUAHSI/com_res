@@ -85,90 +85,55 @@ onMounted(() => {
     maxZoom: minReachSelectionZoom
   })
 
-  // add static flowlines feature service
-  url =
-    'https://maps.water.noaa.gov/server/rest/services/reference/static_nwm_flowlines/FeatureServer/0/query'
-  const flowlinesFeatures = esriLeaflet.featureLayer({
+  url = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/DeSoto/FeatureServer/0'
+  const desotoFlowlines = esriLeaflet.featureLayer({
     url: url,
-    renderer: canvas({ tolerance: 5 }),
     simplifyFactor: 0.35,
     precision: 5,
-    minZoom: minReachSelectionZoom,
-    maxZoom: 18,
+    minZoom: minWMSZoom,
+    renderer: canvas({ tolerance: 5 }),
     color: mapStore.featureOptions.defaultColor,
     weight: mapStore.featureOptions.defaultWeight,
-    opacity: mapStore.featureOptions.opacity
-    // fields: ["FID", "PopupTitle", "PopupSubti", "SLOPE", "LENGTHKM"],
+    opacity: mapStore.featureOptions.opacity,
+    fields: ['FID', 'PopupTitle', 'PopupSubti', 'REACHCODE', 'COMID']
   })
 
-  mapObject.value.flowlinesFeatures = flowlinesFeatures
-
-  flowlinesFeatures.on('click', async function (e) {
+  desotoFlowlines.on('click', function (e) {
     const feature = e.layer.feature
+    console.log('Feature clicked:', feature)
     featureStore.clearSelectedFeatures()
     if (!featureStore.checkFeatureSelected(feature)) {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
-    console.log('Selected feature:', feature)
-    const popup = L.popup()
-    const content = `
-        <h3>${e.layer.feature.properties.name}</h3>
-        <p>
-            <ul>
-                <li>High Water Threshold: ${e.layer.feature.properties.high_water_threshold.toFixed(2)}</li>
-            </ul>
-        </p>
-        `
-    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
-  })
-
-  url =
-    'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/RoaringRiverStatePark/FeatureServer/1'
-  const roaringRiverFeatures = esriLeaflet.featureLayer({
-    url: url,
-    simplifyFactor: 0.35,
-    precision: 5,
-    // minZoom: 9,
-    // maxZoom: 18,
-    style: function () {
-      return {
-        // weight: 0, // remove border
-        // fillOpacity: 0.7,
-        fill: true
-      }
-    },
-    fields: ['FID', 'MeanDepth', 'LakeVolume', 'PopupTitle', 'PopupSubti']
-  })
-
-  roaringRiverFeatures.on('click', function (e) {
-    console.log(e.layer.feature.properties)
     const popup = L.popup()
     const content = `
         <h3>${e.layer.feature.properties.PopupTitle}</h3>
         <h4>${e.layer.feature.properties.PopupSubti}</h4>
         <p>
             <ul>
-                <li>MeanDepth: ${e.layer.feature.properties.MeanDepth}</li>
-                <li>LakeVolume: ${e.layer.feature.properties.LakeVolume}</li>
+                <li>COMID: ${e.layer.feature.properties.COMID}</li>
+                <li>REACHCODE: ${e.layer.feature.properties.REACHCODE}</li>
             </ul>
         </p>
         <p>
-            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/RoaringRiverStatePark/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
+            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/DeSoto/FeatureServer/0/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
         </p>
         `
     popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
 
-    roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
+    desotoFlowlines.setFeatureStyle(e.layer.feature.id, {
       color: '#9D78D2'
     })
 
     popup.on('remove', function () {
-      roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
+      desotoFlowlines.setFeatureStyle(e.layer.feature.id, {
         color: '#3388ff'
       })
     })
   })
+
+  mapObject.value.flowlinesFeatures = desotoFlowlines
 
   let name = 'RoaringRiverStatePark'
   let bounds = regionsStore.getRegionBounds(name)
@@ -247,9 +212,9 @@ onMounted(() => {
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
-  flowlines.addTo(mapStore.leaflet)
-  flowlinesFeatures.addTo(mapStore.leaflet)
-  roaringRiverFeatures.addTo(mapStore.leaflet)
+  // flowlines.addTo(mapStore.leaflet)
+  // flowlinesFeatures.addTo(mapStore.leaflet)
+  desotoFlowlines.addTo(mapStore.leaflet)
 
   for (let layer of wmsLayers.value) {
     layer.addTo(mapStore.leaflet)
@@ -259,8 +224,8 @@ onMounted(() => {
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
-    'Flowlines Features': flowlinesFeatures,
-    'Roaring River Features': roaringRiverFeatures,
+    // 'Flowlines Features': flowlinesFeatures,
+    'Desoto Flowlines': desotoFlowlines,
     'Roaring River State Park': RoaringRiverStatePark,
     'DeSoto WMS': DeSoto,
     'Mount Ascutney': MountAscutney,
