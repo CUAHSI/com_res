@@ -7,7 +7,7 @@ import 'leaflet-easybutton/src/easy-button.css'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, onUpdated, ref } from 'vue'
+import { onMounted, onUpdated } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
@@ -15,7 +15,7 @@ import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, wmsLayers, flowlinesFeatureLayers, activeFeatureLayer } = storeToRefs(mapStore)
+const { mapObject, wmsLayers, flowlinesFeatureLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
@@ -35,8 +35,6 @@ onMounted(() => {
   mapObject.value.huclayers = []
   mapObject.value.selected_hucs = []
   mapObject.value.reaches = {}
-  activeFeatureLayer.value = ref({})
-
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
   let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
@@ -86,7 +84,12 @@ onMounted(() => {
   })
 
   function createFlowlinesFeatureLayer(region) {
-    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/0`
+    let layerNumber = 0
+    if (region.name === 'SpringfieldGreeneCounty') {
+      // https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/SpringfieldGreeneCounty/FeatureServer
+      layerNumber = 1
+    }
+    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${layerNumber}`
     const featureLayer = esriLeaflet.featureLayer({
       url: url,
       simplifyFactor: 0.35,
@@ -95,12 +98,14 @@ onMounted(() => {
       renderer: canvas({ tolerance: 5 }),
       color: mapStore.featureOptions.defaultColor,
       weight: mapStore.featureOptions.defaultWeight,
-      opacity: mapStore.featureOptions.opacity,
-      fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
+      opacity: mapStore.featureOptions.opacity
+      // fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
     })
+    featureLayer.name = region.name
 
     featureLayer.on('click', function (e) {
       const feature = e.layer.feature
+      const properties = feature.properties
       console.log('Feature clicked:', feature)
       featureStore.clearSelectedFeatures()
       if (!featureStore.checkFeatureSelected(feature)) {
@@ -109,12 +114,12 @@ onMounted(() => {
       }
       const popup = L.popup()
       const content = `
-        <h3>${e.layer.feature.properties.PopupTitle}</h3>
-        <h4>${e.layer.feature.properties.PopupSubti}</h4>
+        ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+        ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
         <p>
             <ul>
-                <li>Slope: ${e.layer.feature.properties.SLOPE.toFixed(4)}</li>
-                <li>Length: ${e.layer.feature.properties.LENGTHKM.toFixed(4)} km</li>
+          ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+          ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
             </ul>
         </p>
         `
@@ -205,14 +210,6 @@ onMounted(() => {
     layer.addTo(mapStore.leaflet)
   }
 
-  // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers
-  // and the leaflet map
-  for (let region of regionsStore.regions) {
-    const flowlines = createFlowlinesFeatureLayer(region)
-    flowlinesFeatureLayers.value.push(flowlines)
-    flowlines.addTo(mapStore.leaflet)
-  }
-
   // layer toggling
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
@@ -223,6 +220,14 @@ onMounted(() => {
     'Springfield Greene County': SpringfieldGreeneCounty,
     'Two Rivers Ottauquechee': TwoRiversOttauquechee,
     Windham: Windham
+  }
+
+  // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers
+  // and the leaflet map
+  for (let region of regionsStore.regions) {
+    const flowlines = createFlowlinesFeatureLayer(region)
+    flowlinesFeatureLayers.value.push(flowlines)
+    mixed[`${region.name} flowlines`] = flowlines
   }
 
   // /*
@@ -246,16 +251,6 @@ onMounted(() => {
    */
   mapStore.leaflet.on('click', function (e) {
     mapClick(e)
-  })
-
-  mapStore.leaflet.on('zoomend moveend', () => {
-    const bounds = mapStore.leaflet.getBounds()
-    // convert the bounds to a format that can be used in the URL
-    const boundsString = JSON.stringify([
-      [bounds._southWest.lat, bounds._southWest.lng],
-      [bounds._northEast.lat, bounds._northEast.lng]
-    ])
-    console.log('Bounds:', boundsString)
   })
 
   mapStore.mapLoaded = true

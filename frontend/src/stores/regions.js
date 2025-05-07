@@ -95,6 +95,7 @@ export const useRegionsStore = defineStore('regions', () => {
     }
   ])
   const setRegion = async (regionName) => {
+    console.log('Setting region to:', regionName)
     const mapStore = useMapStore()
     const region = regions.value.find((region) => region.name === regionName)
     if (!region) {
@@ -104,7 +105,7 @@ export const useRegionsStore = defineStore('regions', () => {
     currentRegion.value = region
     await nextTick()
     mapStore.toggleWMSLayer(region.name)
-    // mapStore.toggleFeatureLayer(region.name)
+    mapStore.toggleFeatureLayer(region.name)
     mapStore.limitToBounds(region.bounds)
   }
 
