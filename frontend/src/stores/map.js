@@ -5,6 +5,8 @@ export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
   const wmsLayers = ref([])
   const mapObject = ref(new Map())
+  const flowlinesFeatureLayers = ref([])
+  const activeFeatureLayer = shallowRef(null)
   const featureOptions = ref({
     selectedColor: 'red',
     defaultColor: 'blue',
@@ -16,7 +18,7 @@ export const useMapStore = defineStore('map', () => {
 
   const deselectFeature = (feature) => {
     try {
-      mapObject.value.flowlinesFeatures.setFeatureStyle(feature.id, {
+      activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.defaultColor,
         weight: featureOptions.value.defaultWeight
       })
@@ -27,7 +29,7 @@ export const useMapStore = defineStore('map', () => {
 
   const selectFeature = (feature) => {
     try {
-      mapObject.value.flowlinesFeatures.setFeatureStyle(feature.id, {
+      activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
@@ -37,9 +39,13 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const clearAllFeatures = () => {
-    mapObject.value.flowlinesFeatures.eachFeature(function (feature) {
-      feature.setStyle({ color: featureOptions.value.defaultColor })
-    })
+    try {
+      activeFeatureLayer.value.eachFeature(function (feature) {
+        feature.setStyle({ color: featureOptions.value.defaultColor })
+      })
+    } catch (error) {
+      console.warn('Attempted to clear all features:', error)
+    }
   }
 
   const limitToBounds = (parsedBounds) => {
@@ -70,6 +76,21 @@ export const useMapStore = defineStore('map', () => {
     })
   }
 
+  const toggleFeatureLayer = (layerName) => {
+    // turn off all other feature layers and turn on the selected one
+    console.log('Toggling feature layer:', layerName)
+    flowlinesFeatureLayers.value.forEach((featureLayer) => {
+      if (featureLayer.name !== layerName) {
+        console.log('Removing feature layer:', featureLayer.name)
+        featureLayer.removeFrom(leaflet.value)
+      } else {
+        console.log('Adding feature layer:', featureLayer.name)
+        featureLayer.addTo(leaflet.value)
+        activeFeatureLayer.value = featureLayer
+      }
+    })
+  }
+
   return {
     mapObject,
     mapLoaded,
@@ -80,6 +101,9 @@ export const useMapStore = defineStore('map', () => {
     featureOptions,
     leaflet,
     wmsLayers,
-    toggleWMSLayer
+    flowlinesFeatureLayers,
+    activeFeatureLayer,
+    toggleWMSLayer,
+    toggleFeatureLayer
   }
 })

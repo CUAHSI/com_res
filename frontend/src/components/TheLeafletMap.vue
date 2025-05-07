@@ -15,7 +15,7 @@ import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, wmsLayers } = storeToRefs(mapStore)
+const { mapObject, wmsLayers, flowlinesFeatureLayers, activeFeatureLayer } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
@@ -35,7 +35,7 @@ onMounted(() => {
   mapObject.value.huclayers = []
   mapObject.value.selected_hucs = []
   mapObject.value.reaches = {}
-  mapObject.value.flowlinesFeatures = ref({})
+  activeFeatureLayer.value = ref({})
 
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
@@ -123,9 +123,6 @@ onMounted(() => {
     return featureLayer
   }
 
-  const desotoFlowlines = createFlowlinesFeatureLayer({ name: 'DeSoto' })
-  mapObject.value.flowlinesFeatures = desotoFlowlines
-
   let name = 'RoaringRiverStatePark'
   let bounds = regionsStore.getRegionBounds(name)
   url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
@@ -203,20 +200,23 @@ onMounted(() => {
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
-  // flowlines.addTo(mapStore.leaflet)
-  // flowlinesFeatures.addTo(mapStore.leaflet)
-  desotoFlowlines.addTo(mapStore.leaflet)
 
   for (let layer of wmsLayers.value) {
     layer.addTo(mapStore.leaflet)
+  }
+
+  // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers
+  // and the leaflet map
+  for (let region of regionsStore.regions) {
+    const flowlines = createFlowlinesFeatureLayer(region)
+    flowlinesFeatureLayers.value.push(flowlines)
+    flowlines.addTo(mapStore.leaflet)
   }
 
   // layer toggling
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines,
-    // 'Flowlines Features': flowlinesFeatures,
-    'Desoto Flowlines': desotoFlowlines,
     'Roaring River State Park': RoaringRiverStatePark,
     'DeSoto WMS': DeSoto,
     'Mount Ascutney': MountAscutney,

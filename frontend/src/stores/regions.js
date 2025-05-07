@@ -104,7 +104,7 @@ export const useRegionsStore = defineStore('regions', () => {
     currentRegion.value = region
     await nextTick()
     mapStore.toggleWMSLayer(region.name)
-    // await nextTick()
+    // mapStore.toggleFeatureLayer(region.name)
     mapStore.limitToBounds(region.bounds)
   }
 
