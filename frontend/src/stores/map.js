@@ -81,10 +81,8 @@ export const useMapStore = defineStore('map', () => {
     console.log('Toggling feature layer:', layerName)
     flowlinesFeatureLayers.value.forEach((featureLayer) => {
       if (featureLayer.name !== layerName) {
-        console.log('Removing feature layer:', featureLayer.name)
         featureLayer.removeFrom(leaflet.value)
       } else {
-        console.log('Adding feature layer:', featureLayer.name)
         featureLayer.addTo(leaflet.value)
         activeFeatureLayer.value = featureLayer
       }

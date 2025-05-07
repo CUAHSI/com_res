@@ -84,12 +84,7 @@ onMounted(() => {
   })
 
   function createFlowlinesFeatureLayer(region) {
-    let layerNumber = 0
-    if (region.name === 'SpringfieldGreeneCounty') {
-      // https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/SpringfieldGreeneCounty/FeatureServer
-      layerNumber = 1
-    }
-    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${layerNumber}`
+    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
     const featureLayer = esriLeaflet.featureLayer({
       url: url,
       simplifyFactor: 0.35,
@@ -98,8 +93,8 @@ onMounted(() => {
       renderer: canvas({ tolerance: 5 }),
       color: mapStore.featureOptions.defaultColor,
       weight: mapStore.featureOptions.defaultWeight,
-      opacity: mapStore.featureOptions.opacity
-      // fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
+      opacity: mapStore.featureOptions.opacity,
+      fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
     })
     featureLayer.name = region.name
 
@@ -132,7 +127,7 @@ onMounted(() => {
     let bounds = regionsStore.getRegionBounds(region.name)
     url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
     const layer = L.tileLayer.wms(url, {
-      layers: region.layers,
+      layers: region.wmsLayersToLoad,
       transparent: 'true',
       format: 'image/png',
       minZoom: minWMSZoom,
@@ -144,7 +139,6 @@ onMounted(() => {
   }
   // create the WMS layers for each region
   for (let region of regionsStore.regions) {
-    console.log('Creating WMS layer for region:', region.name)
     createWMSLayer(region)
   }
 
