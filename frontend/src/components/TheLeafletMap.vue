@@ -95,7 +95,7 @@ onMounted(() => {
     color: mapStore.featureOptions.defaultColor,
     weight: mapStore.featureOptions.defaultWeight,
     opacity: mapStore.featureOptions.opacity,
-    fields: ['FID', 'PopupTitle', 'PopupSubti', 'REACHCODE', 'COMID']
+    fields: ['FID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
   })
 
   desotoFlowlines.on('click', function (e) {
@@ -112,8 +112,8 @@ onMounted(() => {
         <h4>${e.layer.feature.properties.PopupSubti}</h4>
         <p>
             <ul>
-                <li>COMID: ${e.layer.feature.properties.COMID}</li>
-                <li>REACHCODE: ${e.layer.feature.properties.REACHCODE}</li>
+                <li>Slope: ${e.layer.feature.properties.SLOPE.toFixed(4)}</li>
+                <li>Length: ${e.layer.feature.properties.LENGTHKM.toFixed(4)} km</li>
             </ul>
         </p>
         <p>

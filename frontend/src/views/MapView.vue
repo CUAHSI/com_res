@@ -138,7 +138,7 @@ const reachIdChanged = async (selected_reach) => {
   }
 
   // get the active reach name, this is necessary to update
-  // the data displayed in the historical and forecast components.
+  // the data displayed in the historical and forecast components
   let reach_name = featureStore.activeFeature.properties.GNIS_NAME
 
   // update the historical plot when the selected reach changes
