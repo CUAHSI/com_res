@@ -128,80 +128,25 @@ onMounted(() => {
     return featureLayer
   }
 
-  let name = 'RoaringRiverStatePark'
-  let bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  let RoaringRiverStatePark = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 13 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: 9,
-    bounds: bounds
-  })
-  RoaringRiverStatePark.name = name
-  wmsLayers.value.push(RoaringRiverStatePark)
-
-  name = 'DeSoto'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const DeSoto = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 8 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom,
-    bounds: bounds
-  })
-  DeSoto.name = name
-  wmsLayers.value.push(DeSoto)
-
-  name = 'MountAscutney'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const MountAscutney = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom,
-    bounds: bounds
-  })
-  MountAscutney.name = name
-  wmsLayers.value.push(MountAscutney)
-
-  name = 'SpringfieldGreeneCounty'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const SpringfieldGreeneCounty = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom
-  })
-  SpringfieldGreeneCounty.name = name
-  wmsLayers.value.push(SpringfieldGreeneCounty)
-
-  name = 'TwoRiversOttauquechee'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const TwoRiversOttauquechee = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom
-  })
-  TwoRiversOttauquechee.name = name
-  wmsLayers.value.push(TwoRiversOttauquechee)
-
-  name = 'Windham'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const Windham = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom
-  })
-  Windham.name = name
-  wmsLayers.value.push(Windham)
+  function createWMSLayer(region) {
+    let bounds = regionsStore.getRegionBounds(region.name)
+    url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
+    const layer = L.tileLayer.wms(url, {
+      layers: region.layers,
+      transparent: 'true',
+      format: 'image/png',
+      minZoom: minWMSZoom,
+      bounds: bounds
+    })
+    layer.name = region.name
+    wmsLayers.value.push(layer)
+    return layer
+  }
+  // create the WMS layers for each region
+  for (let region of regionsStore.regions) {
+    console.log('Creating WMS layer for region:', region.name)
+    createWMSLayer(region)
+  }
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
@@ -213,13 +158,12 @@ onMounted(() => {
   // layer toggling
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
-    'Flowlines WMS': flowlines,
-    'Roaring River State Park': RoaringRiverStatePark,
-    'DeSoto WMS': DeSoto,
-    'Mount Ascutney': MountAscutney,
-    'Springfield Greene County': SpringfieldGreeneCounty,
-    'Two Rivers Ottauquechee': TwoRiversOttauquechee,
-    Windham: Windham
+    'Flowlines WMS': flowlines
+  }
+
+  // add the wms layers to the mixed object
+  for (let layer of wmsLayers.value) {
+    mixed[layer.name] = layer
   }
 
   // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers

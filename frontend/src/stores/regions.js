@@ -21,6 +21,7 @@ export const useRegionsStore = defineStore('regions', () => {
              located eight miles south of Cassville in Barry County, Missouri, 
              spanning 4,294 acres.`,
       flex: 1,
+      layers: Array.from({ length: 13 }, (_, i) => i),
       bounds: [
         [36.32563675305861, -94.43092346191406],
         [36.74823792383878, -93.11943054199219]
@@ -34,6 +35,7 @@ export const useRegionsStore = defineStore('regions', () => {
             45 miles south of St. Louis. The surrounding terrain features rolling 
             hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
+      layers: Array.from({ length: 8 }, (_, i) => i),
       bounds: [
         [37.96260604160774, -91.12541198730469],
         [38.37611542403604, -89.81391906738283]
@@ -48,6 +50,7 @@ export const useRegionsStore = defineStore('regions', () => {
              steep, forested slopes of in the west down through rolling foothills to the
              broad Connecticut River on the east.`,
       flex: 1,
+      layers: Array.from({ length: 7 }, (_, i) => i),
       bounds: [
         [43.043801776082425, -73.84735107421876],
         [43.807774213873806, -71.22436523437501]
@@ -61,6 +64,7 @@ export const useRegionsStore = defineStore('regions', () => {
              where the landscape features a rolling terrain, with some steeper cliffs found on
              the north, east, and south sides of the area.`,
       flex: 1,
+      layers: Array.from({ length: 7 }, (_, i) => i),
       bounds: [
         [36.83346996591306, -94.59365844726564],
         [37.67077737288316, -91.97067260742188]
@@ -74,6 +78,7 @@ export const useRegionsStore = defineStore('regions', () => {
              member towns across Windsor and Orange counties. The region is bordered by the Green
              Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
+      layers: Array.from({ length: 7 }, (_, i) => i),
       bounds: [
         [43.02071359427862, -75.10803222656251],
         [44.53959000445632, -69.86206054687501]
@@ -88,6 +93,7 @@ export const useRegionsStore = defineStore('regions', () => {
              rural villages, forested landscapes, and small urban centers that are primarily covered by
              forests, including spruce, fir, and white pine.`,
       flex: 1,
+      layers: Array.from({ length: 7 }, (_, i) => i),
       bounds: [
         [42.20614200929957, -75.35797119140626],
         [43.74530493763506, -70.11199951171876]
