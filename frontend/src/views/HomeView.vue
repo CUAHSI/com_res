@@ -1,17 +1,19 @@
 <template>
   <v-container fluid>
-    <v-row class="fill-height" align="center" justify="center">
-      <v-col class="text-center">
+    <v-row class="fill-height">
+      <v-col>
         <div>
-          <div class="text-center d-flex flex-column align-center">
-            <div class="mb-4 text-h3">Welcome to the CUAHSI Community Resilience tool!</div>
-            <p class="font-weight-light text-center text-subtitle">
-              The purpose of this web application is to leverage interactive technologies and cloud
-              services to offer a collaborative platform where users can explore, prepare, publish,
-              and share subsets of distributed, continental-scale geospatial datasets at watershed
-              scales. By combining modern cyberinfrastructure techniques with state-of-the-art
-              modeling tools, this application provides researchers with access to data subsets that
-              would otherwise demand significant computational resources.
+          <div>
+            <p class="font-weight-light text-subtitle" style="padding: 10px 20px">
+              This application was established to provide a user-centered perspective on integrating
+              the National Water Model (NWM) into community resilience planning and water
+              decision-making processes across selected regions in Vermont and Missouri. In Vermont,
+              the research focused on three regions: Two Rivers-Ottauquechee, Mt. Ascutney, and
+              Windham. In Missouri, the study engaged with three distinct communities: Springfield,
+              De Soto, and Roaring River State Park. The methods were designed to understand each
+              community's unique context, including their water-related vulnerabilities, resilience
+              planning constraints, and information and data gaps, to develop a series of resources
+              of the NWM that could best help aid their particular needs.
             </p>
           </div>
         </div>
@@ -19,61 +21,52 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col class="steps mb-4 d-flex flex-wrap align-center justify-center">
-        <v-card v-for="step in steps" :key="step.text">
+      <v-col v-for="region in regionsStore.regions" :key="region.text">
+        <v-card
+          class="pa-2"
+          color="secondary"
+          style="height: 400px"
+          @click="handleCardClick(region)"
+        >
+          <v-img :src="region.image" :lazy-src="region.image" style="max-height: 200px"></v-img>
           <v-card-title>
-            <v-icon :icon="step.icon"></v-icon>
-            <span>{{ step.text }}</span>
+            <span>{{ region.title }}</span>
           </v-card-title>
+          <v-card-text>
+            <span>{{ region.text }}</span>
+          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
-    <v-parallax :src="paralaxImg" height="80vh"> </v-parallax>
   </v-container>
 </template>
 
 <script setup>
-import paralaxImg from '@/assets/bahiablanca_flood_oli2_20250130_lrg.jpg'
-// https://earthobservatory.nasa.gov/images/153230/dry-in-the-rio-grande-basin
-import {
-  mdiLockOutline,
-  mdiGestureTap,
-  mdiMapPlus,
-  mdiCloudUploadOutline,
-  mdiShareAllOutline
-} from '@mdi/js'
+import { useRouter } from 'vue-router'
+import { useRegionsStore } from '../stores/regions'
 
-const steps = [
-  {
-    icon: mdiLockOutline,
-    text: 'Log in with your CUAHSI credential',
-    flex: 1
-  },
-  {
-    icon: mdiGestureTap,
-    text: 'Select the dataset',
-    flex: 1
-  },
-  {
-    icon: mdiMapPlus,
-    text: 'Identify the domain',
-    flex: 1
-  },
-  {
-    icon: mdiCloudUploadOutline,
-    text: 'Submit the job to the Cloud',
-    flex: 1
-  },
-  {
-    icon: mdiShareAllOutline,
-    text: 'Download and share results via HydroShare',
-    flex: 1
-  }
-]
+const emit = defineEmits(['region-selected'])
+const router = useRouter()
+const regionsStore = useRegionsStore()
+
+const handleCardClick = (region) => {
+  const bounds = region.bounds
+
+  // Emit an event to the parent component with the selected region's bounds
+  emit('region-selected', { bounds })
+
+  // Use the router to navigate to the maps view
+  router.push({
+    name: 'maps',
+    query: {
+      region: region.name
+    }
+  })
+}
 </script>
 
 <style scoped>
-.steps {
+.regions {
   gap: 2rem 4rem;
 
   a {
