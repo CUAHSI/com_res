@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { loremIpsum } from 'lorem-ipsum'
 import RoaringRiverStatePark from '@/assets/RoaringRiverStatePark.png'
 import DeSoto from '@/assets/DeSoto.png'
 import SpringfieldGreeneCounty from '@/assets/SpringfieldGreeneCounty.png'
@@ -17,7 +16,10 @@ export const useRegionsStore = defineStore('regions', () => {
       image: RoaringRiverStatePark,
       title: 'Roaring River State Park',
       name: 'RoaringRiverStatePark',
-      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      text: `A popular outdoor destination nestled within the rugged terrain of the
+             Ozark Plateau’s karst landscape, Roaring River State Park is located
+             located eight miles south of Cassville in Barry County, Missouri, 
+             spanning 4,294 acres.`,
       flex: 1,
       bounds: [
         [36.32563675305861, -94.43092346191406],
@@ -28,7 +30,9 @@ export const useRegionsStore = defineStore('regions', () => {
       image: DeSoto,
       title: 'DeSoto',
       name: 'DeSoto',
-      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      text: `De Soto is a small city in Jefferson County, Missouri, located about
+            45 miles south of St. Louis. The surrounding terrain features rolling 
+            hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
       bounds: [
         [37.96260604160774, -91.12541198730469],
@@ -39,7 +43,10 @@ export const useRegionsStore = defineStore('regions', () => {
       image: MountAscutney,
       title: 'Mount Ascutney',
       name: 'MountAscutney',
-      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      text: `This region in southeast‑central Vermont spans ten towns
+             and its topography transitions from the
+             steep, forested slopes of in the west down through rolling foothills to the
+             broad Connecticut River on the east.`,
       flex: 1,
       bounds: [
         [43.043801776082425, -73.84735107421876],
@@ -50,7 +57,9 @@ export const useRegionsStore = defineStore('regions', () => {
       image: SpringfieldGreeneCounty,
       title: 'Springfield Greene County',
       name: 'SpringfieldGreeneCounty',
-      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      text: `The third-largest city in Missouri, located on the Springfield Plateau of the Ozark Mountains 
+             where the landscape features a rolling terrain, with some steeper cliffs found on
+             the north, east, and south sides of the area.`,
       flex: 1,
       bounds: [
         [36.83346996591306, -94.59365844726564],
@@ -61,7 +70,9 @@ export const useRegionsStore = defineStore('regions', () => {
       image: TwoRiversOttauquechee,
       title: 'Two Rivers Ottauquechee',
       name: 'TwoRiversOttauquechee',
-      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      text: `The Two Rivers‑Ottauquechee region lies in east‑central Vermont, covering 30
+             member towns across Windsor and Orange counties. The region is bordered by the Green
+             Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
       bounds: [
         [43.02071359427862, -75.10803222656251],
@@ -72,7 +83,10 @@ export const useRegionsStore = defineStore('regions', () => {
       image: Windham,
       title: 'Windham',
       name: 'Windham',
-      text: loremIpsum({ count: 1, units: 'paragraph' }),
+      text: `The Windham region is located in southeastern Vermont and includes 27 towns
+             The area features a mix of
+             rural villages, forested landscapes, and small urban centers that are primarily covered by
+             forests, including spruce, fir, and white pine.`,
       flex: 1,
       bounds: [
         [42.20614200929957, -75.35797119140626],
