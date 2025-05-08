@@ -48,13 +48,15 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const limitToBounds = (parsedBounds) => {
-    if (parsedBounds) {
+  const limitToBounds = (featureLayer) => {
+    console.log('Limiting to bounds of feature layer:', featureLayer)
+    const bounds = featureLayer.bounds
+    if (bounds) {
       try {
-        console.log(`Zooming to bounds: ${parsedBounds}`)
-        leaflet.value.fitBounds(parsedBounds)
+        console.log(`Zooming to bounds: ${bounds}`)
+        leaflet.value.fitBounds(bounds)
         // prevent panning from bounds
-        leaflet.value.setMaxBounds(parsedBounds)
+        leaflet.value.setMaxBounds(bounds)
         // prevent zooming out
         leaflet.value.setMinZoom(leaflet.value.getZoom())
       } catch (error) {

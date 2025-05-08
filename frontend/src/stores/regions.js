@@ -118,7 +118,8 @@ export const useRegionsStore = defineStore('regions', () => {
     await nextTick()
     mapStore.toggleWMSLayer(region.name)
     mapStore.toggleFeatureLayer(region.name)
-    mapStore.limitToBounds(region.bounds)
+    // limit the bounds to the flowlines layer for this region
+    mapStore.limitToBounds(region.flowlinesLayer)
   }
 
   /**

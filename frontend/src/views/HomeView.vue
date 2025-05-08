@@ -62,6 +62,10 @@ const handleCardClick = (region) => {
       region: region.name
     }
   })
+
+  // set the current region in the store
+  regionsStore.currentRegion = region
+  // regionsStore.onRegionChange(region.name)
 }
 </script>
 
