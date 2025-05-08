@@ -48,21 +48,24 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const limitToBounds = (parsedBounds) => {
-    if (parsedBounds) {
+  const limitToBounds = (featureLayer) => {
+    console.log('Limiting to bounds of feature layer:', featureLayer)
+    featureLayer.query().bounds(function (error, bounds) {
+      if (error) {
+        console.log('Error running bounds query:')
+        console.warn(error)
+      }
       try {
-        console.log(`Zooming to bounds: ${parsedBounds}`)
-        leaflet.value.fitBounds(parsedBounds)
+        console.log(`Zooming to bounds: ${bounds}`)
+        leaflet.value.fitBounds(bounds)
         // prevent panning from bounds
-        leaflet.value.setMaxBounds(parsedBounds)
+        leaflet.value.setMaxBounds(bounds)
         // prevent zooming out
         leaflet.value.setMinZoom(leaflet.value.getZoom())
       } catch (error) {
-        console.warn('Error parsing bounds:', error)
+        console.warn('Error zooming to bounds:', error)
       }
-    } else {
-      alert('No bounds provided')
-    }
+    })
   }
 
   const toggleWMSLayer = (layerName) => {
