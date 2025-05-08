@@ -12,6 +12,7 @@ export const useFeaturesStore = defineStore(
     const mapStore = useMapStore()
 
     function selectFeature(feature) {
+      console.log('Selecting feature', feature)
       mapStore.selectFeature(feature)
       selectedFeatures.value.push(feature)
       activeFeature.value = feature

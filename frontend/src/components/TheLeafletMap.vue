@@ -7,7 +7,7 @@ import 'leaflet-easybutton/src/easy-button.css'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, onUpdated, ref } from 'vue'
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
@@ -15,18 +15,16 @@ import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, wmsLayers } = storeToRefs(mapStore)
+const { mapObject, wmsLayers, flowlinesFeatureLayers } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
 
-const minReachSelectionZoom = 11
-const minWMSZoom = 9
+const MIN_REACH_SELECTION_ZOOM = 11
+const MIN_WMS_ZOOM = 9
+const MIN_WFS_ZOOM = 9
 const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
 
-onUpdated(() => {
-  mapStore.leaflet.invalidateSize()
-})
 onMounted(() => {
   mapStore.leaflet = L.map('mapContainer').setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
@@ -35,8 +33,6 @@ onMounted(() => {
   mapObject.value.huclayers = []
   mapObject.value.selected_hucs = []
   mapObject.value.reaches = {}
-  mapObject.value.flowlinesFeatures = ref({})
-
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
   let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
@@ -44,7 +40,7 @@ onMounted(() => {
     layers: 0,
     transparent: 'true',
     format: 'image/png',
-    maxZoom: minReachSelectionZoom,
+    maxZoom: MIN_REACH_SELECTION_ZOOM,
     minZoom: 0
   })
 
@@ -82,174 +78,68 @@ onMounted(() => {
     transparent: 'true',
     format: 'image/png',
     minZoom: 8,
-    maxZoom: minReachSelectionZoom
+    maxZoom: MIN_REACH_SELECTION_ZOOM
   })
 
-  // add static flowlines feature service
-  url =
-    'https://maps.water.noaa.gov/server/rest/services/reference/static_nwm_flowlines/FeatureServer/0/query'
-  const flowlinesFeatures = esriLeaflet.featureLayer({
-    url: url,
-    renderer: canvas({ tolerance: 5 }),
-    simplifyFactor: 0.35,
-    precision: 5,
-    minZoom: minReachSelectionZoom,
-    maxZoom: 18,
-    color: mapStore.featureOptions.defaultColor,
-    weight: mapStore.featureOptions.defaultWeight,
-    opacity: mapStore.featureOptions.opacity
-    // fields: ["FID", "PopupTitle", "PopupSubti", "SLOPE", "LENGTHKM"],
-  })
+  function createFlowlinesFeatureLayer(region) {
+    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
+    const featureLayer = esriLeaflet.featureLayer({
+      url: url,
+      simplifyFactor: 0.35,
+      precision: 5,
+      minZoom: MIN_WFS_ZOOM,
+      renderer: canvas({ tolerance: 5 }),
+      color: mapStore.featureOptions.defaultColor,
+      weight: mapStore.featureOptions.defaultWeight,
+      opacity: mapStore.featureOptions.opacity,
+      fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
+    })
+    featureLayer.name = region.name
 
-  mapObject.value.flowlinesFeatures = flowlinesFeatures
-
-  flowlinesFeatures.on('click', async function (e) {
-    const feature = e.layer.feature
-    featureStore.clearSelectedFeatures()
-    if (!featureStore.checkFeatureSelected(feature)) {
-      // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature)
-    }
-    console.log('Selected feature:', feature)
-    const popup = L.popup()
-    const content = `
-        <h3>${e.layer.feature.properties.name}</h3>
-        <p>
-            <ul>
-                <li>High Water Threshold: ${e.layer.feature.properties.high_water_threshold.toFixed(2)}</li>
-            </ul>
-        </p>
-        `
-    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
-  })
-
-  url =
-    'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/RoaringRiverStatePark/FeatureServer/1'
-  const roaringRiverFeatures = esriLeaflet.featureLayer({
-    url: url,
-    simplifyFactor: 0.35,
-    precision: 5,
-    // minZoom: 9,
-    // maxZoom: 18,
-    style: function () {
-      return {
-        // weight: 0, // remove border
-        // fillOpacity: 0.7,
-        fill: true
+    featureLayer.on('click', function (e) {
+      const feature = e.layer.feature
+      const properties = feature.properties
+      console.log('Feature clicked:', feature)
+      featureStore.clearSelectedFeatures()
+      if (!featureStore.checkFeatureSelected(feature)) {
+        // Only allow one feature to be selected at a time
+        featureStore.selectFeature(feature)
       }
-    },
-    fields: ['FID', 'MeanDepth', 'LakeVolume', 'PopupTitle', 'PopupSubti']
-  })
-
-  roaringRiverFeatures.on('click', function (e) {
-    console.log(e.layer.feature.properties)
-    const popup = L.popup()
-    const content = `
-        <h3>${e.layer.feature.properties.PopupTitle}</h3>
-        <h4>${e.layer.feature.properties.PopupSubti}</h4>
+      const popup = L.popup()
+      const content = `
+        ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+        ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
         <p>
             <ul>
-                <li>MeanDepth: ${e.layer.feature.properties.MeanDepth}</li>
-                <li>LakeVolume: ${e.layer.feature.properties.LakeVolume}</li>
+          ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+          ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
             </ul>
         </p>
-        <p>
-            <a href="https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/RoaringRiverStatePark/FeatureServer/2/${e.layer.feature.id}" target="_blank">View in ArcGIS</a>
-        </p>
         `
-    popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
-
-    roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
-      color: '#9D78D2'
+      popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
     })
+    return featureLayer
+  }
 
-    popup.on('remove', function () {
-      roaringRiverFeatures.setFeatureStyle(e.layer.feature.id, {
-        color: '#3388ff'
-      })
+  function createWMSLayer(region) {
+    url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
+    const layer = L.tileLayer.wms(url, {
+      layers: region.wmsLayersToLoad,
+      transparent: 'true',
+      format: 'image/png',
+      minZoom: MIN_WMS_ZOOM
     })
-  })
-
-  let name = 'RoaringRiverStatePark'
-  let bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  let RoaringRiverStatePark = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 13 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: 9,
-    bounds: bounds
-  })
-  RoaringRiverStatePark.name = name
-  wmsLayers.value.push(RoaringRiverStatePark)
-
-  name = 'DeSoto'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const DeSoto = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 8 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom,
-    bounds: bounds
-  })
-  DeSoto.name = name
-  wmsLayers.value.push(DeSoto)
-
-  name = 'MountAscutney'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const MountAscutney = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom,
-    bounds: bounds
-  })
-  MountAscutney.name = name
-  wmsLayers.value.push(MountAscutney)
-
-  name = 'SpringfieldGreeneCounty'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const SpringfieldGreeneCounty = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom
-  })
-  SpringfieldGreeneCounty.name = name
-  wmsLayers.value.push(SpringfieldGreeneCounty)
-
-  name = 'TwoRiversOttauquechee'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const TwoRiversOttauquechee = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom
-  })
-  TwoRiversOttauquechee.name = name
-  wmsLayers.value.push(TwoRiversOttauquechee)
-
-  name = 'Windham'
-  bounds = regionsStore.getRegionBounds(name)
-  url = `${COMRES_SERVICE_URL}/${name}/MapServer/WmsServer?`
-  const Windham = L.tileLayer.wms(url, {
-    layers: Array.from({ length: 7 }, (_, i) => i),
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: minWMSZoom
-  })
-  Windham.name = name
-  wmsLayers.value.push(Windham)
+    layer.name = region.name
+    wmsLayers.value.push(layer)
+    return layer
+  }
+  // create the WMS layers for each region
+  for (let region of regionsStore.regions) {
+    createWMSLayer(region)
+  }
 
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
-  flowlines.addTo(mapStore.leaflet)
-  flowlinesFeatures.addTo(mapStore.leaflet)
-  roaringRiverFeatures.addTo(mapStore.leaflet)
 
   for (let layer of wmsLayers.value) {
     layer.addTo(mapStore.leaflet)
@@ -258,15 +148,21 @@ onMounted(() => {
   // layer toggling
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
-    'Flowlines WMS': flowlines,
-    'Flowlines Features': flowlinesFeatures,
-    'Roaring River Features': roaringRiverFeatures,
-    'Roaring River State Park': RoaringRiverStatePark,
-    'DeSoto WMS': DeSoto,
-    'Mount Ascutney': MountAscutney,
-    'Springfield Greene County': SpringfieldGreeneCounty,
-    'Two Rivers Ottauquechee': TwoRiversOttauquechee,
-    Windham: Windham
+    'Flowlines WMS': flowlines
+  }
+
+  // add the wms layers to the mixed object
+  for (let layer of wmsLayers.value) {
+    mixed[layer.name] = layer
+  }
+
+  // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers
+  // and the leaflet map
+  for (let region of regionsStore.regions) {
+    const flowlines = createFlowlinesFeatureLayer(region)
+    flowlinesFeatureLayers.value.push(flowlines)
+    region.flowlinesLayer = flowlines
+    mixed[`${region.name} flowlines`] = flowlines
   }
 
   // /*
@@ -285,21 +181,14 @@ onMounted(() => {
   // Layer Control
   L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
 
-  /*
-   * LEAFLET EVENT HANDLERS
-   */
-  mapStore.leaflet.on('click', function (e) {
-    mapClick(e)
-  })
-
-  mapStore.leaflet.on('zoomend moveend', () => {
-    const bounds = mapStore.leaflet.getBounds()
-    // convert the bounds to a format that can be used in the URL
-    const boundsString = JSON.stringify([
-      [bounds._southWest.lat, bounds._southWest.lng],
-      [bounds._northEast.lat, bounds._northEast.lng]
-    ])
-    console.log('Bounds:', boundsString)
+  // on zoom event, log the current bounds and zoom level
+  mapStore.leaflet.on('zoomend moveend', function () {
+    let zoom = mapStore.leaflet.getZoom()
+    console.log('zoom level:', zoom)
+    // log the bounds as [[lat, long], [lat, long]]
+    let bounds = mapStore.leaflet.getBounds()
+    console.log('bounds:', bounds._northEast, bounds._southWest)
+    console.log('map center:', mapStore.leaflet.getCenter())
   })
 
   mapStore.mapLoaded = true
@@ -308,21 +197,6 @@ onMounted(() => {
 /*
  * LEAFLET HANDLERS
  */
-
-async function mapClick(e) {
-  /*
-   * The event handler for map click events
-   * @param {event} e - a map mouse click event
-   * @returns - null
-   */
-
-  // exit early if not zoomed in enough.
-  // this ensures that objects are not clicked until zoomed in
-  let zoom = e.target.getZoom()
-  if (zoom < mapObject.value.selectable_zoom) {
-    return
-  }
-}
 
 function clearSelection() {
   // Clears the selected features on the map

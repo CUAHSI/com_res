@@ -5,6 +5,8 @@ export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
   const wmsLayers = ref([])
   const mapObject = ref(new Map())
+  const flowlinesFeatureLayers = ref([])
+  const activeFeatureLayer = shallowRef(null)
   const featureOptions = ref({
     selectedColor: 'red',
     defaultColor: 'blue',
@@ -16,7 +18,7 @@ export const useMapStore = defineStore('map', () => {
 
   const deselectFeature = (feature) => {
     try {
-      mapObject.value.flowlinesFeatures.setFeatureStyle(feature.id, {
+      activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.defaultColor,
         weight: featureOptions.value.defaultWeight
       })
@@ -27,7 +29,7 @@ export const useMapStore = defineStore('map', () => {
 
   const selectFeature = (feature) => {
     try {
-      mapObject.value.flowlinesFeatures.setFeatureStyle(feature.id, {
+      activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
@@ -37,26 +39,33 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const clearAllFeatures = () => {
-    mapObject.value.flowlinesFeatures.eachFeature(function (feature) {
-      feature.setStyle({ color: featureOptions.value.defaultColor })
-    })
+    try {
+      activeFeatureLayer.value.eachFeature(function (feature) {
+        feature.setStyle({ color: featureOptions.value.defaultColor })
+      })
+    } catch (error) {
+      console.warn('Attempted to clear all features:', error)
+    }
   }
 
-  const limitToBounds = (parsedBounds) => {
-    if (parsedBounds) {
+  const limitToBounds = (featureLayer) => {
+    console.log('Limiting to bounds of feature layer:', featureLayer)
+    featureLayer.query().bounds(function (error, bounds) {
+      if (error) {
+        console.log('Error running bounds query:')
+        console.warn(error)
+      }
       try {
-        console.log(`Zooming to bounds: ${parsedBounds}`)
-        leaflet.value.fitBounds(parsedBounds)
+        console.log(`Zooming to bounds: ${bounds}`)
+        leaflet.value.fitBounds(bounds)
         // prevent panning from bounds
-        leaflet.value.setMaxBounds(parsedBounds)
+        leaflet.value.setMaxBounds(bounds)
         // prevent zooming out
         leaflet.value.setMinZoom(leaflet.value.getZoom())
       } catch (error) {
-        console.warn('Error parsing bounds:', error)
+        console.warn('Error zooming to bounds:', error)
       }
-    } else {
-      alert('No bounds provided')
-    }
+    })
   }
 
   const toggleWMSLayer = (layerName) => {
@@ -66,6 +75,19 @@ export const useMapStore = defineStore('map', () => {
         wmsLayer.removeFrom(leaflet.value)
       } else {
         wmsLayer.addTo(leaflet.value)
+      }
+    })
+  }
+
+  const toggleFeatureLayer = (layerName) => {
+    // turn off all other feature layers and turn on the selected one
+    console.log('Toggling feature layer:', layerName)
+    flowlinesFeatureLayers.value.forEach((featureLayer) => {
+      if (featureLayer.name !== layerName) {
+        featureLayer.removeFrom(leaflet.value)
+      } else {
+        featureLayer.addTo(leaflet.value)
+        activeFeatureLayer.value = featureLayer
       }
     })
   }
@@ -80,6 +102,9 @@ export const useMapStore = defineStore('map', () => {
     featureOptions,
     leaflet,
     wmsLayers,
-    toggleWMSLayer
+    flowlinesFeatureLayers,
+    activeFeatureLayer,
+    toggleWMSLayer,
+    toggleFeatureLayer
   }
 })
