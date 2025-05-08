@@ -7,7 +7,7 @@ import 'leaflet-easybutton/src/easy-button.css'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, onUpdated } from 'vue'
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
@@ -20,13 +20,11 @@ const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
 
-const minReachSelectionZoom = 11
-const minWMSZoom = 9
+const MIN_REACH_SELECTION_ZOOM = 11
+const MIN_WMS_ZOOM = 9
+const MIN_WFS_ZOOM = 9
 const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
 
-onUpdated(() => {
-  mapStore.leaflet.invalidateSize()
-})
 onMounted(() => {
   mapStore.leaflet = L.map('mapContainer').setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
@@ -42,7 +40,7 @@ onMounted(() => {
     layers: 0,
     transparent: 'true',
     format: 'image/png',
-    maxZoom: minReachSelectionZoom,
+    maxZoom: MIN_REACH_SELECTION_ZOOM,
     minZoom: 0
   })
 
@@ -80,7 +78,7 @@ onMounted(() => {
     transparent: 'true',
     format: 'image/png',
     minZoom: 8,
-    maxZoom: minReachSelectionZoom
+    maxZoom: MIN_REACH_SELECTION_ZOOM
   })
 
   function createFlowlinesFeatureLayer(region) {
@@ -89,7 +87,7 @@ onMounted(() => {
       url: url,
       simplifyFactor: 0.35,
       precision: 5,
-      minZoom: minWMSZoom,
+      minZoom: MIN_WFS_ZOOM,
       renderer: canvas({ tolerance: 5 }),
       color: mapStore.featureOptions.defaultColor,
       weight: mapStore.featureOptions.defaultWeight,
@@ -97,6 +95,15 @@ onMounted(() => {
       fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
     })
     featureLayer.name = region.name
+
+    featureLayer.query().bounds(function (error, bounds) {
+      if (error) {
+        console.log('Error running "Query" operation: ' + error);
+      }
+      featureLayer.bounds = bounds;
+      // TODO: region.bounds is not being set correctly
+      region.bounds = bounds;
+    })
 
     featureLayer.on('click', function (e) {
       const feature = e.layer.feature
@@ -130,7 +137,7 @@ onMounted(() => {
       layers: region.wmsLayersToLoad,
       transparent: 'true',
       format: 'image/png',
-      minZoom: minWMSZoom,
+      minZoom: MIN_WMS_ZOOM,
       bounds: bounds
     })
     layer.name = region.name
@@ -165,6 +172,7 @@ onMounted(() => {
   for (let region of regionsStore.regions) {
     const flowlines = createFlowlinesFeatureLayer(region)
     flowlinesFeatureLayers.value.push(flowlines)
+    region.flowlinesLayer = flowlines
     mixed[`${region.name} flowlines`] = flowlines
   }
 
@@ -184,11 +192,14 @@ onMounted(() => {
   // Layer Control
   L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
 
-  /*
-   * LEAFLET EVENT HANDLERS
-   */
-  mapStore.leaflet.on('click', function (e) {
-    mapClick(e)
+  // on zoom event, log the current bounds and zoom level
+  mapStore.leaflet.on('zoomend moveend', function () {
+    let zoom = mapStore.leaflet.getZoom()
+    console.log('zoom level:', zoom)
+    // log the bounds as [[lat, long], [lat, long]]
+    let bounds = mapStore.leaflet.getBounds()
+    console.log('bounds:', bounds._northEast, bounds._southWest)
+    console.log('map center:', mapStore.leaflet.getCenter())
   })
 
   mapStore.mapLoaded = true
@@ -197,21 +208,6 @@ onMounted(() => {
 /*
  * LEAFLET HANDLERS
  */
-
-async function mapClick(e) {
-  /*
-   * The event handler for map click events
-   * @param {event} e - a map mouse click event
-   * @returns - null
-   */
-
-  // exit early if not zoomed in enough.
-  // this ensures that objects are not clicked until zoomed in
-  let zoom = e.target.getZoom()
-  if (zoom < mapObject.value.selectable_zoom) {
-    return
-  }
-}
 
 function clearSelection() {
   // Clears the selected features on the map
