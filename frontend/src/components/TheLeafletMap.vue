@@ -96,15 +96,6 @@ onMounted(() => {
     })
     featureLayer.name = region.name
 
-    featureLayer.query().bounds(function (error, bounds) {
-      if (error) {
-        console.log('Error running "Query" operation: ' + error);
-      }
-      featureLayer.bounds = bounds;
-      // TODO: region.bounds is not being set correctly
-      region.bounds = bounds;
-    })
-
     featureLayer.on('click', function (e) {
       const feature = e.layer.feature
       const properties = feature.properties
@@ -131,14 +122,12 @@ onMounted(() => {
   }
 
   function createWMSLayer(region) {
-    let bounds = regionsStore.getRegionBounds(region.name)
     url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
     const layer = L.tileLayer.wms(url, {
       layers: region.wmsLayersToLoad,
       transparent: 'true',
       format: 'image/png',
-      minZoom: MIN_WMS_ZOOM,
-      bounds: bounds
+      minZoom: MIN_WMS_ZOOM
     })
     layer.name = region.name
     wmsLayers.value.push(layer)

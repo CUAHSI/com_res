@@ -50,8 +50,11 @@ export const useMapStore = defineStore('map', () => {
 
   const limitToBounds = (featureLayer) => {
     console.log('Limiting to bounds of feature layer:', featureLayer)
-    const bounds = featureLayer.bounds
-    if (bounds) {
+    featureLayer.query().bounds(function (error, bounds) {
+      if (error) {
+        console.log('Error running bounds query:')
+        console.warn(error)
+      }
       try {
         console.log(`Zooming to bounds: ${bounds}`)
         leaflet.value.fitBounds(bounds)
@@ -60,11 +63,9 @@ export const useMapStore = defineStore('map', () => {
         // prevent zooming out
         leaflet.value.setMinZoom(leaflet.value.getZoom())
       } catch (error) {
-        console.warn('Error parsing bounds:', error)
+        console.warn('Error zooming to bounds:', error)
       }
-    } else {
-      alert('No bounds provided')
-    }
+    })
   }
 
   const toggleWMSLayer = (layerName) => {

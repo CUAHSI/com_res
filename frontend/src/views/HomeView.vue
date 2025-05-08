@@ -45,16 +45,10 @@
 import { useRouter } from 'vue-router'
 import { useRegionsStore } from '../stores/regions'
 
-const emit = defineEmits(['region-selected'])
 const router = useRouter()
 const regionsStore = useRegionsStore()
 
 const handleCardClick = (region) => {
-  const bounds = region.bounds
-
-  // Emit an event to the parent component with the selected region's bounds
-  emit('region-selected', { bounds })
-
   // Use the router to navigate to the maps view
   router.push({
     name: 'maps',

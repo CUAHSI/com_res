@@ -22,11 +22,7 @@ export const useRegionsStore = defineStore('regions', () => {
              spanning 4,294 acres.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 13 }, (_, i) => i),
-      flowlinesLayerNumber: 0,
-      bounds: [
-        [36.32563675305861, -94.43092346191406],
-        [36.74823792383878, -93.11943054199219]
-      ]
+      flowlinesLayerNumber: 0
     },
     {
       image: DeSoto,
@@ -37,11 +33,7 @@ export const useRegionsStore = defineStore('regions', () => {
             hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 8 }, (_, i) => i),
-      flowlinesLayerNumber: 0,
-      bounds: [
-        [37.96260604160774, -91.12541198730469],
-        [38.37611542403604, -89.81391906738283]
-      ]
+      flowlinesLayerNumber: 0
     },
     {
       image: MountAscutney,
@@ -53,11 +45,7 @@ export const useRegionsStore = defineStore('regions', () => {
              broad Connecticut River on the east.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
-      flowlinesLayerNumber: 0,
-      bounds: [
-        [43.043801776082425, -73.84735107421876],
-        [43.807774213873806, -71.22436523437501]
-      ]
+      flowlinesLayerNumber: 0
     },
     {
       image: SpringfieldGreeneCounty,
@@ -68,11 +56,7 @@ export const useRegionsStore = defineStore('regions', () => {
              the north, east, and south sides of the area.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
-      flowlinesLayerNumber: 1,
-      bounds: [
-        [36.83346996591306, -94.59365844726564],
-        [37.67077737288316, -91.97067260742188]
-      ]
+      flowlinesLayerNumber: 1
     },
     {
       image: TwoRiversOttauquechee,
@@ -83,11 +67,7 @@ export const useRegionsStore = defineStore('regions', () => {
              Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
-      flowlinesLayerNumber: 0,
-      bounds: [
-        [43.02071359427862, -75.10803222656251],
-        [44.53959000445632, -69.86206054687501]
-      ]
+      flowlinesLayerNumber: 0
     },
     {
       image: Windham,
@@ -99,11 +79,7 @@ export const useRegionsStore = defineStore('regions', () => {
              forests, including spruce, fir, and white pine.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
-      flowlinesLayerNumber: 0,
-      bounds: [
-        [42.20614200929957, -75.35797119140626],
-        [43.74530493763506, -70.11199951171876]
-      ]
+      flowlinesLayerNumber: 0
     }
   ])
   const setRegion = async (regionName) => {
@@ -116,43 +92,14 @@ export const useRegionsStore = defineStore('regions', () => {
     }
     currentRegion.value = region
     await nextTick()
+    mapStore.limitToBounds(region.flowlinesLayer)
     mapStore.toggleWMSLayer(region.name)
     mapStore.toggleFeatureLayer(region.name)
-    // limit the bounds to the flowlines layer for this region
-    mapStore.limitToBounds(region.flowlinesLayer)
-  }
-
-  /**
-   * Calculates the expanded bounds of a specified region with optional padding.
-   *
-   * @param {string} regionName - The name of the region to retrieve bounds for.
-   * @param {number} [padding=1.5] - The multiplier to expand the region bounds. Defaults to 1.5 if not provided.
-   * @returns {Array<Array<number>> | null} - The expanded bounds as a 2D array of coordinates
-   * [ [minLat, minLng], [maxLat, maxLng] ], or null if the region is not found.
-   */
-  const getRegionBounds = (regionName, padding) => {
-    if (padding === undefined) {
-      padding = 1.5 // default padding
-    }
-    const region = regions.value.find((region) => region.name === regionName)
-    if (!region) {
-      console.error(`Region ${regionName} not found`)
-      return null
-    }
-    const bounds = region.bounds
-    const latDiff = (bounds[1][0] - bounds[0][0]) * padding
-    const lngDiff = (bounds[1][1] - bounds[0][1]) * padding
-    const newBounds = [
-      [bounds[0][0] - latDiff, bounds[0][1] - lngDiff],
-      [bounds[1][0] + latDiff, bounds[1][1] + lngDiff]
-    ]
-    return newBounds
   }
 
   return {
     regions,
     currentRegion,
-    setRegion,
-    getRegionBounds
+    setRegion
   }
 })
