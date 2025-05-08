@@ -78,11 +78,11 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-// Watch the feature_id from the store. When it changes,
+// Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
 // components.
 watch(
-  () => featureStore.activeFeature?.properties?.feature_id,
+  () => featureStore.activeFeature?.properties?.COMID,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
       reachIdChanged(newVal)
@@ -94,7 +94,7 @@ const toggle = async (component_name) => {
   console.log(component_name)
 
   // get the feature id from the active feature
-  let reach_id = featureStore.activeFeature?.properties?.feature_id ?? null
+  let reach_id = featureStore.activeFeature?.properties?.COMID ?? null
   if (reach_id === undefined || reach_id === null) {
     // if no feature is selected show a popup dialog
     alertStore.displayAlert({
@@ -106,7 +106,7 @@ const toggle = async (component_name) => {
     })
     return
   }
-  let reach_name = featureStore.activeFeature.properties.name
+  let reach_name = featureStore.activeFeature.properties.GNIS_NAME
 
   // toggle plot visualizations
   // based on which button was clicked.
@@ -139,7 +139,7 @@ const reachIdChanged = async (selected_reach) => {
 
   // get the active reach name, this is necessary to update
   // the data displayed in the historical and forecast components
-  let reach_name = featureStore.activeFeature.properties.name
+  let reach_name = featureStore.activeFeature.properties.GNIS_NAME
 
   // update the historical plot when the selected reach changes
   // only if the historical component is visible
