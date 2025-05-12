@@ -6,6 +6,8 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
+// WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
+import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -15,7 +17,8 @@ import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, wmsLayers, flowlinesFeatureLayers } = storeToRefs(mapStore)
+const { mapObject, wmsLayers, flowlinesFeatureLayers, featureLayerProviders } =
+  storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
@@ -24,6 +27,8 @@ const MIN_REACH_SELECTION_ZOOM = 11
 const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
 const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
+const ACCESS_TOKEN =
+  'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
 onMounted(() => {
   mapStore.leaflet = L.map('mapContainer').setView([38.2, -96], 5)
@@ -121,6 +126,20 @@ onMounted(() => {
     return featureLayer
   }
 
+  function createFeatureLayerProvider(region) {
+    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
+    const featureLayerProvider = esriLeafletGeocoder.featureLayerProvider({
+      url: url,
+      searchFields: ['PopupTitle'],
+      label: `${region.name} Flowlines`,
+      //bufferRadius: 5000,
+      formatSuggestion: function (feature) {
+        return feature.properties.PopupTitle
+      }
+    })
+    return featureLayerProvider
+  }
+
   function createWMSLayer(region) {
     url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
     const layer = L.tileLayer.wms(url, {
@@ -161,9 +180,34 @@ onMounted(() => {
   for (let region of regionsStore.regions) {
     const flowlines = createFlowlinesFeatureLayer(region)
     flowlinesFeatureLayers.value.push(flowlines)
+    const provider = createFeatureLayerProvider(region)
+    featureLayerProviders.value.push(provider)
     region.flowlinesLayer = flowlines
     mixed[`${region.name} flowlines`] = flowlines
   }
+
+  const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
+    apikey: ACCESS_TOKEN,
+    maxResults: 3
+    // nearby: {
+    //   lat: -33.8688,
+    //   lng: 151.2093
+    // }
+  })
+
+  // add the address search provider to the featureLayerProviders
+  const providers = [addressSearchProvider, ...featureLayerProviders.value]
+
+  esriLeafletGeocoder
+    .geosearch({
+      position: 'topleft',
+      placeholder: 'Search for a location',
+      useMapBounds: true,
+      expanded: true,
+      title: ' Search',
+      providers: providers
+    })
+    .addTo(mapStore.leaflet)
 
   // /*
   //  * LEAFLET BUTTONS
