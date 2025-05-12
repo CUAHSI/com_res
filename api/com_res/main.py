@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.timeseries import router as timeseries_router
 from app.users import cuahsi_oauth_client
@@ -21,16 +20,6 @@ swagger_params = {
 app = FastAPI(
     servers=[{"url": get_settings().vite_app_api_url}],
     swagger_ui_parameters=swagger_params,
-)
-
-origins = [get_settings().allow_origins]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 
