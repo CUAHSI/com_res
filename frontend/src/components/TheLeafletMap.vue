@@ -36,9 +36,11 @@ onMounted(() => {
   mapObject.value.popups = []
   mapObject.value.buffer = 20
   mapObject.value.huclayers = []
-  mapObject.value.selected_hucs = []
   mapObject.value.reaches = {}
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
+
+  //Remove the common zoom control and add it back later later
+  mapStore.leaflet.zoomControl.remove()
 
   let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
     url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
@@ -198,20 +200,32 @@ onMounted(() => {
   // add the address search provider to the featureLayerProviders
   const providers = [addressSearchProvider, ...featureLayerProviders.value]
 
+  // /*
+  //  * LEAFLET BUTTONS
+  //  */
+
+  // Layer Control
+  L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
+
+  // Geocoder Control
+  // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
   esriLeafletGeocoder
     .geosearch({
-      position: 'topleft',
+      position: 'topright',
       placeholder: 'Search for a location',
       useMapBounds: true,
-      expanded: true,
+      expanded: false,
       title: ' Search',
       providers: providers
     })
     .addTo(mapStore.leaflet)
 
-  // /*
-  //  * LEAFLET BUTTONS
-  //  */
+  // add zoom control again they are ordered in the order they are added
+  L.control
+    .zoom({
+      position: 'topleft'
+    })
+    .addTo(mapStore.leaflet)
 
   // Erase
   L.easyButton(
@@ -221,9 +235,6 @@ onMounted(() => {
     },
     'clear selected features'
   ).addTo(mapStore.leaflet)
-
-  // Layer Control
-  L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
 
   // on zoom event, log the current bounds and zoom level
   mapStore.leaflet.on('zoomend moveend', function () {
@@ -245,20 +256,7 @@ onMounted(() => {
 function clearSelection() {
   // Clears the selected features on the map
 
-  for (let key in mapObject.value.hucbounds) {
-    // clear the huc boundary list
-    delete mapObject.value.hucbounds[key]
-
-    // clear the polygon overlays
-    mapObject.value.huclayers[key].clearLayers()
-    delete mapObject.value.huclayers[key]
-
-    // clear the hucs in the html template
-  }
-  mapObject.value.selected_hucs = []
-
-  // clear the HUC table
-  // clearHucTable();
+  featureStore.clearSelectedFeatures()
 
   // update the map
   updateMapBBox()
