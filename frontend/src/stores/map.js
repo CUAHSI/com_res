@@ -6,6 +6,7 @@ export const useMapStore = defineStore('map', () => {
   const wmsLayers = ref([])
   const mapObject = ref(new Map())
   const flowlinesFeatureLayers = ref([])
+  const featureLayerProviders = shallowRef([])
   const activeFeatureLayer = shallowRef(null)
   const featureOptions = ref({
     selectedColor: 'red',
@@ -103,6 +104,7 @@ export const useMapStore = defineStore('map', () => {
     leaflet,
     wmsLayers,
     flowlinesFeatureLayers,
+    featureLayerProviders,
     activeFeatureLayer,
     toggleWMSLayer,
     toggleFeatureLayer
