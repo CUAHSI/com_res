@@ -1,7 +1,7 @@
 <template>
-  <v-sheet class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
+  <v-sheet class="mx-auto" elevation="8">
     <h5>{{ props.title }}</h5>
-    <div>
+    <div style="height: calc(25vh); width: 100%">
       <Line :data="chartData" :options="chartOptions" />
     </div>
   </v-sheet>
