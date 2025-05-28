@@ -12,6 +12,23 @@
     </v-row>
   </v-sheet>
   <LinePlot v-else :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+  <v-btn
+    v-show="plot_timeseries.length > 0 && !isLoading"
+    color="primary"
+    :disabled="downloading.json"
+    :loading="downloading.json"
+    @click="downJson"
+  >
+    <v-icon :icon="mdiCodeJson" class="mr-1"></v-icon>
+    Download
+    <v-progress-circular
+      v-if="downloading.json"
+      indeterminate
+      color="white"
+      size="20"
+      class="ml-2"
+    ></v-progress-circular>
+  </v-btn>
 </template>
 
 <script setup>
@@ -19,6 +36,7 @@ import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose } from 'vue'
 import { API_BASE } from '@/constants'
+import { mdiCodeJson } from '@mdi/js'
 import {
   Chart as ChartJS,
   Title,
@@ -37,6 +55,7 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
+const downloading = ref({ json: false })
 const error = ref(null)
 
 const clearPlot = () => {
@@ -72,6 +91,30 @@ const getHistoricalData = async (reach_id, name, start_date, end_date) => {
   }
 
   plot_title.value = 'Historical Streamflow - ' + name
+}
+
+async function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const downJson = async () => {
+  downloading.value.json = true
+  const jsonData = JSON.stringify(plot_timeseries.value, null, 2)
+  const blob = new Blob([jsonData], { type: 'application/json' })
+  let filename = getFileName()
+  await downloadBlob(blob, filename)
+  downloading.value.json = false
+}
+
+const getFileName = () => {
+  const date = new Date().toISOString().split('T')[0]
+  let filename = `${plot_title.value}${date}`
+  return filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()
 }
 
 defineExpose({
