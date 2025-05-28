@@ -1,5 +1,17 @@
 <template>
-  <LinePlot :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+  <v-sheet v-if="isLoading" class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
+    <v-skeleton-loader
+      v-if="isLoading"
+      type="heading, image "
+      :loading="isLoading"
+      class="mx-auto"
+    ></v-skeleton-loader>
+    <v-row justify="center" align="center" class="mt-4">
+      <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+      <span class="ml-3">Loading forecasted data...</span>
+    </v-row>
+  </v-sheet>
+  <LinePlot v-else :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
 </template>
 
 <script setup>
