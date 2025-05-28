@@ -1,34 +1,39 @@
 <template>
-  <v-sheet v-if="isLoading" class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
+  <v-sheet v-if="show" class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
       :loading="isLoading"
       class="mx-auto"
     ></v-skeleton-loader>
-    <v-row justify="center" align="center" class="mt-4">
+    <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading historical data...</span>
     </v-row>
+    <LinePlot
+      v-if="!isLoading"
+      :timeseries="plot_timeseries"
+      :title="plot_title"
+      :style="plot_style"
+    />
+    <v-btn
+      v-if="plot_timeseries.length > 0 && !isLoading"
+      color="primary"
+      :disabled="downloading.json"
+      :loading="downloading.json"
+      @click="downJson"
+    >
+      <v-icon :icon="mdiCodeJson" class="mr-1"></v-icon>
+      Download
+      <v-progress-circular
+        v-if="downloading.json"
+        indeterminate
+        color="white"
+        size="20"
+        class="ml-2"
+      ></v-progress-circular>
+    </v-btn>
   </v-sheet>
-  <LinePlot v-else :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
-  <v-btn
-    v-show="plot_timeseries.length > 0 && !isLoading"
-    color="primary"
-    :disabled="downloading.json"
-    :loading="downloading.json"
-    @click="downJson"
-  >
-    <v-icon :icon="mdiCodeJson" class="mr-1"></v-icon>
-    Download
-    <v-progress-circular
-      v-if="downloading.json"
-      indeterminate
-      color="white"
-      size="20"
-      class="ml-2"
-    ></v-progress-circular>
-  </v-btn>
 </template>
 
 <script setup>
@@ -120,5 +125,12 @@ const getFileName = () => {
 defineExpose({
   getHistoricalData,
   clearPlot
+})
+
+defineProps({
+  show: {
+    type: Boolean,
+    required: true
+  }
 })
 </script>
