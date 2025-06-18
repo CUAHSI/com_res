@@ -60,6 +60,7 @@ def compute_rating_increments(
     huc_id: str,
     reach_id: str,
     increment: float,
+    verbose: bool = False,
 ) -> Tuple[Tuple[float], Tuple[float]]:
     """
     Compute flow rate increments for a given reach ID
@@ -72,11 +73,7 @@ def compute_rating_increments(
 
     """
 
-    print(f"HUC ID: {huc_id}")
-    print(f"Reach ID: {reach_id}")
-    print(f"Increment: {increment}")
-    print("-----------")
-
+    
     # create the path to the rating curve file
     # based on the huc_id. This assumes that the
     # data has already been downloaded.
@@ -111,8 +108,13 @@ def compute_rating_increments(
 
         interpolated.append((round(s, 2), round(interpolated_flow, 2)))
 
-    for i in interpolated:
-        print(f"{i[0]}, {i[1]}")
+    if verbose:
+        print(f"HUC ID: {huc_id}")
+        print(f"Reach ID: {reach_id}")
+        print(f"Increment: {increment}")
+        print("-----------")
+        for i in interpolated:
+            print(f"{i[0]}, {i[1]}")
 
     interpolated_stage, interpolated_flow = zip(*interpolated)
 

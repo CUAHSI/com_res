@@ -185,11 +185,14 @@ def generate_reach_fim(
     for each reach identifier.
 
     Arguments:
+    ==========
         huc_id - str: The HUC-8 identifier for the watershed.
         reach_ids - str: A comma separated list of NWM reach identifier for the reaches of interest.
         flow_rates - str: A comma replace list of flow rates corresponding to the reach_ids to use for FIM generation, in cubic meters per second.
-        labels - str: A comma separated list of labels that will be used to name the output files.
+        labels - str: A comma separated list of labels that will be used to name the output files. NOTE: Labels cannot have a period ('.') in their name due to a limitation of FimServ.
+        
     Returns:
+    ========
         None
 
     """
@@ -214,9 +217,11 @@ def generate_reach_fim(
         )
 
     for i in range(0, len(flow_rate_filepaths)):
+        
         # compute FIM using the moasic approach established
         # by NOAA OWP.
         __generate_fim(huc_id, flow_rate_filepaths[i])
+        
 
         # clean the geotiff that was created by replacing
         # all values less than or equal to 0 with 0 and all
