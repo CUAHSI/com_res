@@ -2,14 +2,18 @@
 
 import typer
 import numpy
+import pandas
 import rasterio
-import fimserve as fm
 from typing import List
 from pathlib import Path
-from fimserve import runFIM
 from rasterio import Affine
 from typing_extensions import Annotated
 
+import fimserve as fm
+from fimserve import runFIM
+import compute_rating_increments as cr
+
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]}, add_completion=False
@@ -149,6 +153,116 @@ def __clean_fim_geotiff(
         dst.write(cropped_data.astype(rasterio.float32), 1)
 
 
+def __compute_fim_scenario(i, huc_id, reach_id, flow_rate_filepath):
+    print(f"Computing FIM for {huc_id}:{reach_id} - {flow_rate_filepath} \t [{i+1}]")
+    __generate_fim(huc_id, flow_rate_filepath)
+
+
+@app.command(name="reachfim_interval")
+def generate_reach_fim_at_intervals(
+    huc_id: Annotated[
+        str,
+        typer.Argument(
+            ...,
+            help="The HUC-8 identifier for the watershed.",
+        ),
+    ] = "03020202",
+    reach_id: Annotated[
+        str,
+        typer.Argument(
+            ...,
+            help="An NWM identifiers for the reache of interest.",
+        ),
+    ] = "11239409",
+    stage_increment: Annotated[
+        float,
+        typer.Argument(
+            ...,
+            help="The stage increment in meteres that will be used to subdivide the rating curve into flows",
+        ),
+    ] = 0.5,
+    max_procs: Annotated[
+        int,
+        typer.Argument(
+            ...,
+            help="The number of cuncorrent processes that we execute",
+        ),
+    ] = 1,
+) -> None:
+    """
+    Generates a FIM maps for a specific HUC and nwm reach identifier using
+    flow rates derived from rating curves.
+
+    Arguments:
+    ==========
+        huc_id - str: The HUC-8 identifier for the watershed.
+        reach_ids - str: A comma separated list of NWM reach identifier for the reaches of interest.
+        stage_increment - float: The stage increment in meteres that will be used to subdivide the rating curve into flows
+
+    Returns:
+    ========
+        None
+
+    """
+
+    # download HUC data if it doesn't exist
+    __download_huc_fim(huc_id)
+
+    # compute flow from stage increments
+    print("Computing rating increments...", end="")
+    stage, flow = cr.compute_rating_increments(
+        huc_id=huc_id, reach_id=reach_id, increment=stage_increment, verbose=False
+    )
+    df = pandas.DataFrame({"stage_m": stage[1:], "cms": flow[1:]})
+    print("done")
+
+    # Generate Labels
+    print("Generating output labels...", end="")
+    flow_labels = [f"{str(v).replace('.','_')}_cms" for v in df.cms.values]
+
+    stage_labels = [f"{str(v).replace('.','_')}_m" for v in df["stage_m"].values]
+    labels = [
+        f"{reach_id}__{stage_labels[i]}__{flow_labels[i]}"
+        for i in range(0, len(flow_labels))
+    ]
+    print("done")
+
+    # write the input files that will be used to generate the FIM
+    print("Writing input files...", end="")
+    flow_rate_filepaths = []
+    for i in range(0, len(labels)):
+        flow_rate_filepaths.append(
+            __write_flow_input_file([reach_id], [flow[i]], labels[i])
+        )
+    print("done")
+
+    with ProcessPoolExecutor(max_workers=max_procs) as executor:
+        futures = [
+            executor.submit(
+                __compute_fim_scenario, i, huc_id, reach_id, flow_rate_filepaths[i]
+            )
+            for i in range(len(flow_rate_filepaths))
+        ]
+
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"Error during FIM computation: {e}")
+
+    # clean the geotiff that was created by replacing
+    # all values less than or equal to 0 with 0 and all
+    # others with 1
+    for fpath in Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation").glob("*.tif"):
+        try:
+            print(f"Cleaning FIM Results for {fpath.name}...", end="")
+            __clean_fim_geotiff(fpath)
+            print("done")
+
+        except Exception as e:
+            print(f"Error cleaning FIM results for {fpath.name}.\n{e}")
+
+
 @app.command(name="reachfim")
 def generate_reach_fim(
     huc_id: Annotated[
@@ -190,7 +304,7 @@ def generate_reach_fim(
         reach_ids - str: A comma separated list of NWM reach identifier for the reaches of interest.
         flow_rates - str: A comma replace list of flow rates corresponding to the reach_ids to use for FIM generation, in cubic meters per second.
         labels - str: A comma separated list of labels that will be used to name the output files. NOTE: Labels cannot have a period ('.') in their name due to a limitation of FimServ.
-        
+
     Returns:
     ========
         None
@@ -207,7 +321,9 @@ def generate_reach_fim(
 
     # generate output file names if not provided
     if len(output_labels) == 0:
-        output_labels = [f"flowrate_{r_id}" for r_id in r_ids]
+        for i in range(0, len(r_ids)):
+            flow_label = str(f_rates[i]).replace(".", "_")
+            output_labels.append(f"flowrate_{r_ids[0]}_{flow_label}_cms")
 
     # write the input files that will be used to generate the FIM
     flow_rate_filepaths = []
@@ -217,19 +333,24 @@ def generate_reach_fim(
         )
 
     for i in range(0, len(flow_rate_filepaths)):
-        
+
         # compute FIM using the moasic approach established
         # by NOAA OWP.
         __generate_fim(huc_id, flow_rate_filepaths[i])
-        
 
         # clean the geotiff that was created by replacing
         # all values less than or equal to 0 with 0 and all
         # others with 1
-        __clean_fim_geotiff(
-            Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation")
-            / f"{output_labels[i]}_inundation.tif"
-        )
+        try:
+            __clean_fim_geotiff(
+                Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation")
+                / f"{output_labels[i]}_inundation.tif"
+            )
+        except Exception as e:
+            print(e)
+            print(
+                f"Error cleaning FIM results for {huc_id}:{r_ids[i]} - {flow_rate_filepaths[i]}"
+            )
 
 
 if __name__ == "__main__":
