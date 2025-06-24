@@ -10,8 +10,10 @@ import typer
 import numpy
 import pandas
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 from scipy import interpolate
+
+app = typer.Typer()
 
 
 def interpolate_y(
@@ -52,10 +54,95 @@ def interpolate_y(
     return f(x_value).item()
 
 
-app = typer.Typer()
+def __load_rating_curve(huc_id: str, reach_id: str) -> Union[pandas.DataFrame, None]:
+
+    # create the path to the rating curve file
+    # based on the huc_id. This assumes that the
+    # data has already been downloaded.
+    huc_data_path = Path(f"output/flood_{huc_id}/{huc_id}/branches/0")
+
+    # load the rating curve data
+    df = pandas.read_csv(huc_data_path / "hydrotable_0.csv", low_memory=False)
+    dat = df.loc[df.feature_id == int(reach_id)]
+
+    # exit early if no data is found for the reach
+    if len(dat) == 0:
+        print(f"No data found for reach_id: {reach_id}")
+        return None
+
+    # isolate only the data that we need
+    dat = dat[["stage", "discharge_cms", "HydroID"]]
+
+    return dat
 
 
-@app.command()
+@app.command(name="get_stage")
+def get_stage(
+    huc_id: str, reach_id: str, flow: float, verbose: bool = False
+) -> Union[float, None]:
+    """
+    Interpolates river stage based on user-provided river flow using the
+    synthetically generated rating curve for the specified reach.
+    """
+
+    dat = __load_rating_curve(huc_id, reach_id)
+    if dat is None:
+        return
+
+    # since each feature_id is associated with multiple HydroID's,
+    # we'll just consider the first one to determine the bounds of
+    # our calculation
+    group = dat.groupby("HydroID").get_group(
+        list(dat.groupby("HydroID").groups.keys())[0]
+    )
+
+    interpolated_stage = interpolate_y(group, "discharge_cms", "stage", flow)
+
+    if verbose:
+        print(f"HUC ID: {huc_id}")
+        print(f"Reach ID: {reach_id}")
+        print("-----------")
+        print(
+            f"{flow} cms -> {round(interpolated_stage, 2)} m ({interpolated_stage} m )"
+        )
+
+    return interpolated_stage
+
+
+@app.command(name="get_flow")
+def get_flow(
+    huc_id: str, reach_id: str, stage: float, verbose: bool = False
+) -> Union[float, None]:
+    """
+    Interpolates river flow based on user-provided river stage using the
+    synthetically generated rating curve for the specified reach.
+    """
+
+    dat = __load_rating_curve(huc_id, reach_id)
+    if dat is None:
+        return
+
+    # since each feature_id is associated with multiple HydroID's,
+    # we'll just consider the first one to determine the bounds of
+    # our calculation
+    group = dat.groupby("HydroID").get_group(
+        list(dat.groupby("HydroID").groups.keys())[0]
+    )
+
+    interpolated_flow = interpolate_y(group, "stage", "discharge_cms", stage)
+
+    if verbose:
+        print(f"HUC ID: {huc_id}")
+        print(f"Reach ID: {reach_id}")
+        print("-----------")
+        print(
+            f"{stage} m -> {round(interpolated_flow, 2)} cms ({interpolated_flow} cms)"
+        )
+
+    return interpolated_flow
+
+
+@app.command(name="get_rating_increments")
 def compute_rating_increments(
     huc_id: str,
     reach_id: str,
@@ -73,23 +160,9 @@ def compute_rating_increments(
 
     """
 
-    
-    # create the path to the rating curve file
-    # based on the huc_id. This assumes that the
-    # data has already been downloaded.
-    huc_data_path = Path(f"output/flood_{huc_id}/{huc_id}/branches/0")
-
-    # load the rating curve data
-    df = pandas.read_csv(huc_data_path / "hydrotable_0.csv", low_memory=False)
-    dat = df.loc[df.feature_id == int(reach_id)]
-
-    # exit early if no data is found for the reach
-    if len(dat) == 0:
-        print(f"No data found for reach_id: {reach_id}")
+    dat = __load_rating_curve(huc_id, reach_id)
+    if dat is None:
         return
-
-    # isolate only the data that we need
-    dat = dat[["stage", "discharge_cms", "HydroID"]]
 
     # since each feature_id is associated with multiple HydroID's,
     # we'll just consider the first one to determine the bounds of
