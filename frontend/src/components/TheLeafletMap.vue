@@ -92,7 +92,7 @@ onMounted(() => {
     url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
     const featureLayer = esriLeaflet.featureLayer({
       url: url,
-      simplifyFactor: 0.35,
+      simplifyFactor: 0.4,
       precision: 5,
       minZoom: MIN_WFS_ZOOM,
       renderer: canvas({ tolerance: 5 }),
