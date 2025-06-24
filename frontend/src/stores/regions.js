@@ -22,7 +22,7 @@ export const useRegionsStore = defineStore('regions', () => {
              spanning 4,294 acres.`,
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 13 }, (_, i) => i),
-      flowlinesLayerNumber: 0
+      flowlinesLayerNumber: 13
     },
     {
       image: DeSoto,
