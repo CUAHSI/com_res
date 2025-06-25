@@ -31,6 +31,8 @@ RUN git clone --depth 1 https://github.com/NOAA-OWP/inundation-mapping.git /home
 
 
 # Install FIMServ and remove source after installation
+# Patch the FIMServ library to allow running flood_inundation calculations
+# concurrently without merging the wrong output files.
 RUN git clone https://github.com/sdmlua/FIMserv.git /home/code/FIMServ 
 COPY runFIM.py /home/code/FIMServ/src/fimserve/runFIM.py
 RUN cd /home/code/FIMServ \
@@ -40,8 +42,6 @@ RUN cd /home/code/FIMServ \
 COPY generate_fim.py /home/generate_fim.py
 COPY compute_rating_increments.py /home/compute_rating_increments.py
 
-# Patch the FIMServ library to allow running flood_inundation calculations
-# concurrently without merging the wrong output files.
 
 # Set bash as the default command
 ENTRYPOINT ["/opt/conda/bin/python", "generate_fim.py"]

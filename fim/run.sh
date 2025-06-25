@@ -5,5 +5,5 @@ ARGS=$@
 docker run --rm -ti \
   -v $(pwd)/data/:/home/data \
   -v $(pwd)/output/:/home/output \
-  cuahsi/fimserv:latest \
+  cuahsi/fimserv:0.2 \
   $ARGS
