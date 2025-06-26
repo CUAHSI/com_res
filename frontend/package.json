@@ -29,6 +29,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "esri-leaflet": "^3.0.12",
     "esri-leaflet-geocoder": "^3.1.5",
+    "georaster": "^1.6.0",
     "georaster-layer-for-leaflet": "^3.10.0",
     "leaflet": "^1.9.4",
     "leaflet-easybutton": "^2.4.0",
