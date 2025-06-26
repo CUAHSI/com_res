@@ -84,6 +84,9 @@ The output goes into a bucket:
 [com_res_fim_output](https://console.cloud.google.com/storage/browser/com_res_fim_output)
 ![output_bucket](output_bucket.png)
 
+Update the CORS for the bucket:
+`gcloud storage buckets update gs://com_res_fim_output --cors-file=cloud/gcs_cors_config.json`
+
 #### WIP:
 1. I created a bucket [inundation-mapping-and-fimserv](https://console.cloud.google.com/storage/browser/inundation-mapping-and-fimserv). The goal would be to upload the necessary software to this bucket so that it doesn't have to be downloaded every time the job is run!
   * Are we talking about replacing [these steps in the Dockerfile](https://github.com/CUAHSI/com_res/blob/CAM-666/fim-cloud-run/fim/Dockerfile#L23-L40)? If yes, wouldn't we expect thoses packages to already be in the docker image (and thus not have to be re-downloaded)? Or are we talking about [this HUC8 download](https://github.com/CUAHSI/com_res/blob/a3239fe2af79114e835e897880420af0924aaede/fim/generate_fim.py#L57-L68)?
