@@ -238,42 +238,46 @@ onMounted(() => {
     'clear selected features'
   ).addTo(mapStore.leaflet)
 
-  const url_to_geotiff_file =
-    'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585030__10_0_m__4150_cms_inundation.tif'
-  parseGeoraster(url_to_geotiff_file).then((georaster) => {
-    console.log('georaster:', georaster)
+  try {
+    const url_to_geotiff_file =
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585030__10_0_m__4150_cms_inundation.tif'
+    parseGeoraster(url_to_geotiff_file).then((georaster) => {
+      console.log('georaster:', georaster)
 
-    /*
-            GeoRasterLayer is an extension of GridLayer,
-            which means can use GridLayer options like opacity.
+      /*
+              GeoRasterLayer is an extension of GridLayer,
+              which means can use GridLayer options like opacity.
+  
+              Just make sure to include the georaster option!
+  
+              http://leafletjs.com/reference-1.2.0.html#gridlayer
+          */
+      const roaringRiverRasterTest = new GeoRasterLayer({
+        attribution: 'CUAHSI',
+        georaster: georaster,
+        resolution: 128,
+        opacity: 0.5,
+        pixelValuesToColorFn: (pixelValues) => {
+          // Assuming pixelValues is an array of values, map them to colors
+          return pixelValues.map((value) => {
+            // Example: Map value to a color based on some condition
+            if (value > 0) {
+              return 'blue' // Color for inundated areas
+            } else {
+              return 'transparent' // Color for non-inundated areas
+            }
+          })
+        },
+        bandIndex: 0, // Assuming the raster has a single band
+        noDataValue: 0 // Assuming 0 is the no-data value
+      })
+      roaringRiverRasterTest.addTo(mapStore.leaflet)
 
-            Just make sure to include the georaster option!
-
-            http://leafletjs.com/reference-1.2.0.html#gridlayer
-        */
-    const roaringRiverRasterTest = new GeoRasterLayer({
-      attribution: 'CUAHSI',
-      georaster: georaster,
-      resolution: 128,
-      opacity: 0.5,
-      pixelValuesToColorFn: (pixelValues) => {
-        // Assuming pixelValues is an array of values, map them to colors
-        return pixelValues.map((value) => {
-          // Example: Map value to a color based on some condition
-          if (value > 0) {
-            return 'blue' // Color for inundated areas
-          } else {
-            return 'transparent' // Color for non-inundated areas
-          }
-        })
-      },
-      bandIndex: 0, // Assuming the raster has a single band
-      noDataValue: 0 // Assuming 0 is the no-data value
+      mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
     })
-    roaringRiverRasterTest.addTo(mapStore.leaflet)
-
-    mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
-  })
+  } catch (error) {
+    console.error('Error loading GeoRasterLayer:', error)
+  }
 
   // on zoom event, log the current bounds and zoom level
   mapStore.leaflet.on('zoomend moveend', function () {
