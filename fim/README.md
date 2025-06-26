@@ -59,6 +59,15 @@ where `5` is the stage interval to generate FIMS for and `2` is the number of th
 Retag the image and push it to Artifact Registry:
 `docker tag cuahsi/fimserv:0.2 us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2`
 
+Or build it fresh:
+`docker build -t us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest .`
+
+Push the image:
+`docker push us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest`
+
+You can see the image in the repository here:
+[Artifact Registry](https://console.cloud.google.com/artifacts/docker/com-res/us-central1/cuahsi/fimserv?inv=1&invt=Ab1J9A&project=com-res)
+
 The cloud run job can be found here:
 [fimserv cloud run job](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/executions?inv=1&invt=Ab1KKQ&project=com-res)
 
@@ -76,5 +85,4 @@ The output goes into a bucket:
 ![output_bucket](output_bucket.png)
 
 WIP:
-1. The jobs fail partway through. Example see [logs](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/logs?inv=1&invt=Ab1KKQ&project=com-res). It fails looking for a [.csv file that seems to exist](https://storage.cloud.google.com/com_res_fim_output/flood_11010001/11010001/branches/0/hydroTable_0.csv). LOOKS LIKE A CAPITALIZATION ISSUE!
-2. I created a bucket [inundation-mapping-and-fimserv](https://console.cloud.google.com/storage/browser/inundation-mapping-and-fimserv). The goal would be to upload the necessary software to this bucket so that it doesn't have to be downloaded every time the job is run!
+1. I created a bucket [inundation-mapping-and-fimserv](https://console.cloud.google.com/storage/browser/inundation-mapping-and-fimserv). The goal would be to upload the necessary software to this bucket so that it doesn't have to be downloaded every time the job is run!

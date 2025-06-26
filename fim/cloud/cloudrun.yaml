@@ -39,7 +39,7 @@ spec:
                 bucketName: com_res_fim_output
           containers:
           - name: fimserv-1
-            image: 'us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2'
+            image: 'us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2.1'
             args:
             - reachfim_interval
             - '11010001'
