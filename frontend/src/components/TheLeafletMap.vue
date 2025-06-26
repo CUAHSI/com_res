@@ -239,8 +239,7 @@ onMounted(() => {
   ).addTo(mapStore.leaflet)
 
   try {
-    const url_to_geotiff_file =
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585030__10_0_m__4150_cms_inundation.tif'
+    const url_to_geotiff_file = 'https://storage.googleapis.com/com_res_fim_output/cog.tif'
     parseGeoraster(url_to_geotiff_file).then((georaster) => {
       console.log('georaster:', georaster)
 
