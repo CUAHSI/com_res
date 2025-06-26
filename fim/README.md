@@ -53,3 +53,28 @@ To generate FIM for range of scenarios, you can use the `reachfim_interval` comm
 `run.sh reachfim_interval 03020202 11237685 5 2`
 
 where `5` is the stage interval to generate FIMS for and `2` is the number of threads to use for processing.
+
+### Running in the cloud
+
+Retag the image and push it to Artifact Registry:
+`docker tag cuahsi/fimserv:0.2 us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2`
+
+The cloud run job can be found here:
+[fimserv cloud run job](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/executions?inv=1&invt=Ab1KKQ&project=com-res)
+
+It is also defined in YAML here:
+[cloudrun.yaml](./cloud/cloudrun.yaml)
+
+You can edit the yaml in the cloud console UI here:
+[console yaml edit](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/yaml/edit?inv=1&invt=Ab1KKQ&project=com-res)
+
+The job can be run with the following command (obviously you can alter the args):
+`gcloud run jobs execute fimserv --region=us-central1 --project=com-res --args=reachfim_interval,11010001,8585030,10,1`
+
+The output goes into a bucket:
+[com_res_fim_output](https://console.cloud.google.com/storage/browser/com_res_fim_output)
+![output_bucket](output_bucket.png)
+
+WIP:
+1. The jobs fail partway through. Example see [logs](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/logs?inv=1&invt=Ab1KKQ&project=com-res). It fails looking for a [.csv file that seems to exist](https://storage.cloud.google.com/com_res_fim_output/flood_11010001/11010001/branches/0/hydroTable_0.csv). LOOKS LIKE A CAPITALIZATION ISSUE!
+2. I created a bucket [inundation-mapping-and-fimserv](https://console.cloud.google.com/storage/browser/inundation-mapping-and-fimserv). The goal would be to upload the necessary software to this bucket so that it doesn't have to be downloaded every time the job is run!
