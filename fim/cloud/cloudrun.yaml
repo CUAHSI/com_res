@@ -1,0 +1,58 @@
+# Requires image in gcp
+# https://console.cloud.google.com/artifacts/docker/com-res/us-central1/cuahsi?inv=1&invt=Ab1J9A&project=com-res
+# docker tag cuahsi/fimserv:0.2 us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2
+# gcloud run jobs execute fimserv --region=us-central1 --project=com-res --args=reachfim_interval,11010001,8585030,10,1
+# this outputs to https://console.cloud.google.com/storage/browser/com_res_fim_output;tab=objects?forceOnBucketsSortingFiltering=true&inv=1&invt=Ab1KJA&project=com-res&prefix=&forceOnObjectsSortingFiltering=false
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: fimserv
+  namespace: '451087111407'
+  selfLink: /apis/run.googleapis.com/v1/namespaces/451087111407/jobs/fimserv
+  uid: fdc73138-66a7-416f-9c67-a702a0f7241e
+  resourceVersion: AAY4epjH0GE
+  generation: 7
+  creationTimestamp: '2025-06-26T14:17:18.149812Z'
+  labels:
+    cloud.googleapis.com/location: us-central1
+    run.googleapis.com/lastUpdatedTime: '2025-06-26T14:41:19.162310Z'
+  annotations:
+    run.googleapis.com/creator: dcowan@cuahsi.org
+    run.googleapis.com/lastModifier: dcowan@cuahsi.org
+    run.googleapis.com/client-name: cloud-console
+    run.googleapis.com/operation-id: 069fa7b5-0fe3-451d-97c3-02ea0666c77a
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: cloud-console
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          volumes:
+          - name: com-res-fim-output
+            csi:
+              driver: gcsfuse.run.googleapis.com
+              volumeAttributes:
+                bucketName: com_res_fim_output
+          containers:
+          - name: fimserv-1
+            image: 'us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2'
+            args:
+            - reachfim_interval
+            - '11010001'
+            - '8585030'
+            - '10'
+            - '1'
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 512Mi
+            volumeMounts:
+            - name: com-res-fim-output
+              mountPath: /home/output
+          maxRetries: 0
+          timeoutSeconds: '600'
+          serviceAccountName: 451087111407-compute@developer.gserviceaccount.com
