@@ -238,29 +238,7 @@ onMounted(() => {
     'clear selected features'
   ).addTo(mapStore.leaflet)
 
-  // // add a raster to the map
-  // const rasterUrl =
-  //   'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585030__10_0_m__4150_cms_inundation.tif'
-  // const rasterLayer = new GeoRasterLayer({
-  //   georaster: rasterUrl,
-  //   opacity: 0.5,
-  //   pixelValuesToColorFn: (pixelValues) => {
-  //     // Assuming pixelValues is an array of values, map them to colors
-  //     return pixelValues.map((value) => {
-  //       // Example: Map value to a color based on some condition
-  //       if (value > 0) {
-  //         return 'blue' // Color for inundated areas
-  //       } else {
-  //         return 'transparent' // Color for non-inundated areas
-  //       }
-  //     })
-  //   },
-  //   bandIndex: 0, // Assuming the raster has a single band
-  //   noDataValue: 0 // Assuming 0 is the no-data value
-  // })
-  // rasterLayer.addTo(mapStore.leaflet)
-
-  var url_to_geotiff_file =
+  const url_to_geotiff_file =
     'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585030__10_0_m__4150_cms_inundation.tif'
   parseGeoraster(url_to_geotiff_file).then((georaster) => {
     console.log('georaster:', georaster)
@@ -273,14 +251,28 @@ onMounted(() => {
 
             http://leafletjs.com/reference-1.2.0.html#gridlayer
         */
-    var layer = new GeoRasterLayer({
-      attribution: 'Planet',
+    const roaringRiverRasterTest = new GeoRasterLayer({
+      attribution: 'CUAHSI',
       georaster: georaster,
-      resolution: 128
+      resolution: 128,
+      opacity: 0.5,
+      pixelValuesToColorFn: (pixelValues) => {
+        // Assuming pixelValues is an array of values, map them to colors
+        return pixelValues.map((value) => {
+          // Example: Map value to a color based on some condition
+          if (value > 0) {
+            return 'blue' // Color for inundated areas
+          } else {
+            return 'transparent' // Color for non-inundated areas
+          }
+        })
+      },
+      bandIndex: 0, // Assuming the raster has a single band
+      noDataValue: 0 // Assuming 0 is the no-data value
     })
-    layer.addTo(mapStore.leaflet)
+    roaringRiverRasterTest.addTo(mapStore.leaflet)
 
-    mapStore.leaflet.fitBounds(layer.getBounds())
+    mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
   })
 
   // on zoom event, log the current bounds and zoom level
