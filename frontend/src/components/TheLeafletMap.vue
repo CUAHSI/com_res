@@ -6,6 +6,8 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
+import GeoRasterLayer from 'georaster-layer-for-leaflet'
+import parseGeoraster from 'georaster'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
@@ -92,14 +94,24 @@ onMounted(() => {
     url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
     const featureLayer = esriLeaflet.featureLayer({
       url: url,
-      simplifyFactor: 0.35,
+      simplifyFactor: 0.4,
       precision: 5,
       minZoom: MIN_WFS_ZOOM,
       renderer: canvas({ tolerance: 5 }),
       color: mapStore.featureOptions.defaultColor,
       weight: mapStore.featureOptions.defaultWeight,
       opacity: mapStore.featureOptions.opacity,
-      fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
+      fields: [
+        'FID',
+        'COMID',
+        'REACHCODE',
+        'PopupTitle',
+        'PopupSubti',
+        'SLOPE',
+        'LENGTHKM',
+        'Hydroseq',
+        'GNIS_ID'
+      ]
     })
     featureLayer.name = region.name
 
@@ -118,8 +130,12 @@ onMounted(() => {
         ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
         <p>
             <ul>
+          ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+          ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+          ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
           ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
           ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+          ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
             </ul>
         </p>
         `
@@ -235,6 +251,53 @@ onMounted(() => {
     },
     'clear selected features'
   ).addTo(mapStore.leaflet)
+
+  try {
+    const url_to_geotiff_file = 'https://storage.googleapis.com/com_res_fim_output/cog.tif'
+    fetch(url_to_geotiff_file)
+      .then((res) => res.arrayBuffer())
+      .then((arrayBuffer) => {
+        parseGeoraster(arrayBuffer).then((georaster) => {
+          console.log('georaster:', georaster)
+
+          /*
+                  GeoRasterLayer is an extension of GridLayer,
+                  which means can use GridLayer options like opacity.
+      
+                  Just make sure to include the georaster option!
+      
+                  http://leafletjs.com/reference-1.2.0.html#gridlayer
+              */
+          const roaringRiverRasterTest = new GeoRasterLayer({
+            attribution: 'CUAHSI',
+            georaster: georaster,
+            resolution: 128,
+            opacity: 0.5,
+            pixelValuesToColorFn: (pixelValues) => {
+              // Assuming pixelValues is an array of values, map them to colors
+              return pixelValues.map((value) => {
+                // Example: Map value to a color based on some condition
+                if (value > 0) {
+                  return 'blue' // Color for inundated areas
+                } else {
+                  return 'transparent' // Color for non-inundated areas
+                }
+              })
+            },
+            bandIndex: 0, // Assuming the raster has a single band
+            noDataValue: 0 // Assuming 0 is the no-data value
+          })
+          roaringRiverRasterTest.addTo(mapStore.leaflet)
+
+          mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
+        })
+      })
+      .catch((error) => {
+        console.error('Error fetching or parsing GeoTIFF:', error)
+      })
+  } catch (error) {
+    console.error('Error loading GeoRasterLayer:', error)
+  }
 
   // on zoom event, log the current bounds and zoom level
   mapStore.leaflet.on('zoomend moveend', function () {

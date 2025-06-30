@@ -62,7 +62,7 @@ def __load_rating_curve(huc_id: str, reach_id: str) -> Union[pandas.DataFrame, N
     huc_data_path = Path(f"output/flood_{huc_id}/{huc_id}/branches/0")
 
     # load the rating curve data
-    df = pandas.read_csv(huc_data_path / "hydrotable_0.csv", low_memory=False)
+    df = pandas.read_csv(huc_data_path / "hydroTable_0.csv", low_memory=False)
     dat = df.loc[df.feature_id == int(reach_id)]
 
     # exit early if no data is found for the reach

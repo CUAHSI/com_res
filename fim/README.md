@@ -53,3 +53,54 @@ To generate FIM for range of scenarios, you can use the `reachfim_interval` comm
 `run.sh reachfim_interval 03020202 11237685 5 2`
 
 where `5` is the stage interval to generate FIMS for and `2` is the number of threads to use for processing.
+
+### Running in the cloud
+
+Retag the image and push it to Artifact Registry:
+`docker tag cuahsi/fimserv:0.2 us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2`
+
+Or build it fresh:
+`docker build -t us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest .`
+
+Push the image:
+`docker push us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest`
+
+You can see the image in the repository here:
+[Artifact Registry](https://console.cloud.google.com/artifacts/docker/com-res/us-central1/cuahsi/fimserv?inv=1&invt=Ab1J9A&project=com-res)
+
+The cloud run job can be found here:
+[fimserv cloud run job](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/executions?inv=1&invt=Ab1KKQ&project=com-res)
+
+It is also defined in YAML here:
+[cloudrun.yaml](./cloud/cloudrun.yaml)
+
+You can edit the yaml in the cloud console UI here:
+[console yaml edit](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/yaml/edit?inv=1&invt=Ab1KKQ&project=com-res)
+
+The job can be run with the following command (obviously you can alter the args):
+`gcloud run jobs execute fimserv --region=us-central1 --project=com-res --args=reachfim_interval,11010001,8585030,10,1`
+
+The output goes into a bucket:
+[com_res_fim_output](https://console.cloud.google.com/storage/browser/com_res_fim_output)
+![output_bucket](output_bucket.png)
+
+Update the CORS for the bucket:
+`gcloud storage buckets update gs://com_res_fim_output --cors-file=cloud/gcs_cors_config.json`
+
+#### Logging
+`gcloud beta run jobs logs tail fimserv-JOB_ID --region=us-central1 --project=com-res`
+
+#### WIP:
+1. I created a bucket [inundation-mapping-and-fimserv](https://console.cloud.google.com/storage/browser/inundation-mapping-and-fimserv). The goal would be to upload the necessary software to this bucket so that it doesn't have to be downloaded every time the job is run!
+  * Are we talking about replacing [these steps in the Dockerfile](https://github.com/CUAHSI/com_res/blob/CAM-666/fim-cloud-run/fim/Dockerfile#L23-L40)? If yes, wouldn't we expect thoses packages to already be in the docker image (and thus not have to be re-downloaded)? Or are we talking about [this HUC8 download](https://github.com/CUAHSI/com_res/blob/a3239fe2af79114e835e897880420af0924aaede/fim/generate_fim.py#L57-L68)?
+
+2. [This example](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/executions?project=com-res&inv=1&invt=Ab1J9A) was run with the following resources:
+```
+            resources:
+              limits:
+                cpu: 4000m
+                memory: 16Gi
+```
+and the following args: `--args=reachfim_interval,11010001,8585030,10,1`
+It took ~8min to run.
+Is this what we would expect given the resource allocation? I thought we had seen closer to 3min locally...
