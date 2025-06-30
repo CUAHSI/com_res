@@ -250,6 +250,13 @@ def generate_reach_fim_at_intervals(
             help="The number of cuncorrent processes that we execute",
         ),
     ] = 1,
+    subdir: Annotated[
+        Union[str, None],
+        typer.Argument(
+            ...,
+            help="The subdirectory where the FIM maps will be saved. This is used to avoid overwriting existing FIM maps.",
+        ),
+    ] = None,
 ) -> None:
     """
     Generates a FIM maps for a specific HUC and nwm reach identifier using
@@ -309,18 +316,16 @@ def generate_reach_fim_at_intervals(
         )
     print("done")
 
-    # TODO: This needs to be modified such that concurrent processes all save
-    # their temp data in their own directory. Otherwise, the first process
-    # that finishes will merge all of the results into a single file.
     with ProcessPoolExecutor(max_workers=max_procs) as executor:
 
         futures = []
         for i in range(len(flow_rate_filepaths)):
+            p = f"/home/output/flood_{huc_id}/{huc_id}_inundation/scenario_{i}"
+            if subdir is not None:
+                p = f"/home/output/flood_{huc_id}/{huc_id}_inundation/{subdir}/scenario_{i}"
 
             # skip files that already exist
-            if Path(
-                f"/home/output/flood_{huc_id}/{huc_id}_inundation/scenario_{i}"
-            ).exists():
+            if Path(p).exists():
                 print(
                     f"Skipping scenario {i} for {huc_id}:{reach_id} - already exists."
                 )
@@ -333,7 +338,7 @@ def generate_reach_fim_at_intervals(
                     huc_id,
                     reach_id,
                     flow_rate_filepaths[i],
-                    f"scenario_{i}",
+                    f"{subdir}/scenario_{i}",
                 )
             )
 
