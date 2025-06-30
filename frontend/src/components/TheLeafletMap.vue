@@ -94,14 +94,24 @@ onMounted(() => {
     url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
     const featureLayer = esriLeaflet.featureLayer({
       url: url,
-      simplifyFactor: 0.35,
+      simplifyFactor: 0.4,
       precision: 5,
       minZoom: MIN_WFS_ZOOM,
       renderer: canvas({ tolerance: 5 }),
       color: mapStore.featureOptions.defaultColor,
       weight: mapStore.featureOptions.defaultWeight,
       opacity: mapStore.featureOptions.opacity,
-      fields: ['FID', 'COMID', 'PopupTitle', 'PopupSubti', 'SLOPE', 'LENGTHKM']
+      fields: [
+        'FID',
+        'COMID',
+        'REACHCODE',
+        'PopupTitle',
+        'PopupSubti',
+        'SLOPE',
+        'LENGTHKM',
+        'Hydroseq',
+        'GNIS_ID'
+      ]
     })
     featureLayer.name = region.name
 
@@ -120,8 +130,12 @@ onMounted(() => {
         ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
         <p>
             <ul>
+          ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+          ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+          ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
           ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
           ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+          ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
             </ul>
         </p>
         `

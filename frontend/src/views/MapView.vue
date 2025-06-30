@@ -144,7 +144,7 @@ const reachIdChanged = async (selected_reach) => {
   // update the historical plot when the selected reach changes
   // only if the historical component is visible
   if (showHistorical.value) {
-    await historicalPlotRef.value.getHistoricalData(
+    historicalPlotRef.value.getHistoricalData(
       selected_reach.toString(),
       reach_name,
       new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
@@ -155,7 +155,7 @@ const reachIdChanged = async (selected_reach) => {
   // update the forecast plot when the selected reach changes
   // only if the forecast component is visible
   if (showForecast.value) {
-    await forecastPlotRef.value.getForecastData(
+    forecastPlotRef.value.getForecastData(
       selected_reach.toString(),
       reach_name,
       new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
