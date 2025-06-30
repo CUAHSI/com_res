@@ -240,40 +240,47 @@ onMounted(() => {
 
   try {
     const url_to_geotiff_file = 'https://storage.googleapis.com/com_res_fim_output/cog.tif'
-    parseGeoraster(url_to_geotiff_file).then((georaster) => {
-      console.log('georaster:', georaster)
+    fetch(url_to_geotiff_file)
+      .then((res) => res.arrayBuffer())
+      .then((arrayBuffer) => {
+        parseGeoraster(arrayBuffer).then((georaster) => {
+          console.log('georaster:', georaster)
 
-      /*
-              GeoRasterLayer is an extension of GridLayer,
-              which means can use GridLayer options like opacity.
-  
-              Just make sure to include the georaster option!
-  
-              http://leafletjs.com/reference-1.2.0.html#gridlayer
-          */
-      const roaringRiverRasterTest = new GeoRasterLayer({
-        attribution: 'CUAHSI',
-        georaster: georaster,
-        resolution: 128,
-        opacity: 0.5,
-        pixelValuesToColorFn: (pixelValues) => {
-          // Assuming pixelValues is an array of values, map them to colors
-          return pixelValues.map((value) => {
-            // Example: Map value to a color based on some condition
-            if (value > 0) {
-              return 'blue' // Color for inundated areas
-            } else {
-              return 'transparent' // Color for non-inundated areas
-            }
+          /*
+                  GeoRasterLayer is an extension of GridLayer,
+                  which means can use GridLayer options like opacity.
+      
+                  Just make sure to include the georaster option!
+      
+                  http://leafletjs.com/reference-1.2.0.html#gridlayer
+              */
+          const roaringRiverRasterTest = new GeoRasterLayer({
+            attribution: 'CUAHSI',
+            georaster: georaster,
+            resolution: 128,
+            opacity: 0.5,
+            pixelValuesToColorFn: (pixelValues) => {
+              // Assuming pixelValues is an array of values, map them to colors
+              return pixelValues.map((value) => {
+                // Example: Map value to a color based on some condition
+                if (value > 0) {
+                  return 'blue' // Color for inundated areas
+                } else {
+                  return 'transparent' // Color for non-inundated areas
+                }
+              })
+            },
+            bandIndex: 0, // Assuming the raster has a single band
+            noDataValue: 0 // Assuming 0 is the no-data value
           })
-        },
-        bandIndex: 0, // Assuming the raster has a single band
-        noDataValue: 0 // Assuming 0 is the no-data value
-      })
-      roaringRiverRasterTest.addTo(mapStore.leaflet)
+          roaringRiverRasterTest.addTo(mapStore.leaflet)
 
-      mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
-    })
+          mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
+        })
+      })
+      .catch((error) => {
+        console.error('Error fetching or parsing GeoTIFF:', error)
+      })
   } catch (error) {
     console.error('Error loading GeoRasterLayer:', error)
   }
