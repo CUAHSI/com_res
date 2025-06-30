@@ -13,17 +13,6 @@ export const useRegionsStore = defineStore('regions', () => {
   const currentRegion = ref(null)
   const regions = ref([
     {
-      image: DeSoto,
-      title: 'DeSoto',
-      name: 'DeSoto',
-      text: `De Soto is a small city in Jefferson County, Missouri, located about
-            45 miles south of St. Louis. The surrounding terrain features rolling 
-            hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
-      flex: 1,
-      wmsLayersToLoad: Array.from({ length: 8 }, (_, i) => i),
-      flowlinesLayerNumber: 0
-    },
-    {
       image: RoaringRiverStatePark,
       title: 'Roaring River State Park',
       name: 'RoaringRiverStatePark',
@@ -34,6 +23,17 @@ export const useRegionsStore = defineStore('regions', () => {
       flex: 1,
       wmsLayersToLoad: Array.from({ length: 13 }, (_, i) => i),
       flowlinesLayerNumber: 13
+    },
+    {
+      image: DeSoto,
+      title: 'DeSoto',
+      name: 'DeSoto',
+      text: `De Soto is a small city in Jefferson County, Missouri, located about
+            45 miles south of St. Louis. The surrounding terrain features rolling 
+            hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
+      flex: 1,
+      wmsLayersToLoad: Array.from({ length: 8 }, (_, i) => i),
+      flowlinesLayerNumber: 0
     },
     {
       image: SpringfieldGreeneCounty,
