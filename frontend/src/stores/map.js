@@ -165,6 +165,7 @@ export const useMapStore = defineStore('map', () => {
     flowlinesFeatureLayers.value.forEach((featureLayer) => {
       if (featureLayer.name !== layerName) {
         featureLayer.removeFrom(leaflet.value)
+        control.value.removeLayer(featureLayer)
       } else {
         featureLayer.addTo(leaflet.value)
         activeFeatureLayer.value = featureLayer
