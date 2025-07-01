@@ -21,8 +21,8 @@ export const useRegionsStore = defineStore('regions', () => {
              located eight miles south of Cassville in Barry County, Missouri, 
              spanning 4,294 acres.`,
       flex: 1,
-      wmsLayersToLoad: Array.from({ length: 13 }, (_, i) => i),
-      flowlinesLayerNumber: 13
+      flowlinesLayerNumber: 13,
+      eraseLayerNumber: 4
     },
     {
       image: DeSoto,
@@ -32,8 +32,8 @@ export const useRegionsStore = defineStore('regions', () => {
             45 miles south of St. Louis. The surrounding terrain features rolling 
             hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
-      wmsLayersToLoad: Array.from({ length: 8 }, (_, i) => i),
-      flowlinesLayerNumber: 0
+      flowlinesLayerNumber: 0,
+      eraseLayerNumber: 5
     },
     {
       image: SpringfieldGreeneCounty,
@@ -43,8 +43,8 @@ export const useRegionsStore = defineStore('regions', () => {
              where the landscape features a rolling terrain, with some steeper cliffs found on
              the north, east, and south sides of the area.`,
       flex: 1,
-      wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
-      flowlinesLayerNumber: 1
+      flowlinesLayerNumber: 1,
+      eraseLayerNumber: 5
     },
     {
       image: MountAscutney,
@@ -55,8 +55,8 @@ export const useRegionsStore = defineStore('regions', () => {
              steep, forested slopes of in the west down through rolling foothills to the
              broad Connecticut River on the east.`,
       flex: 1,
-      wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
-      flowlinesLayerNumber: 0
+      flowlinesLayerNumber: 0,
+      eraseLayerNumber: 6
     },
     {
       image: TwoRiversOttauquechee,
@@ -66,7 +66,6 @@ export const useRegionsStore = defineStore('regions', () => {
              member towns across Windsor and Orange counties. The region is bordered by the Green
              Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
-      wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
       flowlinesLayerNumber: 0
     },
     {
@@ -78,7 +77,6 @@ export const useRegionsStore = defineStore('regions', () => {
              rural villages, forested landscapes, and small urban centers that are primarily covered by
              forests, including spruce, fir, and white pine.`,
       flex: 1,
-      wmsLayersToLoad: Array.from({ length: 7 }, (_, i) => i),
       flowlinesLayerNumber: 0
     }
   ])
