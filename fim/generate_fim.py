@@ -82,12 +82,15 @@ def __download_huc_fim(huc_id: str, fim_data_dir: Path) -> None:
         print("FIM Data Already Exists. Skipping download.")
         # if the data already exists, perfom the remaining
         # setup tasks outlined in the DownloadHUC8 function.
+
         code_dir, data_dir, output_dir = fm.setup_directories()
         fm.EnvFile(code_dir)
-        HUC_dir = os.path.join(output_dir, f"flood_{huc_id}")
-        hydrotable_dir = os.path.join(HUC_dir, str(huc_id), "hydrotable.csv")
-        featureID_dir = os.path.join(HUC_dir, "feature_IDs.csv")
-        fm.uniqueFID(hydrotable_dir, featureID_dir)
+
+
+#        HUC_dir = os.path.join(output_dir, f"flood_{huc_id}")
+#        hydrotable_dir = os.path.join(HUC_dir, str(huc_id), "hydrotable.csv")
+#        featureID_dir = os.path.join(HUC_dir, "feature_IDs.csv")
+#        fm.uniqueFID(hydrotable_dir, featureID_dir)
 
 
 def __generate_fim(huc_id, flow_rate_filepath, label="") -> None:
@@ -377,13 +380,23 @@ def generate_reach_fim_at_intervals(
         )
     print("done")
 
+    # define the root path where the final FIM maps will be saved.
+    root_path = f"/home/output/flood_{huc_id}/{huc_id}_inundation"
+    root_label = ""
+    if subdir is not None:
+        root_path = f"/home/output/flood_{huc_id}/{huc_id}_inundation/{subdir}"
+        root_label = f"{subdir}/"
+
     with ProcessPoolExecutor(max_workers=max_procs) as executor:
 
         futures = []
         for i in range(len(flow_rate_filepaths)):
-            p = f"/home/output/flood_{huc_id}/{huc_id}_inundation/scenario_{i}"
-            if subdir is not None:
-                p = f"/home/output/flood_{huc_id}/{huc_id}_inundation/{subdir}/scenario_{i}"
+
+            # build the output path and output label specifdic to the scenario
+            # these extend the root_path and root_label objects to account for
+            # the optional sub_dir argument.
+            p = f"{root_path}/scenario_{i}"
+            label = f"{root_label}scenario_{i}"
 
             # skip files that already exist
             if Path(p).exists():
@@ -399,17 +412,17 @@ def generate_reach_fim_at_intervals(
                     huc_id,
                     reach_id,
                     flow_rate_filepaths[i],
-                    f"{subdir}/scenario_{i}",
+                    label,
                 )
             )
 
     # clean the generated fim maps to remove negative values. The
     # output will be geotiffs containing 0's where no inundation
     # exists and 1's where inundation exists.
-    __clean_fims(Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation"))
+    __clean_fims(Path(root_path))
 
     # convert the output into COG format
-    __convert_to_cog(Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation"))
+    __convert_to_cog(Path(root_path))
 
 
 @app.command(name="reachfim")

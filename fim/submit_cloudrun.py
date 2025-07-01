@@ -57,11 +57,11 @@ def get_execution_status(run_client, execution_id):
             raw_state = condition.get("state")
             # Map Cloud Run states to human-readable ones
             return {
-                "CONDITION_SUCCEEDED": "SUCCEEDED",
-                "CONDITION_FAILED": "FAILED",
-                "CONDITION_CANCELLED": "CANCELLED",
-                "CONDITION_RECONCILING": "RUNNING",
+                "STATE_UNSPECIFIED": "PENDING",
                 "CONDITION_PENDING": "PENDING",
+                "CONDITION_RECONCILING": "RUNNING",
+                "CONDITION_FAILED": "FAILED",
+                "CONDITION_SUCCEEDED": "SUCCEEDED",
             }.get(raw_state, f"Unknown ({raw_state})")
 
     return "PENDING"
@@ -84,7 +84,7 @@ def run(file: Path):
 
         # pass the reachid as an argument so that outputs are saved in
         # a subdirectory named after the reachid
-        args.append(args[2])
+        args.append(f"{args[2]}")
 
         execution_id = execute_job(run_client, args)
         jobs.append(
@@ -92,7 +92,8 @@ def run(file: Path):
                 "args": line,
                 "execution": execution_id,
                 "status": "Starting",
-                "last_update": datetime.now(),
+                "start_time": datetime.now(),
+                "elapsed_time": "---",
             }
         )
 
@@ -102,26 +103,31 @@ def run(file: Path):
         while True:
             all_done = True
             table = Table(title="Cloud Run Job Status", expand=True)
-            table.add_column("Args", style="cyan", no_wrap=True)
             table.add_column("JobID", style="magenta")
-            table.add_column("Status", style="bold green")
-            table.add_column("Last Update", style="dim")
+            table.add_column("HUC8", style="green", no_wrap=True)
+            table.add_column("ReachID", style="green", no_wrap=True)
+            table.add_column("Status", style="gold1")
+            table.add_column("Elapsed Minutes", style="white")
 
             for job in jobs:
                 if job["status"] not in TERMINAL_STATES:
                     # only recheck the status of running jobs
                     job["status"] = get_execution_status(run_client, job["execution"])
-                    job["last_update"] = datetime.now()
-
-                # format the last update time
-                update_time = job["last_update"].strftime("%H:%M:%S")
+                    elapsed_seconds = (
+                        datetime.now() - job["start_time"]
+                    ).total_seconds()
+                    minutes, seconds = divmod(elapsed_seconds, 60)
+                    job["elapsed_time"] = (
+                        f"{round(minutes,0)} min {round(seconds,0)} sec"
+                    )
 
                 # add data to the table
                 table.add_row(
-                    job["args"],
                     job["execution"].split("/")[-1],
+                    job["args"].split(",")[1],  # HUC8
+                    job["args"].split(",")[2],  # ReachID
                     job["status"],
-                    update_time,
+                    job["elapsed_time"],
                 )
 
                 # if one job is still running, we need to keep checking
