@@ -1,8 +1,8 @@
 #!/bin/bash
 
 docker run --rm -ti -u root \
-  -v $(pwd)/generate_fim.py:/home/a.py:Z \
+  -v $(pwd)/data/:/home/data \
+  -v $(pwd)/output/:/home/output \
+  -v $(pwd)/generate_fim.py:/home/generate_fim.py \
   --entrypoint /bin/bash \
-  cuahsi/fimserv:latest
-#  -v $(pwd)/data/:/home/data \
-#  -v $(pwd)/output/:/home/output \
+  us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest

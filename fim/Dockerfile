@@ -10,7 +10,15 @@ RUN apt update \
  libhdf5-dev \
  libnetcdf-dev \
  git \
- awscli
+ awscli \
+ gdal-bin \
+ libgdal-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Set GDAL version env so pip installs correct Python bindings
+ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+ENV C_INCLUDE_PATH=/usr/include/gdal
+ENV GDAL_VERSION=3.7.0
 
 USER $MAMBA_USER
 
@@ -19,6 +27,7 @@ RUN micromamba install -y \
   python==3.10 \
   pip \
   typer
+
 
 # Perform initial clone of flood_inundation code so this doesn't need to be done everytime.
 # Something related to Numba and Geocube changed after this SHA was created 
@@ -41,6 +50,7 @@ RUN cd /home/code/FIMServ \
 
 COPY generate_fim.py /home/generate_fim.py
 COPY compute_rating_increments.py /home/compute_rating_increments.py
+RUN mkdir -p /home/data/inputs
 
 
 # Set bash as the default command
