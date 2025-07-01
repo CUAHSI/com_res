@@ -4,7 +4,6 @@ import L from 'leaflet'
 
 export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
-  const mixedLayers = shallowRef({})
   const wmsLayers = ref({})
   const mapObject = ref(new Map())
   const flowlinesFeatureLayers = ref([])
@@ -169,6 +168,7 @@ export const useMapStore = defineStore('map', () => {
       } else {
         featureLayer.addTo(leaflet.value)
         activeFeatureLayer.value = featureLayer
+        control.value.addOverlay(featureLayer, `Flowlines features - ${featureLayer.name}`)
       }
     })
   }
@@ -188,7 +188,6 @@ export const useMapStore = defineStore('map', () => {
     activeFeatureLayer,
     toggleWMSLayers,
     toggleFeatureLayer,
-    control,
-    mixedLayers
+    control
   }
 })

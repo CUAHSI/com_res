@@ -17,8 +17,7 @@ import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, flowlinesFeatureLayers, featureLayerProviders, control, mixedLayers } =
-  storeToRefs(mapStore)
+const { mapObject, flowlinesFeatureLayers, featureLayerProviders, control } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
@@ -158,7 +157,7 @@ onMounted(() => {
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
 
   // layer toggling
-  mixedLayers.value = {
+  let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines
   }
@@ -171,7 +170,6 @@ onMounted(() => {
     const provider = createFeatureLayerProvider(region)
     featureLayerProviders.value.push(provider)
     region.flowlinesLayer = flowlines
-    mixedLayers.value[`${region.name} flowlines`] = flowlines
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
@@ -191,7 +189,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  control.value = L.control.layers(baselayers, mixedLayers.value).addTo(mapStore.leaflet)
+  control.value = L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
