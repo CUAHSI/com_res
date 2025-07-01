@@ -17,17 +17,14 @@ import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, wmsLayers, flowlinesFeatureLayers, featureLayerProviders } =
+const { mapObject, flowlinesFeatureLayers, featureLayerProviders, control, mixedLayers } =
   storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
 
 const MIN_REACH_SELECTION_ZOOM = 11
-const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
-const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
-const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
@@ -157,44 +154,11 @@ onMounted(() => {
     return featureLayerProvider
   }
 
-  async function createWMSLayers(region) {
-    url = `${COMRES_REST_URL}/${region.name}/MapServer`
-    // first query the service just to get the layer names
-    const queryUrl = `${url}/layers?f=json`
-    const response = await fetch(queryUrl)
-    const data = await response.json()
-    if (data && data.layers) {
-      console.log(`Creating WMS Layers for ${region.name}:`)
-      data.layers.forEach((layer) => {
-        console.log(`Creating layer ${layer.id}: ${layer.name}...`)
-        url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
-        // https://leafletjs.com/reference.html#tilelayer-wms
-        const wmsLayer = L.tileLayer.wms(url, {
-          // TODO: seems like this id might be off by one...
-          layers: `${layer.id}`,
-          // layers: index + 1,
-          // layers: layer.id + 1, // ArcGIS REST API layers are 1-indexed
-          // layers: [layer.id],
-          transparent: true,
-          opacity: layer.id === region.eraseLayerNumber ? 0.5 : 1,
-          format: 'image/png',
-          minZoom: MIN_WMS_ZOOM
-        })
-        wmsLayer.name = `${layer.name} - ${region.name} - ${layer.id}`
-        wmsLayer.id = layer.id
-        wmsLayers.value.push(wmsLayer)
-      })
-      console.log('WMS Layers thus far:', wmsLayers.value)
-    } else {
-      console.error(`No layers found for ${region.name}`)
-    }
-  }
-
   Esri_WorldImagery.addTo(mapStore.leaflet)
   Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
 
   // layer toggling
-  let mixed = {
+  mixedLayers.value = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines
   }
@@ -207,21 +171,7 @@ onMounted(() => {
     const provider = createFeatureLayerProvider(region)
     featureLayerProviders.value.push(provider)
     region.flowlinesLayer = flowlines
-    mixed[`${region.name} flowlines`] = flowlines
-  }
-
-  async function createAndAddWMSLayers() {
-    for (let region of regionsStore.regions) {
-      if (region.name !== 'RoaringRiverStatePark') {
-        continue
-      }
-      await createWMSLayers(region)
-      for (let layer of wmsLayers.value) {
-        console.log('Adding WMS layer:', layer.name)
-        layer.addTo(mapStore.leaflet)
-        mixed[layer.name] = layer
-      }
-    }
+    mixedLayers.value[`${region.name} flowlines`] = flowlines
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
@@ -241,10 +191,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  createAndAddWMSLayers().then(() => {
-    console.log('Adding layer control to map with layers:', mixed)
-    L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
-  })
+  control.value = L.control.layers(baselayers, mixedLayers.value).addTo(mapStore.leaflet)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
