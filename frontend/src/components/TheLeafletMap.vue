@@ -4,7 +4,7 @@
 <script setup>
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
-import L, { canvas } from 'leaflet'
+import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
@@ -14,21 +14,18 @@ import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
-import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, flowlinesFeatureLayers, featureLayerProviders, control } = storeToRefs(mapStore)
+const { mapObject, featureLayerProviders, control, leaflet } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
-const regionsStore = useRegionsStore()
 
 const MIN_REACH_SELECTION_ZOOM = 11
-const MIN_WFS_ZOOM = 9
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
 onMounted(() => {
-  mapStore.leaflet = L.map('mapContainer').setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer').setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -37,7 +34,7 @@ onMounted(() => {
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
   //Remove the common zoom control and add it back later later
-  mapStore.leaflet.zoomControl.remove()
+  leaflet.value.zoomControl.remove()
 
   let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
     url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
@@ -85,91 +82,13 @@ onMounted(() => {
     maxZoom: MIN_REACH_SELECTION_ZOOM
   })
 
-  function createFlowlinesFeatureLayer(region) {
-    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
-    const featureLayer = esriLeaflet.featureLayer({
-      url: url,
-      simplifyFactor: 0.4,
-      precision: 5,
-      minZoom: MIN_WFS_ZOOM,
-      renderer: canvas({ tolerance: 5 }),
-      color: mapStore.featureOptions.defaultColor,
-      weight: mapStore.featureOptions.defaultWeight,
-      opacity: mapStore.featureOptions.opacity,
-      fields: [
-        'FID',
-        'COMID',
-        'REACHCODE',
-        'PopupTitle',
-        'PopupSubti',
-        'SLOPE',
-        'LENGTHKM',
-        'Hydroseq',
-        'GNIS_ID'
-      ]
-    })
-    featureLayer.name = region.name
-
-    featureLayer.on('click', function (e) {
-      const feature = e.layer.feature
-      const properties = feature.properties
-      console.log('Feature clicked:', feature)
-      featureStore.clearSelectedFeatures()
-      if (!featureStore.checkFeatureSelected(feature)) {
-        // Only allow one feature to be selected at a time
-        featureStore.selectFeature(feature)
-      }
-      const popup = L.popup()
-      const content = `
-        ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-        ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-        <p>
-            <ul>
-          ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-          ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-          ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-          ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-          ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-          ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-            </ul>
-        </p>
-        `
-      popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
-    })
-    return featureLayer
-  }
-
-  function createFeatureLayerProvider(region) {
-    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
-    const featureLayerProvider = esriLeafletGeocoder.featureLayerProvider({
-      url: url,
-      searchFields: ['PopupTitle'],
-      label: `${region.name} Flowlines`,
-      //bufferRadius: 5000,
-      formatSuggestion: function (feature) {
-        return feature.properties.PopupTitle
-      }
-    })
-    return featureLayerProvider
-  }
-
-  Esri_WorldImagery.addTo(mapStore.leaflet)
-  Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
+  Esri_WorldImagery.addTo(leaflet.value)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines
-  }
-
-  // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers
-  // and the leaflet map
-  for (let region of regionsStore.regions) {
-    const flowlines = createFlowlinesFeatureLayer(region)
-    flowlinesFeatureLayers.value.push(flowlines)
-    const provider = createFeatureLayerProvider(region)
-    featureLayerProviders.value.push(provider)
-    region.flowlinesLayer = flowlines
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
@@ -189,7 +108,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  control.value = L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
+  control.value = L.control.layers(baselayers, mixed).addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -202,14 +121,14 @@ onMounted(() => {
       title: ' Search',
       providers: providers
     })
-    .addTo(mapStore.leaflet)
+    .addTo(leaflet.value)
 
   // add zoom control again they are ordered in the order they are added
   L.control
     .zoom({
       position: 'topleft'
     })
-    .addTo(mapStore.leaflet)
+    .addTo(leaflet.value)
 
   // Erase
   L.easyButton(
@@ -218,17 +137,7 @@ onMounted(() => {
       clearSelection()
     },
     'clear selected features'
-  ).addTo(mapStore.leaflet)
-
-  // on zoom event, log the current bounds and zoom level
-  mapStore.leaflet.on('zoomend moveend', function () {
-    let zoom = mapStore.leaflet.getZoom()
-    console.log('zoom level:', zoom)
-    // log the bounds as [[lat, long], [lat, long]]
-    let bounds = mapStore.leaflet.getBounds()
-    console.log('bounds:', bounds._northEast, bounds._southWest)
-    console.log('map center:', mapStore.leaflet.getCenter())
-  })
+  ).addTo(leaflet.value)
 
   mapStore.mapLoaded = true
 })
@@ -338,7 +247,7 @@ function drawBbox() {
 
   mapObject.value.huclayers['BBOX'] = json_polygon
   if (featureStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(mapStore.leaflet)
+    json_polygon.addTo(leaflet.value)
   }
 
   // TODO: Not sure if this is still needed

@@ -91,10 +91,14 @@ export const useRegionsStore = defineStore('regions', () => {
       return
     }
     currentRegion.value = region
-    await nextTick()
-    mapStore.limitToBounds(region.flowlinesLayer)
     mapStore.toggleWMSLayers(region)
-    mapStore.toggleFeatureLayer(region.name)
+    await nextTick()
+    try {
+      await mapStore.toggleFeatureLayer(region)
+    } catch (error) {
+      console.error('Error toggling feature layer:', error)
+    }
+    mapStore.limitToBounds(region.flowlinesLayer)
   }
 
   return {
