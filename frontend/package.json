@@ -83,5 +83,8 @@
     "reproject-bbox": {
       "proj4-fully-loaded": "^0.2.0"
     }
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.44.1"
   }
 }
