@@ -253,6 +253,7 @@ onMounted(() => {
   ).addTo(mapStore.leaflet)
 
   try {
+    // TODO: CAM-649
     const url_to_geotiff_file = 'https://storage.googleapis.com/com_res_fim_output/cog.tif'
     fetch(url_to_geotiff_file)
       .then((res) => res.arrayBuffer())
