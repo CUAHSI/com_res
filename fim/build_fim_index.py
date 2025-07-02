@@ -77,6 +77,7 @@ def flatten_stac_items(catalog_path: str) -> pd.DataFrame:
     
     rows = []
     for item in root_catalog.get_all_items():
+        
         row = {
             "item_id": item.id,
             "reach_id": item.properties.get("id"),
@@ -84,6 +85,7 @@ def flatten_stac_items(catalog_path: str) -> pd.DataFrame:
             "flow": item.properties.get("flow"),
             "datetime": item.datetime.isoformat() if item.datetime else None,
             "asset_href": item.assets["cog"].href if "cog" in item.assets else None,
+            "public_url": item.assets['cog'].href.replace('gs://','https://storage.googleapis.com/')
         }
         rows.append(row)
 
