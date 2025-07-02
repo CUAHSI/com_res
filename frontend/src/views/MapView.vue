@@ -66,6 +66,7 @@ import ForecastPlot from '@/components/ForecastPlot.vue'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
+import { storeToRefs } from 'pinia'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
@@ -78,11 +79,13 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
+const { activeFeature } = storeToRefs(featureStore)
+
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
 // components.
 watch(
-  () => featureStore.activeFeature?.properties?.COMID,
+  () => activeFeature.value?.properties?.COMID,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
       reachIdChanged(newVal)
@@ -94,7 +97,7 @@ const toggle = async (component_name) => {
   console.log(component_name)
 
   // get the feature id from the active feature
-  let reach_id = featureStore.activeFeature?.properties?.COMID ?? null
+  let reach_id = activeFeature.value?.properties?.COMID ?? null
   if (reach_id === undefined || reach_id === null) {
     // if no feature is selected show a popup dialog
     alertStore.displayAlert({
@@ -106,7 +109,7 @@ const toggle = async (component_name) => {
     })
     return
   }
-  let reach_name = featureStore.activeFeature.properties.GNIS_NAME
+  let reach_name = activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
 
   // toggle plot visualizations
   // based on which button was clicked.
@@ -139,7 +142,7 @@ const reachIdChanged = async (selected_reach) => {
 
   // get the active reach name, this is necessary to update
   // the data displayed in the historical and forecast components
-  let reach_name = featureStore.activeFeature.properties.GNIS_NAME
+  let reach_name = activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
 
   // update the historical plot when the selected reach changes
   // only if the historical component is visible

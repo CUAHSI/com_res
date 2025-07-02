@@ -4,6 +4,7 @@ pyyaml
 requests
 fastapi
 fastapi-users[beanie]
+google-cloud-bigquery
 uvicorn[standard]
 httpx_oauth==0.15.1
 minio

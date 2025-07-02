@@ -25,6 +25,15 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
 
+# Install system dependencies (required for Google Cloud SDK)
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# (Optional) For local testing with a service account key:
+# COPY key.json /app/key.json
+# ENV GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
+
 ENV PYTHONPATH "/com_res/:${PYTHONPATH}"
 
 EXPOSE 8000

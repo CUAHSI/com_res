@@ -29,6 +29,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./api/com_res:/com_res
+      - ./.config/gcloud/application_default_credentials.json:/app/key.json
     build:
       context: ./api/
       dockerfile: Dockerfile

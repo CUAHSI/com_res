@@ -4,7 +4,7 @@
 <script setup>
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
-import L, { canvas } from 'leaflet'
+import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
@@ -16,24 +16,18 @@ import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
-import { useRegionsStore } from '@/stores/regions'
 
 const mapStore = useMapStore()
-const { mapObject, wmsLayers, flowlinesFeatureLayers, featureLayerProviders } =
-  storeToRefs(mapStore)
+const { mapObject, featureLayerProviders, control, leaflet } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
-const regionsStore = useRegionsStore()
 
 const MIN_REACH_SELECTION_ZOOM = 11
-const MIN_WMS_ZOOM = 9
-const MIN_WFS_ZOOM = 9
-const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
 onMounted(() => {
-  mapStore.leaflet = L.map('mapContainer').setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer').setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -42,7 +36,7 @@ onMounted(() => {
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
 
   //Remove the common zoom control and add it back later later
-  mapStore.leaflet.zoomControl.remove()
+  leaflet.value.zoomControl.remove()
 
   let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
     url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
@@ -90,118 +84,13 @@ onMounted(() => {
     maxZoom: MIN_REACH_SELECTION_ZOOM
   })
 
-  function createFlowlinesFeatureLayer(region) {
-    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
-    const featureLayer = esriLeaflet.featureLayer({
-      url: url,
-      simplifyFactor: 0.4,
-      precision: 5,
-      minZoom: MIN_WFS_ZOOM,
-      renderer: canvas({ tolerance: 5 }),
-      color: mapStore.featureOptions.defaultColor,
-      weight: mapStore.featureOptions.defaultWeight,
-      opacity: mapStore.featureOptions.opacity,
-      fields: [
-        'FID',
-        'COMID',
-        'REACHCODE',
-        'PopupTitle',
-        'PopupSubti',
-        'SLOPE',
-        'LENGTHKM',
-        'Hydroseq',
-        'GNIS_ID'
-      ]
-    })
-    featureLayer.name = region.name
-
-    featureLayer.on('click', function (e) {
-      const feature = e.layer.feature
-      const properties = feature.properties
-      console.log('Feature clicked:', feature)
-      featureStore.clearSelectedFeatures()
-      if (!featureStore.checkFeatureSelected(feature)) {
-        // Only allow one feature to be selected at a time
-        featureStore.selectFeature(feature)
-      }
-      const popup = L.popup()
-      const content = `
-        ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-        ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-        <p>
-            <ul>
-          ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-          ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-          ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-          ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-          ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-          ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-            </ul>
-        </p>
-        `
-      popup.setLatLng(e.latlng).setContent(content).openOn(mapStore.leaflet)
-    })
-    return featureLayer
-  }
-
-  function createFeatureLayerProvider(region) {
-    url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
-    const featureLayerProvider = esriLeafletGeocoder.featureLayerProvider({
-      url: url,
-      searchFields: ['PopupTitle'],
-      label: `${region.name} Flowlines`,
-      //bufferRadius: 5000,
-      formatSuggestion: function (feature) {
-        return feature.properties.PopupTitle
-      }
-    })
-    return featureLayerProvider
-  }
-
-  function createWMSLayer(region) {
-    url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
-    const layer = L.tileLayer.wms(url, {
-      layers: region.wmsLayersToLoad,
-      transparent: 'true',
-      format: 'image/png',
-      minZoom: MIN_WMS_ZOOM
-    })
-    layer.name = region.name
-    wmsLayers.value.push(layer)
-    return layer
-  }
-  // create the WMS layers for each region
-  for (let region of regionsStore.regions) {
-    createWMSLayer(region)
-  }
-
-  Esri_WorldImagery.addTo(mapStore.leaflet)
-  Esri_Hydro_Reference_Overlay.addTo(mapStore.leaflet)
-
-  for (let layer of wmsLayers.value) {
-    layer.addTo(mapStore.leaflet)
-  }
+  Esri_WorldImagery.addTo(leaflet.value)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
   let mixed = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'Flowlines WMS': flowlines
-  }
-
-  // add the wms layers to the mixed object
-  for (let layer of wmsLayers.value) {
-    mixed[layer.name] = layer
-  }
-
-  // for every region, create a flowlines feature layer and add it to mapstore.flowlinesFeatureLayers
-  // and the leaflet map
-  for (let region of regionsStore.regions) {
-    const flowlines = createFlowlinesFeatureLayer(region)
-    flowlinesFeatureLayers.value.push(flowlines)
-    const provider = createFeatureLayerProvider(region)
-    featureLayerProviders.value.push(provider)
-    region.flowlinesLayer = flowlines
-    mixed[`${region.name} flowlines`] = flowlines
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
@@ -221,7 +110,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  L.control.layers(baselayers, mixed).addTo(mapStore.leaflet)
+  control.value = L.control.layers(baselayers, mixed).addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -234,14 +123,14 @@ onMounted(() => {
       title: ' Search',
       providers: providers
     })
-    .addTo(mapStore.leaflet)
+    .addTo(leaflet.value)
 
   // add zoom control again they are ordered in the order they are added
   L.control
     .zoom({
       position: 'topleft'
     })
-    .addTo(mapStore.leaflet)
+    .addTo(leaflet.value)
 
   // Erase
   L.easyButton(
@@ -250,65 +139,89 @@ onMounted(() => {
       clearSelection()
     },
     'clear selected features'
-  ).addTo(mapStore.leaflet)
+  ).addTo(leaflet.value)
 
   try {
-    const url_to_geotiff_file = 'https://storage.googleapis.com/com_res_fim_output/cog.tif'
-    fetch(url_to_geotiff_file)
-      .then((res) => res.arrayBuffer())
-      .then((arrayBuffer) => {
-        parseGeoraster(arrayBuffer).then((georaster) => {
-          console.log('georaster:', georaster)
-
-          /*
-                  GeoRasterLayer is an extension of GridLayer,
-                  which means can use GridLayer options like opacity.
-      
-                  Just make sure to include the georaster option!
-      
-                  http://leafletjs.com/reference-1.2.0.html#gridlayer
-              */
-          const roaringRiverRasterTest = new GeoRasterLayer({
-            attribution: 'CUAHSI',
-            georaster: georaster,
-            resolution: 128,
-            opacity: 0.5,
-            pixelValuesToColorFn: (pixelValues) => {
-              // Assuming pixelValues is an array of values, map them to colors
-              return pixelValues.map((value) => {
-                // Example: Map value to a color based on some condition
-                if (value > 0) {
-                  return 'blue' // Color for inundated areas
-                } else {
-                  return 'transparent' // Color for non-inundated areas
-                }
-              })
-            },
-            bandIndex: 0, // Assuming the raster has a single band
-            noDataValue: 0 // Assuming 0 is the no-data value
+    const cogs = [
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__0_5_m__4_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__1_0_m__15_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__1_5_m__33_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__2_0_m__76_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__2_5_m__141_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__3_0_m__227_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__3_5_m__333_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__4_0_m__458_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__4_5_m__601_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__5_0_m__760_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__5_5_m__934_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__6_0_m__1123_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__6_5_m__1325_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__7_0_m__1540_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__7_5_m__1770_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__8_0_m__2013_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__8_5_m__2267_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__9_0_m__2531_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__9_5_m__2812_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__10_0_m__3104_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__10_5_m__3410_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__11_0_m__3727_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__11_5_m__4052_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__12_0_m__4391_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__12_5_m__4736_cms_inundation.cog',
+      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__13_0_m__5101_cms_inundation.cog'
+    ]
+    for (let cog of cogs) {
+      const url_to_cog_file = cog
+      fetch(url_to_cog_file)
+        .then((res) => res.arrayBuffer())
+        .then((arrayBuffer) => {
+          parseGeoraster(arrayBuffer).then((georaster) => {
+            /*
+              GeoRasterLayer is an extension of GridLayer,
+              which means we can use GridLayer options like opacity.
+              http://leafletjs.com/reference-1.2.0.html#gridlayer
+            */
+            const roaringRiverRasterTest = new GeoRasterLayer({
+              attribution: 'CUAHSI',
+              georaster: georaster,
+              resolution: 128,
+              opacity: 0.5,
+              pixelValuesToColorFn: (pixelValues) => {
+                // Assuming pixelValues is an array of values, map them to colors
+                return pixelValues.map((value) => {
+                  // Example: Map value to a color based on some condition
+                  if (value > 0) {
+                    return 'blue' // Color for inundated areas
+                  } else {
+                    return 'transparent' // Color for non-inundated areas
+                  }
+                })
+              },
+              bandIndex: 0, // Assuming the raster has a single band
+              noDataValue: 0 // Assuming 0 is the no-data value
+            })
+            alert(`Adding GeoRasterLayer for ${cog}`)
+            roaringRiverRasterTest.addTo(leaflet.value)
+            leaflet.value.fitBounds(roaringRiverRasterTest.getBounds())
           })
-          roaringRiverRasterTest.addTo(mapStore.leaflet)
-
-          mapStore.leaflet.fitBounds(roaringRiverRasterTest.getBounds())
         })
-      })
-      .catch((error) => {
-        console.error('Error fetching or parsing GeoTIFF:', error)
-      })
+        .catch((error) => {
+          console.error('Error fetching or parsing GeoTIFF:', error)
+        })
+    }
   } catch (error) {
     console.error('Error loading GeoRasterLayer:', error)
   }
 
   // on zoom event, log the current bounds and zoom level
-  mapStore.leaflet.on('zoomend moveend', function () {
-    let zoom = mapStore.leaflet.getZoom()
+  leaflet.value.on('zoomend moveend', function () {
+    let zoom = leaflet.value.getZoom()
     console.log('zoom level:', zoom)
     // log the bounds as [[lat, long], [lat, long]]
-    let bounds = mapStore.leaflet.getBounds()
+    let bounds = leaflet.value.getBounds()
     console.log('bounds:', bounds._northEast, bounds._southWest)
-    console.log('map center:', mapStore.leaflet.getCenter())
+    console.log('map center:', leaflet.value.getCenter())
   })
-
   mapStore.mapLoaded = true
 })
 
@@ -417,7 +330,7 @@ function drawBbox() {
 
   mapObject.value.huclayers['BBOX'] = json_polygon
   if (featureStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(mapStore.leaflet)
+    json_polygon.addTo(leaflet.value)
   }
 
   // TODO: Not sure if this is still needed
