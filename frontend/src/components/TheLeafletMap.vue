@@ -184,7 +184,7 @@ onMounted(() => {
             const roaringRiverRasterTest = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
-              // resolution: 128,
+              resolution: 128,
               opacity: 0.5,
               pixelValuesToColorFn: (pixelValues) => {
                 // Assuming pixelValues is an array of values, map them to colors
