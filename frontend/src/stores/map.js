@@ -59,9 +59,9 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const limitToBounds = (featureLayer) => {
-    console.log('Limiting to bounds of feature layer:', featureLayer)
-    featureLayer.query().bounds(async function (error, bounds) {
+  const limitToBounds = (region) => {
+    console.log('Limiting to bounds of region', region)
+    region.flowlinesLayer.query().bounds(async function (error, bounds) {
       if (error) {
         console.log('Error running bounds query:')
         console.warn(error)
@@ -74,10 +74,14 @@ export const useMapStore = defineStore('map', () => {
 
         // prevent panning from bounds
         leaflet.value.setMaxBounds(bounds)
-        leaflet.value.fitBounds(bounds)
+        // instead of fitbounds, use default zoom
+        // leaflet.value.fitBounds(bounds)
+        leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
+        const zoom = leaflet.value.getZoom()
+        console.log('Current zoom level:', zoom)
         await nextTick()
         // prevent zooming out
-        leaflet.value.setMinZoom(leaflet.value.getZoom())
+        leaflet.value.setMinZoom(zoom)
       } catch (error) {
         console.warn('Error zooming to bounds:', error)
       }
