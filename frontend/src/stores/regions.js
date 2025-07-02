@@ -22,7 +22,8 @@ export const useRegionsStore = defineStore('regions', () => {
              spanning 4,294 acres.`,
       flex: 1,
       flowlinesLayerNumber: 13,
-      eraseLayerNumber: 4
+      eraseLayerNumber: 4,
+      defaultZoom: 11
     },
     {
       image: DeSoto,
@@ -33,7 +34,8 @@ export const useRegionsStore = defineStore('regions', () => {
             hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
       flowlinesLayerNumber: 0,
-      eraseLayerNumber: 3
+      eraseLayerNumber: 3,
+      defaultZoom: 11
     },
     {
       image: SpringfieldGreeneCounty,
@@ -44,7 +46,8 @@ export const useRegionsStore = defineStore('regions', () => {
              the north, east, and south sides of the area.`,
       flex: 1,
       flowlinesLayerNumber: 1,
-      eraseLayerNumber: 2
+      eraseLayerNumber: 2,
+      defaultZoom: 10
     },
     {
       image: MountAscutney,
@@ -56,7 +59,8 @@ export const useRegionsStore = defineStore('regions', () => {
              broad Connecticut River on the east.`,
       flex: 1,
       flowlinesLayerNumber: 0,
-      eraseLayerNumber: 1
+      eraseLayerNumber: 1,
+      defaultZoom: 10
     },
     {
       image: TwoRiversOttauquechee,
@@ -67,7 +71,8 @@ export const useRegionsStore = defineStore('regions', () => {
              Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
       flowlinesLayerNumber: 0,
-      eraseLayerNumber: 3
+      eraseLayerNumber: 3,
+      defaultZoom: 10
     },
     {
       image: Windham,
@@ -79,7 +84,8 @@ export const useRegionsStore = defineStore('regions', () => {
              forests, including spruce, fir, and white pine.`,
       flex: 1,
       flowlinesLayerNumber: 0,
-      eraseLayerNumber: 3
+      eraseLayerNumber: 3,
+      defaultZoom: 10
     }
   ])
   const setRegion = async (regionName) => {
@@ -91,10 +97,14 @@ export const useRegionsStore = defineStore('regions', () => {
       return
     }
     currentRegion.value = region
-    await nextTick()
-    mapStore.limitToBounds(region.flowlinesLayer)
     mapStore.toggleWMSLayers(region)
-    mapStore.toggleFeatureLayer(region.name)
+    await nextTick()
+    try {
+      await mapStore.toggleFeatureLayer(region)
+    } catch (error) {
+      console.error('Error toggling feature layer:', error)
+    }
+    mapStore.limitToBounds(region)
   }
 
   return {
