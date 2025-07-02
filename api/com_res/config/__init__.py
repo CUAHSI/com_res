@@ -33,8 +33,6 @@ class Settings(BaseSettings):
     nwm_bigquery_key: str
     nwm_bigquery_url: str
 
-    fim_bigquery_key: str
-
     cloud_run: bool = False
 
     OIDC_BASE_URL: str

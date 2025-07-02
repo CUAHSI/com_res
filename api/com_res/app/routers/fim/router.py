@@ -2,8 +2,6 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from google.cloud import bigquery
 
-from config import get_settings
-
 router = APIRouter()
 
 
@@ -24,7 +22,7 @@ async def get_fim(
     JSONResponse: a dictionary containing the FIM data for the specified reach ID.
     """
 
-    client = bigquery.Client(project="com-res", client_options={"api_key": get_settings().fim_bigquery_key})
+    client = bigquery.Client(project="com-res")
 
     query = """
     SELECT *
