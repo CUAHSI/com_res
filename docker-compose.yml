@@ -26,6 +26,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./api/com_res:/com_res
+      # https://cloud.google.com/docs/authentication/external/set-up-adc
       - /Users/dcowan/.config/gcloud/application_default_credentials.json:/app/key.json
     build:
       context: ./api/
