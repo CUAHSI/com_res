@@ -114,7 +114,7 @@ export const useMapStore = defineStore('map', () => {
           format: 'image/png',
           minZoom: MIN_WMS_ZOOM
         })
-        wmsLayer.name = `${layer.name} - ${region.name} - ${layer.id}`
+        wmsLayer.name = layer.name
         wmsLayer.id = layer.id
         wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
         wmsLayers.value[region.name].push(wmsLayer)
