@@ -24,7 +24,6 @@ export const useMapStore = defineStore('map', () => {
 
   const MIN_WMS_ZOOM = 9
   const MIN_WFS_ZOOM = 9
-  const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
   const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
 
   const deselectFeature = (feature) => {
@@ -105,22 +104,17 @@ export const useMapStore = defineStore('map', () => {
     if (data && data.layers) {
       console.log(`Creating WMS Layers for ${region.name}`)
       data.layers.forEach((layer) => {
-        url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
-        // https://leafletjs.com/reference.html#tilelayer-wms
-        const wmsLayer = L.tileLayer.wms(url, {
-          // TODO: seems like this id might be off by one...
-          layers: `${layer.id}`,
-          // layers: index + 1,
-          // layers: layer.id + 1, // ArcGIS REST API layers are 1-indexed
-          // layers: [layer.id],
+        url = `${COMRES_REST_URL}/${region.name}/MapServer/`
+        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
+        const wmsLayer = esriLeaflet.dynamicMapLayer({
+          url: url,
+          pane: 'overlayPane',
+          layers: [layer.id],
           transparent: true,
-          // TODO: set the transparency...
-          opacity: layer.id === region.eraseLayerNumber ? 0.5 : 1,
-          // opacity: layer.name.toLowerCase().includes('erase') ? 0.5 : 1,
           format: 'image/png',
           minZoom: MIN_WMS_ZOOM
         })
-        wmsLayer.name = `${layer.name} - ${region.name} - ${layer.id}`
+        wmsLayer.name = layer.name
         wmsLayer.id = layer.id
         wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
         wmsLayers.value[region.name].push(wmsLayer)
