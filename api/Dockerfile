@@ -1,4 +1,7 @@
-FROM python:3.10-slim
+FROM python:3.12-bullseye
+
+# Ensure all system packages are up to date to reduce vulnerabilities
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
@@ -32,7 +35,7 @@ RUN apt-get update && apt-get install -y \
 
 # (Optional) For local testing with a service account key:
 # COPY key.json /app/key.json
-# ENV GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
+# ENV GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
 
 ENV PYTHONPATH "/com_res/:${PYTHONPATH}"
 

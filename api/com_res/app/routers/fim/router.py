@@ -1,8 +1,24 @@
+import os
+
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from google.cloud import bigquery
 
+from config import get_settings
+
 router = APIRouter()
+
+
+def get_bigquery_client():
+    """Helper function to create BigQuery client with credentials from environment variables"""
+    # Get credentials from environment variables
+    credentials_path = get_settings().google_application_credentials_path
+
+    if credentials_path and os.path.exists(credentials_path):
+        return bigquery.Client.from_service_account_json(credentials_path)
+    else:
+        # Fallback to default credentials
+        return bigquery.Client(project="com-res")
 
 
 @router.get("/fim")
@@ -22,7 +38,7 @@ async def get_fim(
     JSONResponse: a dictionary containing the FIM data for the specified reach ID.
     """
 
-    client = bigquery.Client(project="com-res")
+    client = get_bigquery_client()
 
     query = """
     SELECT *
@@ -33,7 +49,7 @@ async def get_fim(
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter("reach_id", "INT64", 8584970),
+            bigquery.ScalarQueryParameter("reach_id", "INT64", reach_id),
         ]
     )
 

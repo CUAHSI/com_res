@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     nwm_bigquery_key: str
     nwm_bigquery_url: str
 
+    google_application_credentials_path: str
+
     cloud_run: bool = False
 
     OIDC_BASE_URL: str
