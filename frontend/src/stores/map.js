@@ -167,6 +167,8 @@ export const useMapStore = defineStore('map', () => {
    * @returns {void}
    */
   const addCogsToMap = (cogs) => {
+    const alertStore = useAlertStore()
+    console.log('Adding COGs to map:', cogs)
     try {
       for (let cog of cogs) {
         fetch(cog)
@@ -204,6 +206,13 @@ export const useMapStore = defineStore('map', () => {
           })
           .catch((error) => {
             console.error('Error fetching or parsing GeoTIFF:', error)
+            alertStore.displayAlert({
+              title: 'Error Loading COG',
+              text: 'There was an error loading the selected COG.',
+              type: 'error',
+              closable: true,
+              duration: 5
+            })
           })
       }
     } catch (error) {
@@ -363,6 +372,9 @@ export const useMapStore = defineStore('map', () => {
         </p>
         `
       popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.value)
+      // zoom to the feature bounds
+      const bounds = L.geoJSON(feature).getBounds()
+      leaflet.value.fitBounds(bounds)
     })
     return featureLayer
   }
