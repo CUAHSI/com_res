@@ -29,7 +29,42 @@
       ></v-tab>
     </v-tabs>
     <v-spacer></v-spacer>
+    <v-tooltip text="Report an Issue" location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn icon v-bind="props" @click="toggleGithubDialog">
+          <v-icon :icon="mdiGithub"></v-icon>
+        </v-btn>
+      </template>
+    </v-tooltip>
   </v-app-bar>
+  <v-dialog v-model="showGithubDialog" max-width="500">
+    <v-card>
+      <v-card-title>Create an Issue</v-card-title>
+      <v-card-text class="d-flex flex-wrap justify-center">
+        <p class="text-body-1">
+          Please report any issues you find with FloodWise to our GitHub repository.
+        </p>
+        <v-btn
+          variant="outlined"
+          color="primary"
+          class="ma-2"
+          :href="'https://github.com/CUAHSI/com_res/issues/new?template=bug_report.md'"
+          target="_blank"
+        >
+          Report a Bug
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          color="primary"
+          class="ma-2"
+          :href="'https://github.com/CUAHSI/com_res/issues/new?template=feature_request.md'"
+          target="_blank"
+        >
+          Request a Feature
+        </v-btn>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
@@ -38,9 +73,11 @@ import { useDisplay } from 'vuetify'
 import imgUrl from '@/assets/floodwise_icon.jpg'
 defineProps(['paths'])
 defineEmits(['toggleMobileNav'])
+import { mdiGithub } from '@mdi/js'
 
 const route = useRoute()
 const path = ref(route.path)
+const showGithubDialog = ref(false)
 
 watch(
   () => route.path,
@@ -50,6 +87,9 @@ watch(
 )
 
 const { mdAndDown } = useDisplay()
+const toggleGithubDialog = () => {
+  showGithubDialog.value = !showGithubDialog.value
+}
 </script>
 
 <style lang="scss" scoped>
