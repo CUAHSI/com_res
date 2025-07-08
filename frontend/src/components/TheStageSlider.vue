@@ -4,7 +4,12 @@
       <!-- Mercury fill -->
       <div class="mercury" :style="mercuryStyle"></div>
 
-      <!-- Vuetify slider (transparent but handles interaction) -->
+      <!-- Grabbable handle -->
+      <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
+        <div class="handle-label">Water Stage</div>
+      </div>
+
+      <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
       <v-slider
         v-model="modelValue"
         vertical
@@ -42,7 +47,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -69,7 +74,6 @@ const props = defineProps({
     type: String,
     default: '300px'
   },
-  // Array of { value: Number, text: String } for labels
   labels: {
     type: Array,
     default: () => [
@@ -80,12 +84,10 @@ const props = defineProps({
       { value: 100, text: '100°' }
     ]
   },
-  // How often to show major ticks (every Nth tick)
   majorTickInterval: {
     type: Number,
     default: 2
   },
-  // Number of ticks to display
   tickCount: {
     type: Number,
     default: 20
@@ -100,11 +102,14 @@ const modelValue = computed({
 })
 
 const ticks = Array(props.tickCount).fill(0)
+const isDragging = ref(false)
+const startY = ref(0)
+const startValue = ref(0)
 
 const containerStyle = computed(() => ({
   width: props.width,
   height: props.height,
-  right: '20px', // Adjust as needed for your map positioning
+  right: '20px',
   top: '50%',
   transform: 'translateY(-50%)'
 }))
@@ -114,20 +119,72 @@ const mercuryStyle = computed(() => ({
   backgroundColor: mercuryColor.value
 }))
 
+const handleStyle = computed(() => ({
+  bottom: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
+  cursor: isDragging.value ? 'grabbing' : 'grab'
+}))
+
 const mercuryColor = computed(() => {
   const percent = (props.modelValue - props.min) / (props.max - props.min)
-  const hue = 200 + 160 * percent // 200 (blue) to 360 (red)
-  return `hsl(${hue > 360 ? hue - 360 : hue}, 80%, ${70 - percent * 30}%)`
+  // Blue (200) → Purple (280) → Red (360/0)
+  if (percent < 0.5) {
+    const subPercent = percent * 2
+    const hue = 200 + (280 - 200) * subPercent
+    return `hsl(${hue}, 80%, ${70 - subPercent * 20}%)`
+  } else {
+    const subPercent = (percent - 0.5) * 2
+    const hue = 280 + (360 - 280) * subPercent
+    return `hsl(${hue > 360 ? hue - 360 : hue}, 80%, ${50 - subPercent * 10}%)`
+  }
 })
+
+const startDrag = (e) => {
+  isDragging.value = true
+  startY.value = e.clientY || e.touches[0].clientY
+  startValue.value = props.modelValue
+
+  document.addEventListener('mousemove', handleDrag)
+  document.addEventListener('touchmove', handleDrag, { passive: false })
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('touchend', stopDrag)
+}
+
+const handleDrag = (e) => {
+  if (!isDragging.value) return
+  e.preventDefault()
+
+  const clientY = e.clientY || e.touches[0].clientY
+  const container = document.querySelector('.thermometer-slider-container')
+  const rect = container.getBoundingClientRect()
+
+  // Calculate new position (0-1)
+  let position = 1 - (clientY - rect.top) / rect.height
+  position = Math.max(0, Math.min(1, position)) // Clamp between 0-1
+
+  // Calculate new value
+  const range = props.max - props.min
+  const newValue = props.min + position * range
+
+  // Apply step if needed
+  modelValue.value = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('touchmove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchend', stopDrag)
+}
 </script>
 
 <style scoped>
 .thermometer-slider-container {
   position: absolute;
-  z-index: 10; /* Higher than your map */
+  z-index: 10;
   display: flex;
   justify-content: center;
-  pointer-events: none; /* Allows clicks to pass through container */
+  pointer-events: none;
 }
 
 .thermometer {
@@ -138,8 +195,8 @@ const mercuryColor = computed(() => {
   border-radius: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   border: 2px solid #ddd;
-  overflow: hidden;
-  pointer-events: auto; /* Re-enable pointer events for thermometer */
+  overflow: visible;
+  pointer-events: auto;
 }
 
 .mercury {
@@ -150,11 +207,45 @@ const mercuryColor = computed(() => {
   border-radius: 0 0 18px 18px;
 }
 
+.handle {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid #1976d2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+  cursor: grab;
+  user-select: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+.handle-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: bold;
+  color: #1976d2;
+  background-color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
 .slider-input {
   position: absolute;
   height: 100%;
   width: 100%;
-  opacity: 0; /* Make slider transparent but still interactive */
+  opacity: 0;
 }
 
 .ticks {
