@@ -50,21 +50,14 @@
     </v-row>
 
     <TheStageSlider
-      v-if="activeFeature"
+      v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
       v-model="stageValue"
-      :min="0"
-      :max="100"
-      :labels="[
-        { value: 0, text: '0' },
-        { value: 20, text: '20' },
-        { value: 40, text: '40' },
-        { value: 60, text: '60' },
-        { value: 80, text: '80' },
-        { value: 100, text: '100' }
-      ]"
+      :min="activeFeatureFimCogData.stages_m[0]"
+      :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+      :stages="activeFeatureFimCogData.stages_m"
       width="50px"
       height="400px"
-      @input="handleStageChange"
+      @update:modelValue="handleStageChange"
       style="z-index: 99999"
     />
 
@@ -85,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
@@ -198,10 +191,37 @@ const reachIdChanged = async (selected_reach) => {
   }
 }
 
-const handleStageChange = (value) => {
-  console.log('Stage value changed:', value)
-  // Here you can handle the stage change, e.g., update the map or plots
-  // For now, just log it
+const activeFeatureFimCogData = computed(() => {
+  return activeFeature.value?.properties?.fimCogData || null
+})
+
+const handleStageChange = () => {
+  console.log('Stage value changed:', stageValue.value)
+  // enable "snapping to nearest stage" functionality
+  // if the stage value is not in the list of stages
+  if (!activeFeatureFimCogData.value.stages_m.includes(stageValue.value)) {
+    // find the nearest stage value
+    const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
+      return Math.abs(curr - stageValue.value) < Math.abs(prev - stageValue.value) ? curr : prev
+    })
+    stageValue.value = nearestStage
+    console.log('Snapped to nearest stage:', nearestStage)
+  }
+  const cogUrls = mapStore.determineCogsForStage(
+    activeFeatureFimCogData.value.files,
+    activeFeatureFimCogData.value.stages_m
+  )
+  if (cogUrls.length === 0) {
+    alertStore.displayAlert({
+      title: 'No Data Available',
+      text: `There are no COGs available for the selected stage: ${stageValue.value}m.`,
+      type: 'warning',
+      closable: true,
+      duration: 5
+    })
+    return
+  }
+  mapStore.addCogsToMap(cogUrls)
 }
 </script>
 <style scoped>

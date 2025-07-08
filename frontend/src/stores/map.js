@@ -25,7 +25,7 @@ export const useMapStore = defineStore('map', () => {
     opacity: 0.7
   })
   const mapLoaded = ref(false)
-  const stageValue = ref(50) // Default stage value for the slider
+  const stageValue = ref(5) // Default stage value for the slider
 
   const MIN_WMS_ZOOM = 9
   const MIN_WFS_ZOOM = 9
@@ -49,8 +49,17 @@ export const useMapStore = defineStore('map', () => {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
-      // query FastAPI to get relevant geotiffs for the reach
-      const fimCogData = await fetchCogCatalogData(feature)
+      let fimCogData = null
+      // check if the feature already has FIM COG data
+      if (feature.properties?.fimCogData) {
+        console.log('Feature already has FIM COG data:', feature.properties.fimCogData)
+        fimCogData = feature.properties.fimCogData
+      } else {
+        console.log('Feature does not have FIM COG data, fetching...')
+        // query FastAPI to get relevant geotiffs for the reach
+        fimCogData = await fetchCogCatalogData(feature)
+        saveCatalogDataToFeature(feature, fimCogData)
+      }
       console.log('FIM COG DATA:', fimCogData)
       // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
       const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
@@ -62,16 +71,12 @@ export const useMapStore = defineStore('map', () => {
           closable: true,
           duration: 3
         })
-        // return
+        return
       }
-      // first zoom into the bounds of the feature
-      const bounds = L.geoJSON(feature).getBounds()
-      leaflet.value.fitBounds(bounds)
-      leaflet.value.invalidateSize()
-      await nextTick()
-
-      // addCogsToMap(cogUrls)
-      addCogsToMap(fimCogData.files)
+      // // zoom into the bounds of the feature
+      // const bounds = L.geoJSON(feature).getBounds()
+      // leaflet.value.fitBounds(bounds)
+      addCogsToMap(cogUrls)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
     }
@@ -110,6 +115,15 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
+  const saveCatalogDataToFeature = (feature, fimCogData) => {
+    // Save the fetched FIM COG data to the feature properties
+    if (!feature.properties) {
+      feature.properties = {}
+    }
+    feature.properties.fimCogData = fimCogData
+    console.log('Saved FIM COG data to feature properties:', fimCogData)
+  }
+
   /**
    * Determines and returns the COGs (Cloud Optimized GeoTIFF URLs) that correspond to a specific stage value.
    *
@@ -142,7 +156,19 @@ export const useMapStore = defineStore('map', () => {
     return matchingCogs
   }
 
+  /**
+   * Adds Cloud Optimized GeoTIFFs (COGs) as GeoRasterLayers to a Leaflet map.
+   *
+   * Fetches each COG URL, parses it into a georaster object, and creates a GeoRasterLayer
+   * with custom color mapping for pixel values. The layer is then added to the Leaflet map.
+   *
+   * @param {string[]} cogs - An array of URLs pointing to Cloud Optimized GeoTIFF files.
+   *
+   * @returns {void}
+   */
   const addCogsToMap = (cogs) => {
+    const alertStore = useAlertStore()
+    console.log('Adding COGs to map:', cogs)
     try {
       for (let cog of cogs) {
         fetch(cog)
@@ -174,12 +200,19 @@ export const useMapStore = defineStore('map', () => {
                 noDataValue: 0 // Assuming 0 is the no-data value
               })
               raster.addTo(leaflet.value)
-              leaflet.value.fitBounds(raster.getBounds())
+              // leaflet.value.fitBounds(raster.getBounds())
               console.log(`Added GeoRasterLayer for ${cog}`)
             })
           })
           .catch((error) => {
             console.error('Error fetching or parsing GeoTIFF:', error)
+            alertStore.displayAlert({
+              title: 'Error Loading COG',
+              text: 'There was an error loading the selected COG.',
+              type: 'error',
+              closable: true,
+              duration: 5
+            })
           })
       }
     } catch (error) {
@@ -339,6 +372,9 @@ export const useMapStore = defineStore('map', () => {
         </p>
         `
       popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.value)
+      // zoom to the feature bounds
+      const bounds = L.geoJSON(feature).getBounds()
+      leaflet.value.fitBounds(bounds)
     })
     return featureLayer
   }
@@ -397,6 +433,8 @@ export const useMapStore = defineStore('map', () => {
     toggleWMSLayers,
     toggleFeatureLayer,
     control,
-    stageValue
+    stageValue,
+    determineCogsForStage,
+    addCogsToMap
   }
 })
