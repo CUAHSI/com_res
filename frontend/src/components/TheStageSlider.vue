@@ -35,12 +35,12 @@
       <!-- Labels inside thermometer -->
       <div class="labels-inside">
         <div
-          v-for="(label, index) in labels"
+          v-for="(stage, index) in stages"
           :key="index"
           class="label-inside"
-          :style="{ bottom: `${((label.value - min) / (max - min)) * 100}%` }"
+          :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
         >
-          {{ label.text }}
+          {{ stage }}
         </div>
       </div>
     </div>
@@ -75,16 +75,9 @@ const props = defineProps({
     type: String,
     default: '400px' // Increased height to accommodate all labels
   },
-  labels: {
+  stages: {
     type: Array,
-    default: () => [
-      { value: 0, text: '0' },
-      { value: 20, text: '20' },
-      { value: 40, text: '40' },
-      { value: 60, text: '60' },
-      { value: 80, text: '80' },
-      { value: 100, text: '100' }
-    ]
+    default: () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   },
   majorTickInterval: {
     type: Number,

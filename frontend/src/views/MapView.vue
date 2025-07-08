@@ -50,18 +50,11 @@
     </v-row>
 
     <TheStageSlider
-      v-if="activeFeature"
+      v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
       v-model="stageValue"
-      :min="0"
-      :max="100"
-      :labels="[
-        { value: 0, text: '0' },
-        { value: 20, text: '20' },
-        { value: 40, text: '40' },
-        { value: 60, text: '60' },
-        { value: 80, text: '80' },
-        { value: 100, text: '100' }
-      ]"
+      :min="activeFeatureFimCogData.stages_m[0]"
+      :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+      :stages="activeFeatureFimCogData.stages_m"
       width="50px"
       height="400px"
       @input="handleStageChange"
@@ -85,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
@@ -197,6 +190,10 @@ const reachIdChanged = async (selected_reach) => {
     )
   }
 }
+
+const activeFeatureFimCogData = computed(() => {
+  return activeFeature.value?.properties?.fimCogData || null
+})
 
 const handleStageChange = (value) => {
   console.log('Stage value changed:', value)

@@ -49,8 +49,17 @@ export const useMapStore = defineStore('map', () => {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
-      // query FastAPI to get relevant geotiffs for the reach
-      const fimCogData = await fetchCogCatalogData(feature)
+      let fimCogData = null
+      // check if the feature already has FIM COG data
+      if (feature.properties?.fimCogData) {
+        console.log('Feature already has FIM COG data:', feature.properties.fimCogData)
+        fimCogData = feature.properties.fimCogData
+      } else {
+        console.log('Feature does not have FIM COG data, fetching...')
+        // query FastAPI to get relevant geotiffs for the reach
+        fimCogData = await fetchCogCatalogData(feature)
+        saveCatalogDataToFeature(feature, fimCogData)
+      }
       console.log('FIM COG DATA:', fimCogData)
       // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
       const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
@@ -108,6 +117,15 @@ export const useMapStore = defineStore('map', () => {
     } catch (error) {
       console.error('Error fetching FIM COGs:', error)
     }
+  }
+
+  const saveCatalogDataToFeature = (feature, fimCogData) => {
+    // Save the fetched FIM COG data to the feature properties
+    if (!feature.properties) {
+      feature.properties = {}
+    }
+    feature.properties.fimCogData = fimCogData
+    console.log('Saved FIM COG data to feature properties:', fimCogData)
   }
 
   /**
