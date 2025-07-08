@@ -57,14 +57,21 @@ export const useMapStore = defineStore('map', () => {
       if (cogUrls.length === 0) {
         alertStore.displayAlert({
           title: 'Stage Selection',
-          text: `No COGs found for selected stage: ${stageValue.value}m.`,
+          text: `No COGs found for selected stage: ${stageValue.value}m. For now we are faking this with a default COG.`,
           type: 'warning',
           closable: true,
           duration: 3
         })
-        return
+        // return
       }
-      addCogsToMap(cogUrls)
+      // first zoom into the bounds of the feature
+      const bounds = L.geoJSON(feature).getBounds()
+      leaflet.value.fitBounds(bounds)
+      leaflet.value.invalidateSize()
+      await nextTick()
+
+      // addCogsToMap(cogUrls)
+      addCogsToMap(fimCogData.files)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
     }
@@ -138,8 +145,7 @@ export const useMapStore = defineStore('map', () => {
   const addCogsToMap = (cogs) => {
     try {
       for (let cog of cogs) {
-        const url_to_cog_file = cog
-        fetch(url_to_cog_file)
+        fetch(cog)
           .then((res) => res.arrayBuffer())
           .then((arrayBuffer) => {
             parseGeoraster(arrayBuffer).then((georaster) => {
