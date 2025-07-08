@@ -21,7 +21,7 @@
         @update:modelValue="$emit('update:modelValue', modelValue)"
       ></v-slider>
 
-      <!-- Tick marks and labels -->
+      <!-- Tick marks -->
       <div class="ticks">
         <div
           v-for="(_, index) in ticks"
@@ -32,11 +32,12 @@
         ></div>
       </div>
 
-      <div class="labels">
+      <!-- Labels now inside thermometer -->
+      <div class="labels-inside">
         <div
           v-for="(label, index) in labels"
           :key="index"
-          class="label"
+          class="label-inside"
           :style="{ bottom: `${((label.value - min) / (max - min)) * 100}%` }"
         >
           {{ label.text }}
@@ -271,19 +272,45 @@ const stopDrag = () => {
   height: 2px;
 }
 
-.labels {
+.labels-inside {
   position: absolute;
-  left: calc(100% + 10px);
+  right: 8px;
   top: 0;
   bottom: 0;
   width: 30px;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  pointer-events: none;
 }
 
-.label {
-  position: absolute;
+.label-inside {
+  position: relative;
   transform: translateY(50%);
-  font-size: 12px;
+  font-size: 10px;
   color: #333;
-  white-space: nowrap;
+  text-align: right;
+  padding-right: 8px;
+  z-index: 1;
+  text-shadow:
+    -1px -1px 0 white,
+    1px -1px 0 white,
+    -1px 1px 0 white,
+    1px 1px 0 white;
+}
+
+/* Adjust thermometer overflow to ensure labels are visible */
+.thermometer {
+  overflow: visible;
+}
+
+/* Make sure mercury doesn't obscure labels */
+.mercury {
+  z-index: 0;
+}
+
+/* Adjust handle z-index to stay above everything */
+.handle {
+  z-index: 2;
 }
 </style>

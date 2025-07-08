@@ -46,12 +46,12 @@
       :min="0"
       :max="100"
       :labels="[
-        { value: 0, text: '0°C' },
-        { value: 20, text: '20°C' },
-        { value: 40, text: '40°C' },
-        { value: 60, text: '60°C' },
-        { value: 80, text: '80°C' },
-        { value: 100, text: '100°C' }
+        { value: 0, text: '0' },
+        { value: 20, text: '20' },
+        { value: 40, text: '40' },
+        { value: 60, text: '60' },
+        { value: 80, text: '80' },
+        { value: 100, text: '100' }
       ]"
       width="50px"
       height="400px"
