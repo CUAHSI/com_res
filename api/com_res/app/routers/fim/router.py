@@ -80,9 +80,9 @@ async def get_fim(
         results = dict(files=[], flows_cms=[], stages_m=[])
 
         for row in query_job:
-            results['files'].append(row[0])
-            results['stages_m'].append(row[2])
-            results['flows_cms'].append(row[3])
+            results['files'].append(row['public_url'])
+            results['stages_m'].append(row['stage'])
+            results['flows_cms'].append(row['flow'])
 
     except Exception as e:
         logging.error(f"Query failed: {str(e)}")

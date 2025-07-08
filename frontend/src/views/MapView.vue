@@ -57,7 +57,7 @@
       :stages="activeFeatureFimCogData.stages_m"
       width="50px"
       height="400px"
-      @input="handleStageChange"
+      @update:modelValue="handleStageChange"
       style="z-index: 99999"
     />
 
@@ -195,10 +195,23 @@ const activeFeatureFimCogData = computed(() => {
   return activeFeature.value?.properties?.fimCogData || null
 })
 
-const handleStageChange = (value) => {
-  console.log('Stage value changed:', value)
-  // Here you can handle the stage change, e.g., update the map or plots
-  // For now, just log it
+const handleStageChange = () => {
+  console.log('Stage value changed:', stageValue.value)
+  const cogUrls = mapStore.determineCogsForStage(
+    activeFeatureFimCogData.value.files,
+    activeFeatureFimCogData.value.stages_m
+  )
+  if (cogUrls.length === 0) {
+    alertStore.displayAlert({
+      title: 'No Data Available',
+      text: `There are no COGs available for the selected stage: ${stageValue.value}m.`,
+      type: 'warning',
+      closable: true,
+      duration: 5
+    })
+    return
+  }
+  mapStore.addCogsToMap(cogUrls)
 }
 </script>
 <style scoped>

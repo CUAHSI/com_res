@@ -25,7 +25,7 @@ export const useMapStore = defineStore('map', () => {
     opacity: 0.7
   })
   const mapLoaded = ref(false)
-  const stageValue = ref(50) // Default stage value for the slider
+  const stageValue = ref(5) // Default stage value for the slider
 
   const MIN_WMS_ZOOM = 9
   const MIN_WFS_ZOOM = 9
@@ -71,16 +71,12 @@ export const useMapStore = defineStore('map', () => {
           closable: true,
           duration: 3
         })
-        // return
+        return
       }
-      // first zoom into the bounds of the feature
-      const bounds = L.geoJSON(feature).getBounds()
-      leaflet.value.fitBounds(bounds)
-      leaflet.value.invalidateSize()
-      await nextTick()
-
-      // addCogsToMap(cogUrls)
-      addCogsToMap(fimCogData.files)
+      // // zoom into the bounds of the feature
+      // const bounds = L.geoJSON(feature).getBounds()
+      // leaflet.value.fitBounds(bounds)
+      addCogsToMap(cogUrls)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
     }
@@ -160,6 +156,16 @@ export const useMapStore = defineStore('map', () => {
     return matchingCogs
   }
 
+  /**
+   * Adds Cloud Optimized GeoTIFFs (COGs) as GeoRasterLayers to a Leaflet map.
+   *
+   * Fetches each COG URL, parses it into a georaster object, and creates a GeoRasterLayer
+   * with custom color mapping for pixel values. The layer is then added to the Leaflet map.
+   *
+   * @param {string[]} cogs - An array of URLs pointing to Cloud Optimized GeoTIFF files.
+   *
+   * @returns {void}
+   */
   const addCogsToMap = (cogs) => {
     try {
       for (let cog of cogs) {
@@ -192,7 +198,7 @@ export const useMapStore = defineStore('map', () => {
                 noDataValue: 0 // Assuming 0 is the no-data value
               })
               raster.addTo(leaflet.value)
-              leaflet.value.fitBounds(raster.getBounds())
+              // leaflet.value.fitBounds(raster.getBounds())
               console.log(`Added GeoRasterLayer for ${cog}`)
             })
           })
@@ -415,6 +421,8 @@ export const useMapStore = defineStore('map', () => {
     toggleWMSLayers,
     toggleFeatureLayer,
     control,
-    stageValue
+    stageValue,
+    determineCogsForStage,
+    addCogsToMap
   }
 })
