@@ -4,7 +4,7 @@
   </v-overlay>
 
   <v-container fluid>
-    <div id="div-plot-button" class="desktop-plot-buttons-container">
+    <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
         variant="flat"
@@ -21,6 +21,10 @@
           :color="showHistorical ? 'blue' : 'white'"
         >
           Historical
+          <InfoIcon
+            text="Plot historical streamflow data for the selected river reach."
+            style="margin-left: 5px"
+          />
         </v-btn>
         <v-btn
           style="margin-right: 10px"
@@ -28,6 +32,10 @@
           :color="showForecast ? 'blue' : 'white'"
         >
           Forecast
+          <InfoIcon
+            text="Plot forecasted streamflow data for the selected river reach."
+            style="margin-left: 5px"
+          />
         </v-btn>
       </v-card>
     </div>
@@ -40,6 +48,19 @@
         <TheLeafletMap />
       </v-col>
     </v-row>
+
+    <TheStageSlider
+      v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
+      v-model="stageValue"
+      :min="activeFeatureFimCogData.stages_m[0]"
+      :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+      :stages="activeFeatureFimCogData.stages_m"
+      :flows="activeFeatureFimCogData.flows_cms"
+      width="50px"
+      height="400px"
+      @update:modelValue="handleStageChange"
+      style="z-index: 99999"
+    />
 
     <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
       <HistoricalPlot
@@ -58,15 +79,17 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
+import TheStageSlider from '@/components/TheStageSlider.vue'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
+import InfoIcon from '../components/InfoTooltip.vue'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
@@ -80,6 +103,7 @@ const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
 const { activeFeature } = storeToRefs(featureStore)
+const { stageValue } = storeToRefs(mapStore)
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -166,6 +190,40 @@ const reachIdChanged = async (selected_reach) => {
       '3'
     )
   }
+}
+
+const activeFeatureFimCogData = computed(() => {
+  return activeFeature.value?.properties?.fimCogData || null
+})
+
+const handleStageChange = () => {
+  console.log('Stage value changed:', stageValue.value)
+  // enable "snapping to nearest stage" functionality
+  // if the stage value is not in the list of stages
+  if (!activeFeatureFimCogData.value.stages_m.includes(stageValue.value)) {
+    // find the nearest stage value
+    const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
+      return Math.abs(curr - stageValue.value) < Math.abs(prev - stageValue.value) ? curr : prev
+    })
+    stageValue.value = nearestStage
+    console.log('Snapped to nearest stage:', nearestStage)
+  }
+  const cogUrls = mapStore.determineCogsForStage(
+    activeFeatureFimCogData.value.files,
+    activeFeatureFimCogData.value.stages_m
+  )
+  if (cogUrls.length === 0) {
+    alertStore.displayAlert({
+      title: 'No Data Available',
+      text: `There are no COGs available for the selected stage: ${stageValue.value}m.`,
+      type: 'warning',
+      closable: true,
+      duration: 5
+    })
+    return
+  }
+  mapStore.clearCogsFromMap()
+  mapStore.addCogsToMap(cogUrls)
 }
 </script>
 <style scoped>

@@ -1,4 +1,7 @@
-FROM python:3.10-slim
+FROM python:3.12-bullseye
+
+# Ensure all system packages are up to date to reduce vulnerabilities
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
@@ -24,6 +27,15 @@ RUN apt-get update && apt-get install -y wget && apt-get install -y ca-certifica
 RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digicert.com/GeoTrustTLSRSACAG1.crt.pem && \
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
+
+# Install system dependencies (required for Google Cloud SDK)
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# (Optional) For local testing with a service account key:
+# COPY key.json /app/key.json
+# ENV GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
 
 ENV PYTHONPATH "/com_res/:${PYTHONPATH}"
 

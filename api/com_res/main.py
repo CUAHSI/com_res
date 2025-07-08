@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers.fim import router as fim_router
 from app.routers.timeseries import router as timeseries_router
 from app.users import cuahsi_oauth_client
 from config import get_settings
@@ -36,8 +37,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 app.include_router(
     timeseries_router,
     tags=["timeseries"],
+)
+
+app.include_router(
+    fim_router,
+    tags=["fim"],
 )
