@@ -35,7 +35,7 @@
       <!-- Labels inside thermometer -->
       <div class="labels-inside">
         <div
-          v-for="(stage, index) in stages"
+          v-for="(stage, index) in visibleStages"
           :key="index"
           class="label-inside"
           :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
@@ -73,7 +73,7 @@ const props = defineProps({
   },
   height: {
     type: String,
-    default: '400px' // Increased height to accommodate all labels
+    default: '400px'
   },
   stages: {
     type: Array,
@@ -85,11 +85,15 @@ const props = defineProps({
   },
   majorTickInterval: {
     type: Number,
-    default: 4 // Adjusted to match label frequency
+    default: 4
   },
   tickCount: {
     type: Number,
     default: 20
+  },
+  minLabelSpacing: {
+    type: Number,
+    default: 40 // Minimum vertical pixels between labels to prevent overlap
   }
 })
 
@@ -105,17 +109,35 @@ const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
 
+// Calculate which stages to show based on available space
+const visibleStages = computed(() => {
+  const containerHeight = parseInt(props.height) || 400
+  const maxPossibleLabels = Math.floor(containerHeight / props.minLabelSpacing)
+
+  if (props.stages.length <= maxPossibleLabels) {
+    return props.stages
+  }
+
+  // If too many labels, show a subset with every Nth label
+  const step = Math.ceil(props.stages.length / maxPossibleLabels)
+  return props.stages.filter(
+    (_, index) => index % step === 0 || index === 0 || index === props.stages.length - 1
+  )
+})
+
 const containerStyle = computed(() => ({
   width: props.width,
   height: props.height,
   right: '20px',
   top: '50%',
-  transform: 'translateY(-50%)'
+  transform: 'translateY(-50%)',
+  padding: '20px 0' // Add vertical padding
 }))
 
 const mercuryStyle = computed(() => ({
   height: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
-  backgroundColor: mercuryColor.value
+  backgroundColor: mercuryColor.value,
+  margin: '0 10px' // Add horizontal padding
 }))
 
 const handleStyle = computed(() => ({
@@ -125,7 +147,6 @@ const handleStyle = computed(() => ({
 
 const mercuryColor = computed(() => {
   const percent = (props.modelValue - props.min) / (props.max - props.min)
-  // Blue (200) → Purple (280) → Red (360/0)
   if (percent < 0.5) {
     const subPercent = percent * 2
     const hue = 200 + (280 - 200) * subPercent
@@ -161,15 +182,10 @@ const handleDrag = (e) => {
   const container = document.querySelector('.thermometer-slider-container')
   const rect = container.getBoundingClientRect()
 
-  // Calculate new position (0-1)
   let position = 1 - (clientY - rect.top) / rect.height
-  position = Math.max(0, Math.min(1, position)) // Clamp between 0-1
-
-  // Calculate new value
+  position = Math.max(0, Math.min(1, position))
   const range = props.max - props.min
   const newValue = props.min + position * range
-
-  // Apply step if needed
   modelValue.value = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
 }
 
@@ -189,26 +205,30 @@ const stopDrag = () => {
   display: flex;
   justify-content: center;
   pointer-events: none;
+  box-sizing: border-box;
 }
 
 .thermometer {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 40px); /* Account for padding */
   background-color: #f5f5f5;
   border-radius: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   border: 2px solid #ddd;
   overflow: visible;
   pointer-events: auto;
+  margin: 20px 0; /* Add vertical padding */
+  padding-right: 30px; /* Make room for labels */
 }
 
 .mercury {
   position: absolute;
   bottom: 0;
-  width: 100%;
+  width: calc(100% - 20px); /* Account for horizontal padding */
   transition: height 0.2s ease;
   border-radius: 0 0 18px 18px;
+  margin: 0 10px;
 }
 
 .handle {
@@ -254,9 +274,9 @@ const stopDrag = () => {
 
 .ticks {
   position: absolute;
-  right: 30%;
-  top: 0;
-  bottom: 0;
+  right: 25px;
+  top: 10px;
+  bottom: 10px;
   width: 2px;
   background-color: #333;
 }
@@ -278,8 +298,8 @@ const stopDrag = () => {
 .labels-inside {
   position: absolute;
   right: 8px;
-  top: 0;
-  bottom: 0;
+  top: 10px;
+  bottom: 10px;
   width: 30px;
   pointer-events: none;
 }
@@ -297,16 +317,6 @@ const stopDrag = () => {
     1px -1px 0 white,
     -1px 1px 0 white,
     1px 1px 0 white;
-}
-
-/* Ensure ticks and labels align perfectly */
-.ticks {
-  right: 25px; /* Adjusted to make space for labels */
-}
-
-/* Adjust thermometer dimensions */
-.thermometer {
-  padding-right: 20px; /* Make room for labels */
 }
 
 /* Make sure mercury doesn't obscure labels */
