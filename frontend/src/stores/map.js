@@ -66,7 +66,7 @@ export const useMapStore = defineStore('map', () => {
       if (cogUrls.length === 0) {
         alertStore.displayAlert({
           title: 'Stage Selection',
-          text: `No COGs found for selected stage: ${stageValue.value}m.`,
+          text: `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}m.`,
           type: 'warning',
           closable: true,
           duration: 3
