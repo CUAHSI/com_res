@@ -4,6 +4,9 @@ import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import { useFeaturesStore } from '@/stores/features'
+import { ENDPOINTS } from '@/constants'
+import GeoRasterLayer from 'georaster-layer-for-leaflet'
+import parseGeoraster from 'georaster'
 
 export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
@@ -37,12 +40,18 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const selectFeature = (feature) => {
+  const selectFeature = async (feature) => {
     try {
       activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
+
+      // query FastAPI to get relevant geotiffs for the reach
+      const fimCogs = await fetchFimCogs(feature)
+      console.log('FIM COG DATA:', fimCogs)
+      // fimCogs is now an object containing 3 arrays: files, flows_cms, and stages_m
+      addCogsToMap(fimCogs.files)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
     }
@@ -55,6 +64,74 @@ export const useMapStore = defineStore('map', () => {
       })
     } catch (error) {
       console.warn('Attempted to clear all features:', error)
+    }
+  }
+
+  const fetchFimCogs = async (feature) => {
+    try {
+      console.log('Fetching FIM COGs for feature:', feature)
+      const reachId = feature?.properties?.COMID || feature?.properties?.reach_id
+      if (!reachId) {
+        console.warn('No reach_id found in feature properties:', feature)
+        return
+      }
+      const params = new URLSearchParams({
+        reach_id: reachId
+      })
+      console.log(`Querying for FIM COGs matching reach_id: ${reachId}`)
+      const response = await fetch(`${ENDPOINTS.fim}?${params.toString()}`)
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching FIM COGs:', error)
+    }
+  }
+
+  const addCogsToMap = (cogs) => {
+    try {
+      for (let cog of cogs) {
+        const url_to_cog_file = cog
+        fetch(url_to_cog_file)
+          .then((res) => res.arrayBuffer())
+          .then((arrayBuffer) => {
+            parseGeoraster(arrayBuffer).then((georaster) => {
+              /*
+              GeoRasterLayer is an extension of GridLayer,
+              which means we can use GridLayer options like opacity.
+              http://leafletjs.com/reference-1.2.0.html#gridlayer
+            */
+              const raster = new GeoRasterLayer({
+                attribution: 'CUAHSI',
+                georaster: georaster,
+                resolution: 128,
+                opacity: 0.5,
+                pixelValuesToColorFn: (pixelValues) => {
+                  // Assuming pixelValues is an array of values, map them to colors
+                  return pixelValues.map((value) => {
+                    // Example: Map value to a color based on some condition
+                    if (value > 0) {
+                      return 'blue' // Color for inundated areas
+                    } else {
+                      return 'transparent' // Color for non-inundated areas
+                    }
+                  })
+                },
+                bandIndex: 0, // Assuming the raster has a single band
+                noDataValue: 0 // Assuming 0 is the no-data value
+              })
+              raster.addTo(leaflet.value)
+              leaflet.value.fitBounds(raster.getBounds())
+              console.log(`Added GeoRasterLayer for ${cog}`)
+            })
+          })
+          .catch((error) => {
+            console.error('Error fetching or parsing GeoTIFF:', error)
+          })
+      }
+    } catch (error) {
+      console.error('Error loading GeoRasterLayer:', error)
     }
   }
 

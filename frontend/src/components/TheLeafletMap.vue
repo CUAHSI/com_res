@@ -6,8 +6,6 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
 import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
-import GeoRasterLayer from 'georaster-layer-for-leaflet'
-import parseGeoraster from 'georaster'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
@@ -140,78 +138,6 @@ onMounted(() => {
     },
     'clear selected features'
   ).addTo(leaflet.value)
-
-  try {
-    const cogs = [
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__0_5_m__4_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__1_0_m__15_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__1_5_m__33_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__2_0_m__76_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__2_5_m__141_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__3_0_m__227_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__3_5_m__333_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__4_0_m__458_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__4_5_m__601_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__5_0_m__760_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__5_5_m__934_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__6_0_m__1123_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__6_5_m__1325_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__7_0_m__1540_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__7_5_m__1770_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__8_0_m__2013_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__8_5_m__2267_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__9_0_m__2531_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__9_5_m__2812_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__10_0_m__3104_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__10_5_m__3410_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__11_0_m__3727_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__11_5_m__4052_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__12_0_m__4391_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__12_5_m__4736_cms_inundation.cog',
-      'https://storage.googleapis.com/com_res_fim_output/flood_11010001/11010001_inundation/8585734/8585734__13_0_m__5101_cms_inundation.cog'
-    ]
-    for (let cog of cogs) {
-      const url_to_cog_file = cog
-      fetch(url_to_cog_file)
-        .then((res) => res.arrayBuffer())
-        .then((arrayBuffer) => {
-          parseGeoraster(arrayBuffer).then((georaster) => {
-            /*
-              GeoRasterLayer is an extension of GridLayer,
-              which means we can use GridLayer options like opacity.
-              http://leafletjs.com/reference-1.2.0.html#gridlayer
-            */
-            const roaringRiverRasterTest = new GeoRasterLayer({
-              attribution: 'CUAHSI',
-              georaster: georaster,
-              resolution: 128,
-              opacity: 0.5,
-              pixelValuesToColorFn: (pixelValues) => {
-                // Assuming pixelValues is an array of values, map them to colors
-                return pixelValues.map((value) => {
-                  // Example: Map value to a color based on some condition
-                  if (value > 0) {
-                    return 'blue' // Color for inundated areas
-                  } else {
-                    return 'transparent' // Color for non-inundated areas
-                  }
-                })
-              },
-              bandIndex: 0, // Assuming the raster has a single band
-              noDataValue: 0 // Assuming 0 is the no-data value
-            })
-            alert(`Adding GeoRasterLayer for ${cog}`)
-            roaringRiverRasterTest.addTo(leaflet.value)
-            leaflet.value.fitBounds(roaringRiverRasterTest.getBounds())
-          })
-        })
-        .catch((error) => {
-          console.error('Error fetching or parsing GeoTIFF:', error)
-        })
-    }
-  } catch (error) {
-    console.error('Error loading GeoRasterLayer:', error)
-  }
 
   // on zoom event, log the current bounds and zoom level
   leaflet.value.on('zoomend moveend', function () {
