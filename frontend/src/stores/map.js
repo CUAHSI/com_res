@@ -220,6 +220,16 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
+  const clearCogsFromMap = () => {
+    console.log('Clearing all COGs from map')
+    leaflet.value.eachLayer((layer) => {
+      if (layer instanceof GeoRasterLayer) {
+        console.log('Removing GeoRasterLayer:', layer)
+        leaflet.value.removeLayer(layer)
+      }
+    })
+  }
+
   const limitToBounds = (region) => {
     console.log('Limiting to bounds of region', region)
     region.flowlinesLayer.query().bounds(async function (error, bounds) {
@@ -435,6 +445,7 @@ export const useMapStore = defineStore('map', () => {
     control,
     stageValue,
     determineCogsForStage,
-    addCogsToMap
+    addCogsToMap,
+    clearCogsFromMap
   }
 })
