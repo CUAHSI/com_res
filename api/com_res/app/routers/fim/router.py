@@ -2,6 +2,7 @@ import logging
 import os
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from google.auth import default, exceptions
 from google.cloud import bigquery
@@ -20,9 +21,11 @@ def get_bigquery_client():
         credentials_path = __settings.google_application_credentials_path
         if credentials_path and os.path.exists(credentials_path):
             try:
-                return bigquery.Client.from_service_account_json(credentials_path)
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+                credentials, project = default()
+                return bigquery.Client(credentials=credentials, project=project or "com-res")
             except Exception as e:
-                logging.warning(f"Service account auth failed: {e}")
+                logging.warning(f"GOOGLE_APPLICATION_CREDENTIALS auth failed: {e}")
 
     # 2. Try Application Default Credentials
     try:
@@ -36,21 +39,9 @@ def get_bigquery_client():
 router = APIRouter()
 
 
-# def get_bigquery_client():
-#     """Helper function to create BigQuery client with credentials from environment variables"""
-#     # Get credentials from environment variables
-#     credentials_path = get_settings().google_application_credentials_path
-
-#     if credentials_path and os.path.exists(credentials_path):
-#         return bigquery.Client.from_service_account_json(credentials_path)
-#     else:
-#         # Fallback to default credentials
-#         return bigquery.Client(project="com-res")
-
-
 @router.get("/fim")
 async def get_fim(
-    reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
+    reach_id: str = Query(..., description="The unique NWM reach identifier.", example="8584970"),
 ) -> JSONResponse:
     """
     Get FIM data for a given reach ID.
@@ -63,6 +54,10 @@ async def get_fim(
     Returns:
     ========
     JSONResponse: a dictionary containing the FIM data for the specified reach ID.
+
+    Raises:
+    =======
+    HTTPException: if the BigQuery operation fails or if the reach ID is not found.
     """
     try:
         client = get_bigquery_client()
@@ -92,4 +87,4 @@ async def get_fim(
     except Exception as e:
         logging.error(f"Query failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"BigQuery operation failed: {str(e)}")
-    return JSONResponse(content=results)
+    return JSONResponse(content=jsonable_encoder(results))
