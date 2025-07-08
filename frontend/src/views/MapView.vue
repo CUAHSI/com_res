@@ -55,6 +55,7 @@
       :min="activeFeatureFimCogData.stages_m[0]"
       :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
       :stages="activeFeatureFimCogData.stages_m"
+      :flows="activeFeatureFimCogData.flows_cms"
       width="50px"
       height="400px"
       @update:modelValue="handleStageChange"
