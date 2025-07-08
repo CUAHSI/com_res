@@ -4,7 +4,7 @@
   </v-overlay>
 
   <v-container fluid>
-    <div id="div-plot-button" class="desktop-plot-buttons-container">
+    <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
         variant="flat"
@@ -42,6 +42,7 @@
     </v-row>
 
     <TheStageSlider
+      v-if="activeFeature"
       v-model="stageValue"
       :min="0"
       :max="100"
@@ -97,9 +98,9 @@ const showHistorical = ref(false)
 const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
-const stageValue = ref(30)
 
 const { activeFeature } = storeToRefs(featureStore)
+const { stageValue } = storeToRefs(mapStore)
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot

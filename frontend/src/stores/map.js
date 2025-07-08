@@ -4,6 +4,7 @@ import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import { useFeaturesStore } from '@/stores/features'
+import { useAlertStore } from '@/stores/alerts'
 import { ENDPOINTS } from '@/constants'
 import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
@@ -24,6 +25,7 @@ export const useMapStore = defineStore('map', () => {
     opacity: 0.7
   })
   const mapLoaded = ref(false)
+  const stageValue = ref(50) // Default stage value for the slider
 
   const MIN_WMS_ZOOM = 9
   const MIN_WFS_ZOOM = 9
@@ -41,17 +43,28 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const selectFeature = async (feature) => {
+    const alertStore = useAlertStore()
     try {
       activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
-
       // query FastAPI to get relevant geotiffs for the reach
-      const fimCogs = await fetchFimCogs(feature)
-      console.log('FIM COG DATA:', fimCogs)
-      // fimCogs is now an object containing 3 arrays: files, flows_cms, and stages_m
-      addCogsToMap(fimCogs.files)
+      const fimCogData = await fetchCogCatalogData(feature)
+      console.log('FIM COG DATA:', fimCogData)
+      // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
+      const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
+      if (cogUrls.length === 0) {
+        alertStore.displayAlert({
+          title: 'Stage Selection',
+          text: `No COGs found for selected stage: ${stageValue.value}m.`,
+          type: 'warning',
+          closable: true,
+          duration: 3
+        })
+        return
+      }
+      addCogsToMap(cogUrls)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
     }
@@ -67,7 +80,8 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const fetchFimCogs = async (feature) => {
+  const fetchCogCatalogData = async (feature) => {
+    // Query FastAPI to get stage, flow, and TIFF urls for a given feature
     try {
       console.log('Fetching FIM COGs for feature:', feature)
       const reachId = feature?.properties?.COMID || feature?.properties?.reach_id
@@ -87,6 +101,38 @@ export const useMapStore = defineStore('map', () => {
     } catch (error) {
       console.error('Error fetching FIM COGs:', error)
     }
+  }
+
+  /**
+   * Determines and returns the COGs (Cloud Optimized GeoTIFF URLs) that correspond to a specific stage value.
+   *
+   * @param {Array<string|Array>} cogs - An array of COG URLs or arrays of COG URLs.
+   * @param {Array<string>} stage - An array of stage values, sorted in order.
+   * @returns {Array<string|Array>} An array of COGs that match the current stage value. Returns an empty array if no match is found.
+   *
+   * @example
+   * // Given cogs = ['url1', 'url2', ['url3', 'url4']]
+   * // and stage = ['stage1', 'stage2', 'stage3']
+   * // If stageValue.value is 'stage2', returns ['url2']
+   *
+   * @throws {void} Does not throw, but logs warnings if the stage value is not found or no COGs match.
+   */
+  const determineCogsForStage = (cogs, stage) => {
+    const index = stage.findIndex((s) => s === stageValue.value)
+    if (index === -1) {
+      console.warn(`Stage value ${stageValue.value} not found in stage array`)
+      return []
+    }
+    // Return the COGs that match the index
+    const matchingCogs = cogs.filter(
+      (cog, i) => i === index || (Array.isArray(cog) && cog.includes(stageValue.value))
+    )
+    if (matchingCogs.length === 0) {
+      console.warn(`No COGs found for stage value ${stageValue.value}`)
+      return []
+    }
+    console.log(`Found ${matchingCogs.length} COGs for stage value ${stageValue.value}`)
+    return matchingCogs
   }
 
   const addCogsToMap = (cogs) => {
@@ -344,6 +390,7 @@ export const useMapStore = defineStore('map', () => {
     activeFeatureLayer,
     toggleWMSLayers,
     toggleFeatureLayer,
-    control
+    control,
+    stageValue
   }
 })
