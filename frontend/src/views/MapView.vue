@@ -21,6 +21,10 @@
           :color="showHistorical ? 'blue' : 'white'"
         >
           Historical
+          <InfoIcon
+            text="Plot historical streamflow data for the selected river reach."
+            style="margin-left: 5px"
+          />
         </v-btn>
         <v-btn
           style="margin-right: 10px"
@@ -28,6 +32,10 @@
           :color="showForecast ? 'blue' : 'white'"
         >
           Forecast
+          <InfoIcon
+            text="Plot forecasted streamflow data for the selected river reach."
+            style="margin-left: 5px"
+          />
         </v-btn>
       </v-card>
     </div>
@@ -87,6 +95,7 @@ import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
+import InfoIcon from '../components/InfoTooltip.vue'
 
 const { mdAndDown } = useDisplay()
 const mapStore = useMapStore()
