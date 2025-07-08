@@ -197,6 +197,16 @@ const activeFeatureFimCogData = computed(() => {
 
 const handleStageChange = () => {
   console.log('Stage value changed:', stageValue.value)
+  // enable "snapping to nearest stage" functionality
+  // if the stage value is not in the list of stages
+  if (!activeFeatureFimCogData.value.stages_m.includes(stageValue.value)) {
+    // find the nearest stage value
+    const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
+      return Math.abs(curr - stageValue.value) < Math.abs(prev - stageValue.value) ? curr : prev
+    })
+    stageValue.value = nearestStage
+    console.log('Snapped to nearest stage:', nearestStage)
+  }
   const cogUrls = mapStore.determineCogsForStage(
     activeFeatureFimCogData.value.files,
     activeFeatureFimCogData.value.stages_m
