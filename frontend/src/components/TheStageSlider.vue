@@ -6,7 +6,7 @@
 
       <!-- Grabbable handle -->
       <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-        <div class="handle-label">Water Stage</div>
+        <div class="handle-label">{{ flowFromStage(modelValue) }} cfs</div>
       </div>
 
       <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
@@ -79,6 +79,10 @@ const props = defineProps({
     type: Array,
     default: () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   },
+  flows: {
+    type: Array,
+    default: () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+  },
   majorTickInterval: {
     type: Number,
     default: 4 // Adjusted to match label frequency
@@ -132,6 +136,11 @@ const mercuryColor = computed(() => {
     return `hsl(${hue > 360 ? hue - 360 : hue}, 80%, ${50 - subPercent * 10}%)`
   }
 })
+
+const flowFromStage = (stage) => {
+  const index = props.stages.indexOf(stage)
+  return index >= 0 ? props.flows[index] : null
+}
 
 const startDrag = (e) => {
   isDragging.value = true
