@@ -221,6 +221,7 @@ const handleStageChange = () => {
     })
     return
   }
+  mapStore.clearCogsFromMap()
   mapStore.addCogsToMap(cogUrls)
 }
 </script>
