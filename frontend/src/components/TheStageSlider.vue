@@ -32,7 +32,7 @@
         ></div>
       </div>
 
-      <!-- Labels now inside thermometer -->
+      <!-- Labels inside thermometer -->
       <div class="labels-inside">
         <div
           v-for="(label, index) in labels"
@@ -69,25 +69,26 @@ const props = defineProps({
   },
   width: {
     type: String,
-    default: '40px'
+    default: '50px'
   },
   height: {
     type: String,
-    default: '300px'
+    default: '400px' // Increased height to accommodate all labels
   },
   labels: {
     type: Array,
     default: () => [
-      { value: 0, text: '0°' },
-      { value: 25, text: '25°' },
-      { value: 50, text: '50°' },
-      { value: 75, text: '75°' },
-      { value: 100, text: '100°' }
+      { value: 0, text: '0' },
+      { value: 20, text: '20' },
+      { value: 40, text: '40' },
+      { value: 60, text: '60' },
+      { value: 80, text: '80' },
+      { value: 100, text: '100' }
     ]
   },
   majorTickInterval: {
     type: Number,
-    default: 2
+    default: 4 // Adjusted to match label frequency
   },
   tickCount: {
     type: Number,
@@ -278,14 +279,11 @@ const stopDrag = () => {
   top: 0;
   bottom: 0;
   width: 30px;
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: space-between;
   pointer-events: none;
 }
 
 .label-inside {
-  position: relative;
+  position: absolute;
   transform: translateY(50%);
   font-size: 10px;
   color: #333;
@@ -299,9 +297,14 @@ const stopDrag = () => {
     1px 1px 0 white;
 }
 
-/* Adjust thermometer overflow to ensure labels are visible */
+/* Ensure ticks and labels align perfectly */
+.ticks {
+  right: 25px; /* Adjusted to make space for labels */
+}
+
+/* Adjust thermometer dimensions */
 .thermometer {
-  overflow: visible;
+  padding-right: 20px; /* Make room for labels */
 }
 
 /* Make sure mercury doesn't obscure labels */
