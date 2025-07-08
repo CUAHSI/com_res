@@ -4,7 +4,7 @@
   </v-overlay>
 
   <v-container fluid>
-    <div id="div-plot-button" class="desktop-plot-buttons-container">
+    <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
         variant="flat"
@@ -41,6 +41,25 @@
       </v-col>
     </v-row>
 
+    <TheStageSlider
+      v-if="activeFeature"
+      v-model="stageValue"
+      :min="0"
+      :max="100"
+      :labels="[
+        { value: 0, text: '0' },
+        { value: 20, text: '20' },
+        { value: 40, text: '40' },
+        { value: 60, text: '60' },
+        { value: 80, text: '80' },
+        { value: 100, text: '100' }
+      ]"
+      width="50px"
+      height="400px"
+      @input="handleStageChange"
+      style="z-index: 99999"
+    />
+
     <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
       <HistoricalPlot
         v-show="showHistorical"
@@ -63,6 +82,7 @@ import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
+import TheStageSlider from '@/components/TheStageSlider.vue'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
@@ -80,6 +100,7 @@ const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
 const { activeFeature } = storeToRefs(featureStore)
+const { stageValue } = storeToRefs(mapStore)
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -166,6 +187,12 @@ const reachIdChanged = async (selected_reach) => {
       '3'
     )
   }
+}
+
+const handleStageChange = (value) => {
+  console.log('Stage value changed:', value)
+  // Here you can handle the stage change, e.g., update the map or plots
+  // For now, just log it
 }
 </script>
 <style scoped>

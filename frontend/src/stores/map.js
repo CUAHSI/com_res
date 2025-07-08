@@ -4,6 +4,10 @@ import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import { useFeaturesStore } from '@/stores/features'
+import { useAlertStore } from '@/stores/alerts'
+import { ENDPOINTS } from '@/constants'
+import GeoRasterLayer from 'georaster-layer-for-leaflet'
+import parseGeoraster from 'georaster'
 
 export const useMapStore = defineStore('map', () => {
   const leaflet = shallowRef(null)
@@ -21,6 +25,7 @@ export const useMapStore = defineStore('map', () => {
     opacity: 0.7
   })
   const mapLoaded = ref(false)
+  const stageValue = ref(50) // Default stage value for the slider
 
   const MIN_WMS_ZOOM = 9
   const MIN_WFS_ZOOM = 9
@@ -37,12 +42,36 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const selectFeature = (feature) => {
+  const selectFeature = async (feature) => {
+    const alertStore = useAlertStore()
     try {
       activeFeatureLayer.value.setFeatureStyle(feature.id, {
         color: featureOptions.value.selectedColor,
         weight: featureOptions.value.selectedWeight
       })
+      // query FastAPI to get relevant geotiffs for the reach
+      const fimCogData = await fetchCogCatalogData(feature)
+      console.log('FIM COG DATA:', fimCogData)
+      // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
+      const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
+      if (cogUrls.length === 0) {
+        alertStore.displayAlert({
+          title: 'Stage Selection',
+          text: `No COGs found for selected stage: ${stageValue.value}m. For now we are faking this with a default COG.`,
+          type: 'warning',
+          closable: true,
+          duration: 3
+        })
+        // return
+      }
+      // first zoom into the bounds of the feature
+      const bounds = L.geoJSON(feature).getBounds()
+      leaflet.value.fitBounds(bounds)
+      leaflet.value.invalidateSize()
+      await nextTick()
+
+      // addCogsToMap(cogUrls)
+      addCogsToMap(fimCogData.files)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
     }
@@ -55,6 +84,106 @@ export const useMapStore = defineStore('map', () => {
       })
     } catch (error) {
       console.warn('Attempted to clear all features:', error)
+    }
+  }
+
+  const fetchCogCatalogData = async (feature) => {
+    // Query FastAPI to get stage, flow, and TIFF urls for a given feature
+    try {
+      console.log('Fetching FIM COGs for feature:', feature)
+      const reachId = feature?.properties?.COMID || feature?.properties?.reach_id
+      if (!reachId) {
+        console.warn('No reach_id found in feature properties:', feature)
+        return
+      }
+      const params = new URLSearchParams({
+        reach_id: reachId
+      })
+      console.log(`Querying for FIM COGs matching reach_id: ${reachId}`)
+      const response = await fetch(`${ENDPOINTS.fim}?${params.toString()}`)
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching FIM COGs:', error)
+    }
+  }
+
+  /**
+   * Determines and returns the COGs (Cloud Optimized GeoTIFF URLs) that correspond to a specific stage value.
+   *
+   * @param {Array<string|Array>} cogs - An array of COG URLs or arrays of COG URLs.
+   * @param {Array<string>} stage - An array of stage values, sorted in order.
+   * @returns {Array<string|Array>} An array of COGs that match the current stage value. Returns an empty array if no match is found.
+   *
+   * @example
+   * // Given cogs = ['url1', 'url2', ['url3', 'url4']]
+   * // and stage = ['stage1', 'stage2', 'stage3']
+   * // If stageValue.value is 'stage2', returns ['url2']
+   *
+   * @throws {void} Does not throw, but logs warnings if the stage value is not found or no COGs match.
+   */
+  const determineCogsForStage = (cogs, stage) => {
+    const index = stage.findIndex((s) => s === stageValue.value)
+    if (index === -1) {
+      console.warn(`Stage value ${stageValue.value} not found in stage array`)
+      return []
+    }
+    // Return the COGs that match the index
+    const matchingCogs = cogs.filter(
+      (cog, i) => i === index || (Array.isArray(cog) && cog.includes(stageValue.value))
+    )
+    if (matchingCogs.length === 0) {
+      console.warn(`No COGs found for stage value ${stageValue.value}`)
+      return []
+    }
+    console.log(`Found ${matchingCogs.length} COGs for stage value ${stageValue.value}`)
+    return matchingCogs
+  }
+
+  const addCogsToMap = (cogs) => {
+    try {
+      for (let cog of cogs) {
+        fetch(cog)
+          .then((res) => res.arrayBuffer())
+          .then((arrayBuffer) => {
+            parseGeoraster(arrayBuffer).then((georaster) => {
+              /*
+              GeoRasterLayer is an extension of GridLayer,
+              which means we can use GridLayer options like opacity.
+              http://leafletjs.com/reference-1.2.0.html#gridlayer
+            */
+              const raster = new GeoRasterLayer({
+                attribution: 'CUAHSI',
+                georaster: georaster,
+                resolution: 128,
+                opacity: 0.5,
+                pixelValuesToColorFn: (pixelValues) => {
+                  // Assuming pixelValues is an array of values, map them to colors
+                  return pixelValues.map((value) => {
+                    // Example: Map value to a color based on some condition
+                    if (value > 0) {
+                      return 'blue' // Color for inundated areas
+                    } else {
+                      return 'transparent' // Color for non-inundated areas
+                    }
+                  })
+                },
+                bandIndex: 0, // Assuming the raster has a single band
+                noDataValue: 0 // Assuming 0 is the no-data value
+              })
+              raster.addTo(leaflet.value)
+              leaflet.value.fitBounds(raster.getBounds())
+              console.log(`Added GeoRasterLayer for ${cog}`)
+            })
+          })
+          .catch((error) => {
+            console.error('Error fetching or parsing GeoTIFF:', error)
+          })
+      }
+    } catch (error) {
+      console.error('Error loading GeoRasterLayer:', error)
     }
   }
 
@@ -267,6 +396,7 @@ export const useMapStore = defineStore('map', () => {
     activeFeatureLayer,
     toggleWMSLayers,
     toggleFeatureLayer,
-    control
+    control,
+    stageValue
   }
 })
