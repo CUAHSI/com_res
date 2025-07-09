@@ -14,50 +14,45 @@
         Our team is always happy to connect!
       </p>
     </v-sheet>
+  <h2 class="ma-2 text-center">Our Team</h2>
+  <v-container class="ma-4">
+    <p>
+      <v-row align="center" justify="center">
+        <v-col v-for="member in members" :key="member.name" cols="12" sm="6" md="4" class="d-flex justify-center">
+          <v-card>
+            <v-img
+              :src="`${member.image}`"
+              :width="400"
+              aspect-ratio="1"
+              cover
+              :lazy-src="`${member.image}`"
+            >
+              <template v-slot:placeholder>
+                <div class="d-flex align-center justify-center fill-height">
+                  <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
+                </div>
+              </template>
+            </v-img>
+            <v-card-title class="text-h6">
+              {{ member.name }}
+            </v-card-title>
+            <v-card-subtitle>
+              {{ member.position }}
+              <v-divider></v-divider>
+              {{ member.org }}
+              <v-divider></v-divider>
+              {{ member.email }}
+            </v-card-subtitle>
+          </v-card>
+        </v-col>
+      </v-row>
+    </p>
+  </v-container>    
   </v-container>
 
-  <h2 class="ma-2 text-center">Our Team</h2>
-  <v-container>
-    <v-row align="center" justify="center">
-      <v-col v-for="member in members" :key="member.name" cols="12" sm="6" md="4" class="d-flex justify-center">
-        <v-card>
-          <v-img
-            :src="`${member.image}`"
-            :width="400"
-            aspect-ratio="1"
-            cover
-            :lazy-src="`${member.image}`"
-          >
-            <template v-slot:placeholder>
-              <div class="d-flex align-center justify-center fill-height">
-                <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
-              </div>
-            </template>
-          </v-img>
-          <v-card-title class="text-h6">
-            {{ member.name }}
-          </v-card-title>
-          <v-card-subtitle>
-            {{ member.position }}
-            <v-divider></v-divider>
-            {{ member.org }}
-            <v-divider></v-divider>
-            {{ member.email }}
-          </v-card-subtitle>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
 </template>
 
-<style>
-@media (min-width: 1024px) {
-  .about {
-    padding-bottom: 2rem; 
-    /* min-height: 50vh; */
-  }
-}
-</style>
+
 
 <script setup>
 import kristinImg from '@/assets/KristinRaub.jpg'
