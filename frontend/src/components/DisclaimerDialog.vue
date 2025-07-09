@@ -11,18 +11,31 @@
         <v-card-text>
           <p>
             FloodWise is an experimental application that provides visualizations of potential flood
-            extents based on forecasts from NOAA’s National Water Model and associated flood
+            extents based on forecasts from NOAA's National Water Model and associated flood
             inundation mapping (FIM) services. While FloodWise aims to offer useful insights into
             where flooding may occur, the outputs are estimates and inherently include uncertainty.
             These maps are not official flood products from NOAA or the National Weather Service,
-            although they utilize methodologies similar to those found in NOAA’s experimental FIM
+            although they utilize methodologies similar to those found in NOAA's experimental FIM
             services. The purpose of FloodWise is to support public understanding and exploration of
             historical and potential future flood scenarios. All underlying data are sourced from
             publicly available datasets. For official flood forecasts, warnings, and authoritative
-            flood maps, please refer to the resources provided in the “Resources” tab. FloodWise is
+            flood maps, please refer to the resources provided in the "Resources" tab. FloodWise is
             intended for informational and educational use only and should not be relied upon for
             emergency decision-making or as a substitute for official guidance.
           </p>
+          <!-- Logo row -->
+          <v-row class="mt-4" justify="space-around" align="center">
+            <v-col v-for="(logo, index) in logos" :key="index" cols="auto">
+              <v-img
+                :src="logo.image"
+                :alt="logo.alt"
+                :lazy-src="logo.image"
+                contain
+                max-height="50"
+                max-width="100"
+              ></v-img>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
@@ -38,13 +51,25 @@
     </v-dialog>
   </div>
 </template>
+
 <script setup>
 import { mdiAlertCircle } from '@mdi/js'
 import { useAlertStore } from '@/stores/alerts'
 import { storeToRefs } from 'pinia'
 
+import CIROH from '@/assets/CIROH.png'
+import CUAHSI from '@/assets/CUAHSI.png'
+import GRI from '@/assets/GRI_RGB_Monogram_Red+B.png' // Example logo, replace with actual path
+
 const alertStore = useAlertStore()
 const { need_disclaimer } = storeToRefs(alertStore)
+
+// Example logos - replace with your actual logo paths and alt text
+const logos = [
+  { image: CIROH, alt: 'CIROH' },
+  { image: CUAHSI, alt: 'CUAHSI' },
+  { image: GRI, alt: 'Global Resilience Institute' }
+]
 
 function dismiss_disclaimer() {
   alertStore.acceptDisclaimer()
