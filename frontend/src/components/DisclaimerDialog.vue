@@ -2,7 +2,7 @@
   <div class="pa-4 text-center">
     <v-dialog
       v-model="need_disclaimer"
-      max-width="600"
+      max-width="800"
       persistent
       scrollable
       transition="dialog-bottom-transition"
