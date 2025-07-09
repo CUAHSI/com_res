@@ -3,8 +3,8 @@
     <v-main>
       <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '999999' }"></AlertPopup>
       <NotificationDialog
-        v-if="!alertStore.noaa_alert_accepted"
-        @accept="alertStore.acceptNoaaAlert"
+        v-if="!alertStore.disclaimer_accepted"
+        @accept="alertStore.acceptDisclaimer"
         :style="{ 'z-index': '999999' }"
       />
       <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />

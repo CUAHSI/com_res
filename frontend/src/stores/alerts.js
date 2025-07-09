@@ -5,7 +5,7 @@ export const useAlertStore = defineStore(
   'alerts',
   () => {
     let displayed = ref({})
-    const need_noaa_alert = ref(true)
+    const need_disclaimer = ref(true)
 
     function displayAlert(alert) {
       displayed.value = alert
@@ -13,17 +13,17 @@ export const useAlertStore = defineStore(
         displayed.value = {}
       }, alert.duration * 1000)
     }
-    function acceptNoaaAlert() {
-      need_noaa_alert.value = false
+    function acceptDisclaimer() {
+      need_disclaimer.value = false
     }
 
-    return { displayed, displayAlert, need_noaa_alert, acceptNoaaAlert }
+    return { displayed, displayAlert, need_disclaimer, acceptDisclaimer }
   },
   {
     persist: {
-      // only persist the need_noaa_alert
+      // only persist the need_disclaimer
       // https://prazdevs.github.io/pinia-plugin-persistedstate/guide/config.html#pick
-      pick: ['need_noaa_alert']
+      pick: ['need_disclaimer']
     }
   }
 )

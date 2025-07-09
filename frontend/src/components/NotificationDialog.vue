@@ -1,13 +1,13 @@
 <template>
   <div class="pa-4 text-center">
     <v-dialog
-      v-model="need_noaa_alert"
+      v-model="need_disclaimer"
       max-width="600"
       persistent
       scrollable
       transition="dialog-bottom-transition"
     >
-      <v-card :prepend-icon="mdiAlertCircle" title="NOAA ACCEPTANCE">
+      <v-card :prepend-icon="mdiAlertCircle" title="Important Information">
         <v-card-text>
           <p>
             FloodWise is an experimental application that provides visualizations of potential flood
@@ -27,7 +27,7 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text="Accept" variant="tonal" @click="dismiss_noaa_alert"></v-btn>
+          <v-btn color="primary" text="Accept" variant="tonal" @click="dismiss_disclaimer"></v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -39,9 +39,9 @@ import { useAlertStore } from '@/stores/alerts'
 import { storeToRefs } from 'pinia'
 
 const alertStore = useAlertStore()
-const { need_noaa_alert } = storeToRefs(alertStore)
+const { need_disclaimer } = storeToRefs(alertStore)
 
-function dismiss_noaa_alert() {
-  alertStore.acceptNoaaAlert()
+function dismiss_disclaimer() {
+  alertStore.acceptDisclaimer()
 }
 </script>
