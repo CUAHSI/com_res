@@ -10,18 +10,18 @@
       <v-card :prepend-icon="mdiAlertCircle" title="NOAA ACCEPTANCE">
         <v-card-text>
           <p>
-            The FloodWise application is an experimental tool that shows where flooding might happen
-            based on NOAA’s National Water Model forecasts and their flood inundation mapping (FIM)
-            services. FloodWise gives an estimate of floodwater extent, but it is not exact and has
-            some uncertainty. Please note that these maps are not official flood maps from NOAA or
-            the National Weather Service. However, they use similar methods to those used in NOAA’s
-            experimental FIM service. The goal is to help communities and stakeholders explore
-            possible flooding scenarios, both from the past and what might happen in the future. All
-            data used in these maps come from public sources and are freely available for public
-            use. If you're looking for official flood maps, data, or warnings, please visit the
-            “Resources” tab, where you can find several links to official products. Please keep in
-            mind: FloodWise maps are for exploration and learning only, and do not replace official
-            flood forecasts or warnings.
+            FloodWise is an experimental application that provides visualizations of potential flood
+            extents based on forecasts from NOAA’s National Water Model and associated flood
+            inundation mapping (FIM) services. While FloodWise aims to offer useful insights into
+            where flooding may occur, the outputs are estimates and inherently include uncertainty.
+            These maps are not official flood products from NOAA or the National Weather Service,
+            although they utilize methodologies similar to those found in NOAA’s experimental FIM
+            services. The purpose of FloodWise is to support public understanding and exploration of
+            historical and potential future flood scenarios. All underlying data are sourced from
+            publicly available datasets. For official flood forecasts, warnings, and authoritative
+            flood maps, please refer to the resources provided in the “Resources” tab. FloodWise is
+            intended for informational and educational use only and should not be relied upon for
+            emergency decision-making or as a substitute for official guidance.
           </p>
         </v-card-text>
         <v-divider></v-divider>
