@@ -1,8 +1,14 @@
 <template>
   <h2 class="ma-2 text-center">Contact</h2>
   <v-container class="about">
-    <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
-      <p>
+    <v-sheet class="pa-6 mx-auto " max-width="1200" rounded>
+      <p style=" 
+              font-size: 20px;
+              line-height: 1.8;
+              font-family: 'Roboto', sans-serif;
+              color: #000000;
+              font-weight: 350;
+            ">
         This project is a collaboration between the 
         <a href="https://globalresilience.northeastern.edu/">Global Resilience Institute at Northeastern University</a> 
         and <a href="https://www.cuahsi.org/">CUAHSI</a>. 
