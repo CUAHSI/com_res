@@ -7,7 +7,7 @@
       scrollable
       transition="dialog-bottom-transition"
     >
-      <v-card :prepend-icon="mdiAlertCircle" title="Important Information">
+      <v-card :prepend-icon="mdiAlertCircle" title="FloodWise Tool Acknowledgement">
         <v-card-text>
           <p>
             FloodWise is an experimental application that provides visualizations of potential flood
@@ -27,7 +27,7 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text="Accept" variant="tonal" @click="dismiss_disclaimer"></v-btn>
+          <v-btn color="primary" text="Acknowledge" variant="tonal" @click="dismiss_disclaimer"></v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

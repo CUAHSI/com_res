@@ -2,7 +2,7 @@
   <v-app>
     <v-main>
       <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '999999' }"></AlertPopup>
-      <NotificationDialog
+      <DisclaimerDialog
         v-if="!alertStore.disclaimer_accepted"
         @accept="alertStore.acceptDisclaimer"
         :style="{ 'z-index': '999999' }"
@@ -38,7 +38,7 @@ import TheFooter from './components/TheFooter.vue'
 import { ref, watch } from 'vue'
 import { useAlertStore } from './stores/alerts'
 import { useRegionsStore } from './stores/regions'
-import NotificationDialog from './components/NotificationDialog.vue'
+import DisclaimerDialog from './components/DisclaimerDialog.vue'
 
 const router = useRouter()
 const alertStore = useAlertStore()
