@@ -1,8 +1,15 @@
 <template>
   <h2 class="ma-2 text-center">Project Description</h2>
   <v-container class="about">
-    <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
-      <p>
+    <v-sheet class="pa-6 mx-auto " max-width="1200" rounded>
+      <p style="padding: 12px 16px 12px 24px; 
+              padding: 12px 16px;
+              font-size: 20px;
+              line-height: 1.8;
+              font-family: 'Roboto', sans-serif;
+              color: #000000;
+              font-weight: 350;
+              border-radius: 12px;">
         Via a collaboration between the 
         <a href="https://globalresilience.northeastern.edu/" target="_blank" rel="noopener">
           Global Resilience Institute
@@ -25,19 +32,34 @@
           project page at the Global Resilience Institute
         </a>.
       </p>
-      
-      <p class="mt-6">
+
+      <p class="mt-0" style=
+              "padding: 12px 16px 12px 24px; 
+              padding: 12px 16px;
+              font-size: 20px;
+              line-height: 1.8;
+              font-family: 'Roboto', sans-serif;
+              color: #000000;
+              font-weight: 350;
+              border-radius: 12px;">
         This resource was co-developed between the GRI/CUAHSI research team and community stakeholders 
         in Vermont and Missouri. The co-development process involved three steps:
       </p>
       
       <v-sheet
-        class="mt-4 mb-4 pa-4"
+        class="mt-2 mb-4 pa-4"
         style="background-color: #f0f0f0; border-left: 4px solid #9e9e9e;"
         elevation="0"
         rounded
       >
-        <ol class="mt-2" style="margin-left: 3rem;">
+        <ol style=" 
+              padding-left: 4rem;
+              font-size: 18px;
+              line-height: 1.8;
+              font-family: 'Roboto', sans-serif;
+              color: #000000;
+              font-weight: 350;
+              border-radius: 12px; margin: 0; " >
         <li>
           Interviews with Vermont and Missouri stakeholders to better understand how decision making operates 
           in their communities and organizations, their information needs and priorities, and their ideas for how 
