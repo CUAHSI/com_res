@@ -2,6 +2,11 @@
   <v-app>
     <v-main>
       <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '999999' }"></AlertPopup>
+      <NotificationDialog
+        v-if="!alertStore.noaa_alert_accepted"
+        @accept="alertStore.acceptNoaaAlert"
+        :style="{ 'z-index': '999999' }"
+      />
       <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />
       <TheMobileNavDrawer
         @toggle-mobile-nav="toggleMobileNav"
@@ -33,6 +38,7 @@ import TheFooter from './components/TheFooter.vue'
 import { ref, watch } from 'vue'
 import { useAlertStore } from './stores/alerts'
 import { useRegionsStore } from './stores/regions'
+import NotificationDialog from './components/NotificationDialog.vue'
 
 const router = useRouter()
 const alertStore = useAlertStore()
