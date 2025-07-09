@@ -25,14 +25,15 @@
           </p>
           <!-- Logo row -->
           <v-row class="mt-4" justify="space-around" align="center">
-            <v-col v-for="(logo, index) in logos" :key="index" cols="auto">
+            <v-col v-for="(logo, index) in logos" :key="index" cols="12" sm="4" md="3">
               <v-img
                 :src="logo.image"
                 :alt="logo.alt"
                 :lazy-src="logo.image"
                 contain
-                max-height="50"
-                max-width="100"
+                height="100"
+                class="mx-auto"
+                :cover="logo.shouldCover !== false"
               ></v-img>
             </v-col>
           </v-row>
@@ -64,11 +65,10 @@ import GRI from '@/assets/GRI_RGB_Monogram_Red+B.png' // Example logo, replace w
 const alertStore = useAlertStore()
 const { need_disclaimer } = storeToRefs(alertStore)
 
-// Example logos - replace with your actual logo paths and alt text
 const logos = [
-  { image: CIROH, alt: 'CIROH' },
-  { image: CUAHSI, alt: 'CUAHSI' },
-  { image: GRI, alt: 'Global Resilience Institute' }
+  { image: CIROH, alt: 'CIROH', shouldCover: false },
+  { image: CUAHSI, alt: 'CUAHSI', shouldCover: false },
+  { image: GRI, alt: 'Global Resilience Institute', shouldCover: true }
 ]
 
 function dismiss_disclaimer() {
