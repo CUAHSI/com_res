@@ -69,7 +69,10 @@ onMounted(() => {
   let USGS_Imagery = L.tileLayer(
     'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
     {
-      attribution: 'USGS'
+      attribution: 'USGS',
+      noWrap: true,
+      maxZoom: 18,
+      minZoom: 0
     }
   )
 
