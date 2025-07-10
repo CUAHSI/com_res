@@ -66,9 +66,17 @@ onMounted(() => {
     minZoom: 0
   })
 
+  let USGS_Imagery = L.tileLayer(
+    'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'USGS'
+    }
+  )
+
   const baselayers = {
     'ESRI World Imagery': Esri_WorldImagery,
-    'CartoDB Positron No Labels': CartoDB_PositronNoLabels
+    'CartoDB Positron No Labels': CartoDB_PositronNoLabels,
+    'USGS Imagery': USGS_Imagery
   }
 
   // add the NOAA flowlines wms
@@ -82,7 +90,7 @@ onMounted(() => {
     maxZoom: MIN_REACH_SELECTION_ZOOM
   })
 
-  Esri_WorldImagery.addTo(leaflet.value)
+  USGS_Imagery.addTo(leaflet.value)
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
