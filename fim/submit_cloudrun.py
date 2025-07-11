@@ -190,6 +190,11 @@ def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False)
             matching_dirs.append(match.group(0))
     print("done")
 
+    failed_reachids = []
+    if Path("failed_reachids.txt").exists():
+        with open(Path("failed_reachids.txt"), "r") as f:
+            failed_reachids = f.read().splitlines()
+
     # Start all jobs
     submitted_job_count = 0
     for line in lines:
@@ -198,6 +203,10 @@ def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False)
         # skip jobs that already have been processed and saved in the output bucket
         out_dir_name_in_cloud = f"flood_{args[1]}/{args[1]}_inundation/{args[2]}/"
         if out_dir_name_in_cloud in matching_dirs:
+            continue
+
+        # skip jobs that have failed before
+        if args[2] in failed_reachids:
             continue
 
         # pass the reachid as an argument so that outputs are saved in
