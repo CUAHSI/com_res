@@ -3,35 +3,31 @@
     <v-row class="fill-height">
       <v-col>
         <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
-            <p style="
-              padding: 24px;
-              font-size: 20px;
-              line-height: 1.8;
-              font-family: 'Roboto', sans-serif;
-              color: #000000;
-              font-weight: 350;
-              border-radius: 12px;
-            ">
-              This application was established to provide a user-centered perspective on integrating
-              the National Water Model (NWM) into community resilience planning and water
-              decision-making processes across selected regions in <strong>Missouri</strong> and <strong>Vermont</strong>. 
-              In Missouri, the study engaged with three distinct communities: <span style="color: #0d47a1;">Springfield</span>,
-              <span style="color: #0d47a1;">De Soto</span>, and <span style="color: #0d47a1;">Roaring River State Park</span>. In Vermont,
-              the research focused on three regions: <span style="color: #0d47a1;">Two Rivers-Ottauquechee</span>, <span style="color: #0d47a1;">Mt. Ascutney</span>, and
-              <span style="color: #0d47a1;">Windham</span>. The methods were designed to understand each
-              community's unique context, including their water-related vulnerabilities, resilience
-              planning constraints, and information and data gaps, to develop a series of resources
-              of the NWM that could best help aid their particular needs.
-            </p>
+          <p>
+            This application was established to provide a user-centered perspective on integrating
+            the National Water Model (NWM) into community resilience planning and water
+            decision-making processes across selected regions in <strong>Missouri</strong> and
+            <strong>Vermont</strong>. In Missouri, the study engaged with three distinct
+            communities: <span style="color: #0d47a1">Springfield</span>,
+            <span style="color: #0d47a1">De Soto</span>, and
+            <span style="color: #0d47a1">Roaring River State Park</span>. In Vermont, the research
+            focused on three regions: <span style="color: #0d47a1">Two Rivers-Ottauquechee</span>,
+            <span style="color: #0d47a1">Mt. Ascutney</span>, and
+            <span style="color: #0d47a1">Windham</span>. The methods were designed to understand
+            each community's unique context, including their water-related vulnerabilities,
+            resilience planning constraints, and information and data gaps, to develop a series of
+            resources of the NWM that could best help aid their particular needs.
+          </p>
         </v-sheet>
         <p class="subheading"></p>
       </v-col>
     </v-row>
-    <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded >
-      <h3 class="text-center mb-4" >Regions in Missouri</h3>
-      <v-row align="center" justify="center" >
-        <v-col 
-          v-for="region in regionsStore.regions.slice(0, 3)" :key="region.text"
+    <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
+      <h3 class="text-center mb-4">Regions in Missouri</h3>
+      <v-row align="center" justify="center">
+        <v-col
+          v-for="region in regionsStore.regions.slice(0, 3)"
+          :key="region.text"
           cols="12"
           sm="6"
           md="4"
@@ -57,9 +53,10 @@
 
     <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
       <h3 class="text-center mb-4">Regions in Missouri</h3>
-      <v-row align="center" justify="center" >
-        <v-col 
-          v-for="region in regionsStore.regions.slice(3, 6)" :key="region.text"
+      <v-row align="center" justify="center">
+        <v-col
+          v-for="region in regionsStore.regions.slice(3, 6)"
+          :key="region.text"
           cols="12"
           sm="6"
           md="4"
@@ -81,7 +78,7 @@
           </v-card>
         </v-col>
       </v-row>
-    </v-sheet>  
+    </v-sheet>
   </v-container>
 </template>
 
