@@ -1,11 +1,9 @@
 <template>
   <h2 class="ma-2 text-center">Resources</h2>
-  <v-container>
-    <p> COMING SOON</p>>
-    <br /><br />
-    <p> COMING SOON</p>>
+  <v-container class="resources">
+    <v-sheet class="pa-6 mx-auto" max-width="200" rounded>
+      <p>Coming Soon!</p>
+    </v-sheet>
   </v-container>
 </template>
-<script setup>
-import { loremIpsum } from 'lorem-ipsum'
-</script>
+<script setup></script>
