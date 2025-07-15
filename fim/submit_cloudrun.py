@@ -128,6 +128,7 @@ def show_progress_short(run_client, jobs):
     # Live status table
     TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELLED"}
     count_succeeded = 0
+    count_running = len(jobs)
     with Live(refresh_per_second=2) as live:
         while True:
             all_done = True
@@ -135,7 +136,6 @@ def show_progress_short(run_client, jobs):
             table.add_column("Number of Jobs", style="magenta")
             table.add_column("Status", style="green", no_wrap=True)
 
-            count_running = 0
             for job in jobs:
                 if job["status"] not in TERMINAL_STATES:
                     # only recheck the status of running jobs
@@ -147,8 +147,6 @@ def show_progress_short(run_client, jobs):
                     elif job["status"] == "SUCCEEDED":
                         count_succeeded += 1
                         count_running -= 1
-                    else:
-                        count_running += 1
 
                 # if one job is still running, we need to keep checking
                 if job["status"] not in TERMINAL_STATES:
@@ -228,7 +226,7 @@ def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False)
             print("Reached the maximum number of jobs to submit (140).")
             break
 
-    print(f"Number of Jobns submitted: {submitted_job_count}")
+    print(f"Number of Jobs submitted: {submitted_job_count}")
 
     if verbose:
         failed = show_progress_long(run_client, jobs)
