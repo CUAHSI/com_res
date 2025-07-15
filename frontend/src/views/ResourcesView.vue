@@ -1,9 +1,11 @@
 <template>
   <h2 class="ma-2 text-center">Resources</h2>
-  <v-container class="resources">
-    <v-sheet class="pa-6 mx-auto" max-width="200" rounded>
-      <p>Coming Soon!</p>
-    </v-sheet>
+  <v-container>
+    {{ loremIpsum({ count: 2, units: 'paragraphs', paragraphLowerBound: 7 }) }}
+    <br /><br />
+    {{ loremIpsum({ count: 2, units: 'paragraphs', paragraphLowerBound: 7 }) }}
   </v-container>
 </template>
-<script setup></script>
+<script setup>
+import { loremIpsum } from 'lorem-ipsum'
+</script>
