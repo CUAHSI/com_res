@@ -93,7 +93,7 @@ onMounted(() => {
     maxZoom: MIN_REACH_SELECTION_ZOOM
   })
 
-  USGS_Imagery.addTo(leaflet.value)
+  Esri_WorldImagery.addTo(leaflet.value)
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
