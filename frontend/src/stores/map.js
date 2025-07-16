@@ -60,7 +60,7 @@ export const useMapStore = defineStore('map', () => {
         fimCogData = await fetchCogCatalogData(feature)
         saveCatalogDataToFeature(feature, fimCogData)
       }
-      console.log('FIM COG DATA:', fimCogData)
+      //      console.log('FIM COG DATA:', fimCogData)
       // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
       const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
       if (cogUrls.length === 0) {
@@ -76,6 +76,8 @@ export const useMapStore = defineStore('map', () => {
       // // zoom into the bounds of the feature
       // const bounds = L.geoJSON(feature).getBounds()
       // leaflet.value.fitBounds(bounds)
+      //
+      console.log(cogUrls)
       addCogsToMap(cogUrls)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
@@ -366,6 +368,7 @@ export const useMapStore = defineStore('map', () => {
         // Only allow one feature to be selected at a time
         featureStore.selectFeature(feature)
       }
+
       const popup = L.popup()
       const content = `
         ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
@@ -379,14 +382,29 @@ export const useMapStore = defineStore('map', () => {
           ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
           ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
             </ul>
+        
+          <button class="zoom-button"
+                  style="margin: 10px 0px;border: 1px solid #ccc; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);"
+          >Zoom to this location</button>
+
         </p>
         `
       popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.value)
-      // zoom to the feature bounds
-      const bounds = L.geoJSON(feature).getBounds()
-      leaflet.value.fitBounds(bounds)
+
+      // Add event listener for the "Zoom to this location" button
+      const zoomButton = popup.getElement().querySelector('.zoom-button')
+      zoomButton.addEventListener('click', function () {
+        zoomToFeature(feature) // Call the local zoomToFeature function
+      })
     })
     return featureLayer
+  }
+
+  function zoomToFeature(feature) {
+    // zoom to the feature bounds
+    console.log(feature)
+    const bounds = L.geoJSON(feature).getBounds()
+    leaflet.value.fitBounds(bounds)
   }
 
   function createFeatureLayerProvider(region) {
