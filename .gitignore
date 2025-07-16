@@ -57,5 +57,7 @@ ssl/
 minikube/
 *.bak
 old/
+.ipynb_checkpoints/
+.venv/
 
 .eslintcache
