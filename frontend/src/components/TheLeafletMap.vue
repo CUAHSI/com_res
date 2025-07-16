@@ -90,7 +90,8 @@ onMounted(() => {
     transparent: 'true',
     format: 'image/png',
     minZoom: 8,
-    maxZoom: MIN_REACH_SELECTION_ZOOM
+    maxZoom: MIN_REACH_SELECTION_ZOOM,
+    updateWhenIdle: true
   })
 
   USGS_Imagery.addTo(leaflet.value)
