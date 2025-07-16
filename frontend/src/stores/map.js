@@ -284,7 +284,8 @@ export const useMapStore = defineStore('map', () => {
           layers: [layer.id],
           transparent: true,
           format: 'image/png',
-          minZoom: MIN_WMS_ZOOM
+          minZoom: MIN_WMS_ZOOM,
+          updateWhenIdle: true
         })
         wmsLayer.name = `${layer.name} - ${region.name}`
         wmsLayer.id = layer.id
