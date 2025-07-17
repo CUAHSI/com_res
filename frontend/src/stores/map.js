@@ -33,6 +33,228 @@ export const useMapStore = defineStore('map', () => {
 
   const erroredLayers = ref(new Set()) // Track broken WMS layers
 
+  // A simple helper function to debounce calls.
+  // It ensures a function is not called again until a certain amount of time has passed without it being called.
+  function debounce(func, timeout = 250) {
+    let timer
+    return (...args) => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        func.apply(this, args)
+      }, timeout)
+    }
+  }
+
+  // --- START: NEW CRASH-HANDLING LOGIC ---
+  let mapCorrupted = false
+
+  function patchZoomAnimationCrashHandler() {
+    if (!leaflet.value || !leaflet.value._animateZoom) return
+    const originalAnimateZoom = leaflet.value._animateZoom
+    leaflet.value._animateZoom = function (...args) {
+      try {
+        return originalAnimateZoom.apply(this, args)
+      } catch (e) {
+        if (e.message && e.message.includes('getZoomScale')) {
+          console.error('Leaflet zoom animation crashed — repairing map...', e)
+          if (!mapCorrupted) {
+            mapCorrupted = true
+            repairCorruptedMap()
+          }
+        } else {
+          throw e
+        }
+      }
+    }
+  }
+
+  function repairCorruptedMap() {
+    if (!leaflet.value) return
+    console.warn('Resetting Leaflet map due to animation crash...')
+
+    const center = leaflet.value.getCenter()
+    const zoom = leaflet.value.getZoom()
+    const preservedLayers = []
+
+    leaflet.value.eachLayer((layer) => {
+      // Preserve all layers except the base tile layers, which we'll recreate.
+      if (!layer.options.attribution || !layer.options.attribution.includes('CARTO')) {
+        preservedLayers.push(layer)
+      }
+    })
+
+    leaflet.value.off()
+    leaflet.value.remove()
+
+    const oldEl = document.getElementById('mapContainer') // Use your actual map ID
+    if (oldEl && oldEl.parentNode) {
+      const newEl = oldEl.cloneNode(false)
+      oldEl.parentNode.replaceChild(newEl, oldEl)
+    }
+
+    setTimeout(() => {
+      // Re-run the entire initialization logic, which will create a fresh map
+      initializeMap('mapContainer', center, zoom)
+
+      // Re-add all the dynamic layers that were on the map before the crash
+      preservedLayers.forEach((layer) => {
+        if (!leaflet.value.hasLayer(layer)) {
+          leaflet.value.addLayer(layer)
+        }
+      })
+
+      // Re-add layers to the control
+      if (control.value) {
+        preservedLayers.forEach((layer) => {
+          if (layer.name) {
+            // Assuming your overlay layers have a 'name' property
+            control.value.addOverlay(layer, layer.name)
+          }
+        })
+      }
+
+      mapCorrupted = false
+      console.log('Map successfully repaired.')
+    }, 100)
+  }
+  // --- END: NEW CRASH-HANDLING LOGIC ---
+
+  // This function now contains all the setup logic moved from TheLeafletMap.vue
+  function initializeMap(elementId, center = [38.2, -96], zoom = 5) {
+    leaflet.value = L.map(elementId).setView(center, zoom)
+
+    // --- This block is moved directly from your component's onMounted ---
+    mapObject.value.hucbounds = []
+    mapObject.value.popups = []
+    mapObject.value.buffer = 20
+    mapObject.value.huclayers = []
+    mapObject.value.reaches = {}
+    mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
+    leaflet.value.zoomControl.remove()
+
+    const MIN_REACH_SELECTION_ZOOM = 11
+    const ACCESS_TOKEN =
+      'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
+
+    let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
+      url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
+      maxZoom: MIN_REACH_SELECTION_ZOOM,
+      minZoom: 0
+    })
+
+    let CartoDB_PositronNoLabels = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+      {
+        noWrap: true,
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+      }
+    )
+
+    let Esri_WorldImagery = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+      {
+        noWrap: true,
+        variant: 'World_Imagery',
+        attribution: 'Esri',
+        maxZoom: 18,
+        minZoom: 0
+      }
+    )
+
+    let USGS_Imagery = L.tileLayer(
+      'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'USGS',
+        noWrap: true,
+        maxZoom: 18,
+        minZoom: 0
+      }
+    )
+
+    const baselayers = {
+      'ESRI World Imagery': Esri_WorldImagery,
+      'CartoDB Positron No Labels': CartoDB_PositronNoLabels,
+      'USGS Imagery': USGS_Imagery
+    }
+
+    let flowlines = L.tileLayer.wms(
+      'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer',
+      {
+        layers: 0,
+        transparent: 'true',
+        format: 'image/png',
+        minZoom: 8,
+        maxZoom: MIN_REACH_SELECTION_ZOOM
+      }
+    )
+
+    Esri_WorldImagery.addTo(leaflet.value)
+    Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
+
+    let mixed = {
+      'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
+      'Flowlines WMS': flowlines
+    }
+
+    const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
+      apikey: ACCESS_TOKEN,
+      maxResults: 3
+    })
+
+    const providers = [addressSearchProvider, ...featureLayerProviders.value]
+
+    control.value = L.control.layers(baselayers, mixed).addTo(leaflet.value)
+
+    esriLeafletGeocoder
+      .geosearch({
+        position: 'topright',
+        placeholder: 'Search for a location',
+        useMapBounds: true,
+        expanded: false,
+        title: ' Search',
+        providers: providers
+      })
+      .addTo(leaflet.value)
+
+    L.control.zoom({ position: 'topleft' }).addTo(leaflet.value)
+
+    // This will wait 250ms after the LAST zoom event before running.
+    const debouncedUpdate = debounce(() => updateVisibleWMSLayers(), 350)
+
+    // Add event listener that calls the debounced function
+    leaflet.value.on('zoomend', debouncedUpdate)
+
+    mapLoaded.value = true
+
+    // IMPORTANT: Patch the new map instance to handle future crashes.
+    patchZoomAnimationCrashHandler()
+
+    console.log('Map initialized and patched.')
+  }
+  // --- END: NEW INITIALIZATION FUNCTION ---
+
+  // --- START: MOVED FUNCTION ---
+  // This function was moved from TheLeafletMap.vue
+  function updateVisibleWMSLayers() {
+    if (!leaflet.value) return
+    console.log('Updating visible WMS layers at zoom level', leaflet.value.getZoom())
+    const zoom = leaflet.value.getZoom()
+
+    Object.keys(wmsLayers.value).forEach((region) => {
+      for (const layer of wmsLayers.value[region]) {
+        if (zoom < layer.options.minZoom || zoom > layer.options.maxZoom) {
+          if (leaflet.value.hasLayer(layer)) leaflet.value.removeLayer(layer)
+        } else {
+          if (!leaflet.value.hasLayer(layer)) leaflet.value.addLayer(layer)
+        }
+      }
+    })
+  }
+  // --- END: MOVED FUNCTION ---
+
   const deselectFeature = (feature) => {
     try {
       activeFeatureLayer.value.setFeatureStyle(feature.id, {
@@ -475,6 +697,8 @@ export const useMapStore = defineStore('map', () => {
     determineCogsForStage,
     addCogsToMap,
     clearCogsFromMap,
-    erroredLayers
+    erroredLayers,
+    initializeMap,
+    updateVisibleWMSLayers
   }
 })
