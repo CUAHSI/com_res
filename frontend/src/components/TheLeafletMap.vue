@@ -12,14 +12,10 @@ import 'leaflet-easybutton/src/easy-button'
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
-//import { useFeaturesStore } from '@/stores/features'
-//import { useAlertStore } from '@/stores/alerts'
 
 const mapStore = useMapStore()
 const { mapObject, featureLayerProviders, control, leaflet, wmsLayers, erroredLayers } =
   storeToRefs(mapStore)
-//const featureStore = useFeaturesStore()
-//const alertStore = useAlertStore()
 
 // Store information to fix broken map state that occurs
 // when zooming fast.
@@ -239,122 +235,6 @@ function updateVisibleWMSLayers() {
     }
   })
 }
-
-//////////////////////////////////////////////
-//////////////////////////////////////////////
-//////////////////////////////////////////////
-//////////////////////////////////////////////
-
-///*
-// * LEAFLET HANDLERS
-// */
-//
-//function clearSelection() {
-//  // Clears the selected features on the map
-//
-//  featureStore.clearSelectedFeatures()
-//
-//  // update the map
-//  updateMapBBox()
-//
-//  // clear and update the HUC textbox
-//  // document.querySelector('.mdl-textfield').MaterialTextfield.change('');
-//  alertStore.displayAlert({
-//    title: 'Cleared',
-//    text: 'Your map selection was cleared',
-//    type: 'info',
-//    closable: true,
-//    duration: 1
-//  })
-//}
-//
-//function updateMapBBox() {
-//  /**
-//   * Calculates and draws the bounding box on the map.
-//   * This is computed using the wgs84_bbox variable stored
-//   * within Map.hucbounds. This also calculates the bbox in the
-//   * nwm coordinates which are used for subsetting NWM data.
-//   */
-//
-//  // calculate global boundary
-//  let xmin = 9999999
-//  let ymin = 9999999
-//  let xmax = -9999999
-//  let ymax = -9999999
-//  for (let key in mapObject.value.hucbounds) {
-//    let bounds = mapObject.value.hucbounds[key].wgs84_bbox
-//    if (bounds.getWest() < xmin) {
-//      xmin = bounds.getWest()
-//    }
-//    if (bounds.getSouth() < ymin) {
-//      ymin = bounds.getSouth()
-//    }
-//    if (bounds.getEast() > xmax) {
-//      xmax = bounds.getEast()
-//    }
-//    if (bounds.getNorth() > ymax) {
-//      ymax = bounds.getNorth()
-//    }
-//  }
-//
-//  console.log('updating leaflet bbox with values:')
-//  console.log('xmin', xmin)
-//  console.log('ymin', ymin)
-//  console.log('xmax', xmax)
-//  console.log('ymax', ymax)
-//
-//  // save the map bbox
-//  mapObject.value.bbox = [xmin, ymin, xmax, ymax]
-//
-//  // remove the old bounding box layer
-//  removeBbox()
-//
-//  // draw the new bounding box layer
-//  drawBbox()
-//}
-//
-//function removeBbox() {
-//  // remove the bbox layer if it exists
-//  if ('BBOX' in mapObject.value.huclayers) {
-//    // remove the polygon overlay
-//    mapObject.value.huclayers['BBOX'].clearLayers()
-//    delete mapObject.value.huclayers['BBOX']
-//  }
-//}
-//function drawBbox() {
-//  let style = {
-//    fillColor: 'black',
-//    weight: 2,
-//    opacity: 1,
-//    color: 'green',
-//    fillOpacity: 0.01,
-//    lineJoin: 'round'
-//  }
-//
-//  // redraw the bbox layer with new coordinates
-//  let polygon = [
-//    {
-//      type: 'Polygon',
-//      coordinates: [
-//        [
-//          [mapObject.value.bbox[0], mapObject.value.bbox[1]],
-//          [mapObject.value.bbox[0], mapObject.value.bbox[3]],
-//          [mapObject.value.bbox[2], mapObject.value.bbox[3]],
-//          [mapObject.value.bbox[2], mapObject.value.bbox[1]],
-//          [mapObject.value.bbox[0], mapObject.value.bbox[1]]
-//        ]
-//      ]
-//    }
-//  ]
-//  let json_polygon = L.geoJSON(polygon, { style: style })
-//
-//  mapObject.value.huclayers['BBOX'] = json_polygon
-//  if (featureStore?.selectedModel?.input == 'bbox') {
-//    json_polygon.addTo(leaflet.value)
-//  }
-//
-//  // TODO: Not sure if this is still needed
-//}
 </script>
 <style scoped>
 #mapContainer {
