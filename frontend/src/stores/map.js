@@ -31,6 +31,8 @@ export const useMapStore = defineStore('map', () => {
   const MIN_WFS_ZOOM = 9
   const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
 
+  const erroredLayers = ref(new Set()) // Track broken WMS layers
+
   const deselectFeature = (feature) => {
     try {
       activeFeatureLayer.value.setFeatureStyle(feature.id, {
@@ -292,6 +294,14 @@ export const useMapStore = defineStore('map', () => {
         wmsLayer.id = layer.id
         wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
         wmsLayers.value[region.name].push(wmsLayer)
+
+        // Listen for tile load errors
+        wmsLayer.on('error', () => {
+          erroredLayers.value.add(wmsLayer)
+        })
+        wmsLayer.on('tileerror', () => {
+          erroredLayers.value.add(wmsLayer)
+        })
       })
     } else {
       console.error(`No layers found for ${region.name}`)
@@ -464,6 +474,7 @@ export const useMapStore = defineStore('map', () => {
     stageValue,
     determineCogsForStage,
     addCogsToMap,
-    clearCogsFromMap
+    clearCogsFromMap,
+    erroredLayers
   }
 })

@@ -12,13 +12,20 @@ import 'leaflet-easybutton/src/easy-button'
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/map'
-import { useFeaturesStore } from '@/stores/features'
-import { useAlertStore } from '@/stores/alerts'
+//import { useFeaturesStore } from '@/stores/features'
+//import { useAlertStore } from '@/stores/alerts'
 
 const mapStore = useMapStore()
-const { mapObject, featureLayerProviders, control, leaflet } = storeToRefs(mapStore)
-const featureStore = useFeaturesStore()
-const alertStore = useAlertStore()
+const { mapObject, featureLayerProviders, control, leaflet, wmsLayers, erroredLayers } =
+  storeToRefs(mapStore)
+//const featureStore = useFeaturesStore()
+//const alertStore = useAlertStore()
+
+// Store information to fix broken map state that occurs
+// when zooming fast.
+let zooming = false
+let updateTimeout = null
+let lastZoom = null
 
 const MIN_REACH_SELECTION_ZOOM = 11
 const ACCESS_TOKEN =
@@ -141,14 +148,14 @@ onMounted(() => {
     })
     .addTo(leaflet.value)
 
-  // Erase
-  L.easyButton(
-    'fa-eraser',
-    function () {
-      clearSelection()
-    },
-    'clear selected features'
-  ).addTo(leaflet.value)
+  //  // Erase
+  //  L.easyButton(
+  //    'fa-eraser',
+  //    function () {
+  //      clearSelection()
+  //    },
+  //    'clear selected features'
+  //  ).addTo(leaflet.value)
 
   //  // on zoom event, log the current bounds and zoom level
   //  leaflet.value.on('zoomend moveend', function () {
@@ -160,118 +167,194 @@ onMounted(() => {
   //    console.log('map center:', leaflet.value.getCenter())
   //  })
   mapStore.mapLoaded = true
+
+  leaflet.value.on('zoomend', () => {
+    zooming = false // Reset zooming state
+    if (updateTimeout) clearTimeout(updateTimeout)
+
+    updateTimeout = setTimeout(() => {
+      const currentZoom = leaflet.value.getZoom()
+      if (currentZoom !== lastZoom) {
+        lastZoom = currentZoom
+        updateVisibleWMSLayers() // a function that refreshes your visible layers
+      }
+    }, 150) // adjust delay as needed
+  })
+
+  leaflet.value.on('zoomstart', () => {
+    if (!leaflet.value.getContainer() || !leaflet.value._mapPane) {
+      zooming = true
+      console.warn('Skipping zoom: Map container or pane not ready')
+      return
+    }
+  })
 })
 
-/*
- * LEAFLET HANDLERS
- */
+function updateVisibleWMSLayers() {
+  console.log('Updating visible WMS layers at zoom level', leaflet.value.getZoom())
+  const zoom = leaflet.value.getZoom()
 
-function clearSelection() {
-  // Clears the selected features on the map
+  Object.keys(wmsLayers.value).forEach((region) => {
+    for (const layer of wmsLayers.value[region]) {
+      // Example logic: hide layers if outside zoom range
+      if (zoom < 8 || zoom > 16) {
+        // This should be replaced with Min and Max layer zoom levels
+        if (leaflet.value.hasLayer(layer)) leaflet.value.removeLayer(layer)
+      } else {
+        if (!leaflet.value.hasLayer(layer)) leaflet.value.addLayer(layer)
+      }
 
-  featureStore.clearSelectedFeatures()
+      // Recovery mechanism for broken layers
+      if (erroredLayers.value.has(layer)) {
+        console.warn(`Resetting errored WMS layer: ${layer.name}`)
+        erroredLayers.value.delete(layer)
 
-  // update the map
-  updateMapBBox()
+        const resetLayer = () => {
+          if (leaflet.value.hasLayer(layer)) {
+            leaflet.value.removeLayer(layer)
+          }
 
-  // clear and update the HUC textbox
-  // document.querySelector('.mdl-textfield').MaterialTextfield.change('');
-  alertStore.displayAlert({
-    title: 'Cleared',
-    text: 'Your map selection was cleared',
-    type: 'info',
-    closable: true,
-    duration: 1
+          // Re-add the layer in the *next* animation frame after DOM stabilizes
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              try {
+                if (!leaflet.value.hasLayer(layer)) {
+                  leaflet.value.addLayer(layer)
+                }
+              } catch (e) {
+                console.error(`Failed to re-add layer ${layer.name}`, e)
+              }
+            }, 100)
+          })
+        }
+
+        if (zooming) {
+          // Delay the reset until zoom has ended
+          console.warn('Delaying WMS layer reset until zoom completes')
+          leaflet.value.once('zoomend', resetLayer)
+        } else {
+          resetLayer()
+        }
+      }
+    }
   })
 }
 
-function updateMapBBox() {
-  /**
-   * Calculates and draws the bounding box on the map.
-   * This is computed using the wgs84_bbox variable stored
-   * within Map.hucbounds. This also calculates the bbox in the
-   * nwm coordinates which are used for subsetting NWM data.
-   */
+//////////////////////////////////////////////
+//////////////////////////////////////////////
+//////////////////////////////////////////////
+//////////////////////////////////////////////
 
-  // calculate global boundary
-  let xmin = 9999999
-  let ymin = 9999999
-  let xmax = -9999999
-  let ymax = -9999999
-  for (let key in mapObject.value.hucbounds) {
-    let bounds = mapObject.value.hucbounds[key].wgs84_bbox
-    if (bounds.getWest() < xmin) {
-      xmin = bounds.getWest()
-    }
-    if (bounds.getSouth() < ymin) {
-      ymin = bounds.getSouth()
-    }
-    if (bounds.getEast() > xmax) {
-      xmax = bounds.getEast()
-    }
-    if (bounds.getNorth() > ymax) {
-      ymax = bounds.getNorth()
-    }
-  }
-
-  console.log('updating leaflet bbox with values:')
-  console.log('xmin', xmin)
-  console.log('ymin', ymin)
-  console.log('xmax', xmax)
-  console.log('ymax', ymax)
-
-  // save the map bbox
-  mapObject.value.bbox = [xmin, ymin, xmax, ymax]
-
-  // remove the old bounding box layer
-  removeBbox()
-
-  // draw the new bounding box layer
-  drawBbox()
-}
-
-function removeBbox() {
-  // remove the bbox layer if it exists
-  if ('BBOX' in mapObject.value.huclayers) {
-    // remove the polygon overlay
-    mapObject.value.huclayers['BBOX'].clearLayers()
-    delete mapObject.value.huclayers['BBOX']
-  }
-}
-function drawBbox() {
-  let style = {
-    fillColor: 'black',
-    weight: 2,
-    opacity: 1,
-    color: 'green',
-    fillOpacity: 0.01,
-    lineJoin: 'round'
-  }
-
-  // redraw the bbox layer with new coordinates
-  let polygon = [
-    {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [mapObject.value.bbox[0], mapObject.value.bbox[1]],
-          [mapObject.value.bbox[0], mapObject.value.bbox[3]],
-          [mapObject.value.bbox[2], mapObject.value.bbox[3]],
-          [mapObject.value.bbox[2], mapObject.value.bbox[1]],
-          [mapObject.value.bbox[0], mapObject.value.bbox[1]]
-        ]
-      ]
-    }
-  ]
-  let json_polygon = L.geoJSON(polygon, { style: style })
-
-  mapObject.value.huclayers['BBOX'] = json_polygon
-  if (featureStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(leaflet.value)
-  }
-
-  // TODO: Not sure if this is still needed
-}
+///*
+// * LEAFLET HANDLERS
+// */
+//
+//function clearSelection() {
+//  // Clears the selected features on the map
+//
+//  featureStore.clearSelectedFeatures()
+//
+//  // update the map
+//  updateMapBBox()
+//
+//  // clear and update the HUC textbox
+//  // document.querySelector('.mdl-textfield').MaterialTextfield.change('');
+//  alertStore.displayAlert({
+//    title: 'Cleared',
+//    text: 'Your map selection was cleared',
+//    type: 'info',
+//    closable: true,
+//    duration: 1
+//  })
+//}
+//
+//function updateMapBBox() {
+//  /**
+//   * Calculates and draws the bounding box on the map.
+//   * This is computed using the wgs84_bbox variable stored
+//   * within Map.hucbounds. This also calculates the bbox in the
+//   * nwm coordinates which are used for subsetting NWM data.
+//   */
+//
+//  // calculate global boundary
+//  let xmin = 9999999
+//  let ymin = 9999999
+//  let xmax = -9999999
+//  let ymax = -9999999
+//  for (let key in mapObject.value.hucbounds) {
+//    let bounds = mapObject.value.hucbounds[key].wgs84_bbox
+//    if (bounds.getWest() < xmin) {
+//      xmin = bounds.getWest()
+//    }
+//    if (bounds.getSouth() < ymin) {
+//      ymin = bounds.getSouth()
+//    }
+//    if (bounds.getEast() > xmax) {
+//      xmax = bounds.getEast()
+//    }
+//    if (bounds.getNorth() > ymax) {
+//      ymax = bounds.getNorth()
+//    }
+//  }
+//
+//  console.log('updating leaflet bbox with values:')
+//  console.log('xmin', xmin)
+//  console.log('ymin', ymin)
+//  console.log('xmax', xmax)
+//  console.log('ymax', ymax)
+//
+//  // save the map bbox
+//  mapObject.value.bbox = [xmin, ymin, xmax, ymax]
+//
+//  // remove the old bounding box layer
+//  removeBbox()
+//
+//  // draw the new bounding box layer
+//  drawBbox()
+//}
+//
+//function removeBbox() {
+//  // remove the bbox layer if it exists
+//  if ('BBOX' in mapObject.value.huclayers) {
+//    // remove the polygon overlay
+//    mapObject.value.huclayers['BBOX'].clearLayers()
+//    delete mapObject.value.huclayers['BBOX']
+//  }
+//}
+//function drawBbox() {
+//  let style = {
+//    fillColor: 'black',
+//    weight: 2,
+//    opacity: 1,
+//    color: 'green',
+//    fillOpacity: 0.01,
+//    lineJoin: 'round'
+//  }
+//
+//  // redraw the bbox layer with new coordinates
+//  let polygon = [
+//    {
+//      type: 'Polygon',
+//      coordinates: [
+//        [
+//          [mapObject.value.bbox[0], mapObject.value.bbox[1]],
+//          [mapObject.value.bbox[0], mapObject.value.bbox[3]],
+//          [mapObject.value.bbox[2], mapObject.value.bbox[3]],
+//          [mapObject.value.bbox[2], mapObject.value.bbox[1]],
+//          [mapObject.value.bbox[0], mapObject.value.bbox[1]]
+//        ]
+//      ]
+//    }
+//  ]
+//  let json_polygon = L.geoJSON(polygon, { style: style })
+//
+//  mapObject.value.huclayers['BBOX'] = json_polygon
+//  if (featureStore?.selectedModel?.input == 'bbox') {
+//    json_polygon.addTo(leaflet.value)
+//  }
+//
+//  // TODO: Not sure if this is still needed
+//}
 </script>
 <style scoped>
 #mapContainer {
