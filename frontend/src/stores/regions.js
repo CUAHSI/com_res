@@ -15,7 +15,7 @@ export const useRegionsStore = defineStore('regions', () => {
     {
       image: RoaringRiverStatePark,
       title: 'Roaring River State Park',
-      name: 'RoaringRiverStatePark',
+      name: 'RoaringRiverStatePark_slim',
       text: `A popular outdoor destination nestled within the rugged terrain of the
              Ozark Plateau’s karst landscape, Roaring River State Park is located
              located eight miles south of Cassville in Barry County, Missouri, 
