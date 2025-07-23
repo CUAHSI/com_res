@@ -17,6 +17,7 @@ export const useMapStore = defineStore('map', () => {
   const featureLayerProviders = shallowRef([])
   const activeFeatureLayer = shallowRef(null)
   const control = shallowRef(null)
+  const pendingLayerChanges = ref([])
   const featureOptions = ref({
     selectedColor: 'red',
     defaultColor: 'blue',
@@ -30,6 +31,7 @@ export const useMapStore = defineStore('map', () => {
   const MIN_WMS_ZOOM = 9
   const MIN_WFS_ZOOM = 9
   const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
+  //const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
 
   const deselectFeature = (feature) => {
     try {
@@ -73,9 +75,6 @@ export const useMapStore = defineStore('map', () => {
         })
         return
       }
-      // // zoom into the bounds of the feature
-      // const bounds = L.geoJSON(feature).getBounds()
-      // leaflet.value.fitBounds(bounds)
       addCogsToMap(cogUrls)
     } catch (error) {
       console.warn('Attempted to select feature:', error)
@@ -276,7 +275,6 @@ export const useMapStore = defineStore('map', () => {
     if (data && data.layers) {
       console.log(`Creating WMS Layers for ${region.name}`)
       data.layers.forEach((layer) => {
-        url = `${COMRES_REST_URL}/${region.name}/MapServer/`
         // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
         const wmsLayer = esriLeaflet.dynamicMapLayer({
           url: url,
@@ -287,10 +285,25 @@ export const useMapStore = defineStore('map', () => {
           minZoom: MIN_WMS_ZOOM,
           updateWhenIdle: true
         })
+        //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
+        //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
+        //      const wmsLayer = L.tileLayer.wms(url,
+        //      {
+        //        layers: layer.id,
+        //        transparent: true,
+        //        format: 'image/png',
+        //        minZoom: MIN_WMS_ZOOM,
+        //        tiled: true,
+        //        updateWhenIdle: true,
+        //            crossOrigin: true
+        //      })
+
+        console.log(wmsLayer)
         wmsLayer.name = `${layer.name} - ${region.name}`
         wmsLayer.id = layer.id
         wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
         wmsLayers.value[region.name].push(wmsLayer)
+        console.log(`Added WMS layer: ${wmsLayer.name} for region: ${region.name}`)
       })
     } else {
       console.error(`No layers found for ${region.name}`)
@@ -447,6 +460,7 @@ export const useMapStore = defineStore('map', () => {
     stageValue,
     determineCogsForStage,
     addCogsToMap,
-    clearCogsFromMap
+    clearCogsFromMap,
+    pendingLayerChanges
   }
 })

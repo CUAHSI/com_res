@@ -16,7 +16,8 @@ import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 
 const mapStore = useMapStore()
-const { mapObject, featureLayerProviders, control, leaflet } = storeToRefs(mapStore)
+const { mapObject, featureLayerProviders, control, leaflet, pendingLayerChanges } =
+  storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
@@ -26,6 +27,8 @@ const ACCESS_TOKEN =
 
 onMounted(() => {
   leaflet.value = L.map('mapContainer').setView([38.2, -96], 5)
+  patchLeafletZoomCrashes(leaflet.value)
+
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -67,36 +70,20 @@ onMounted(() => {
 
   const baselayers = {
     'USGS Imagery': USGS_Imagery,
-    'ESRI World Imagery': Esri_WorldImagery
+    'ESRI World Imagery': Esri_WorldImagery,
+    'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay
   }
-
-  // add the NOAA flowlines wms
-  url =
-    'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer'
-  let flowlines = L.tileLayer.wms(url, {
-    layers: 0,
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: 8,
-    maxZoom: MIN_REACH_SELECTION_ZOOM,
-    updateWhenIdle: true
-  })
 
   Esri_WorldImagery.addTo(leaflet.value)
 
   // layer toggling
   let mixed = {
-    'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
-    'Flowlines WMS': flowlines
+    'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
     apikey: ACCESS_TOKEN,
     maxResults: 3
-    // nearby: {
-    //   lat: -33.8688,
-    //   lng: 151.2093
-    // }
   })
 
   // add the address search provider to the featureLayerProviders
@@ -147,8 +134,50 @@ onMounted(() => {
     console.log('bounds:', bounds._northEast, bounds._southWest)
     console.log('map center:', leaflet.value.getCenter())
   })
+
+  leaflet.value.on('zoomend', () => {
+    for (const { old, new: newLayer } of pendingLayerChanges.value) {
+      if (leaflet.value.hasLayer(old)) {
+        leaflet.value.removeLayer(old)
+      }
+      leaflet.value.addLayer(newLayer)
+    }
+    pendingLayerChanges.value.length = 0 // clear list
+  })
+
   mapStore.mapLoaded = true
 })
+
+function patchLeafletZoomCrashes(map) {
+  // Patch #1: Suppress crashes in _animateZoom
+  const originalAnimateZoom = map._animateZoom
+  map._animateZoom = function (center, zoom, origin, scale, delta) {
+    try {
+      if (!this._mapPane || !this._mapPane.style) return
+      originalAnimateZoom.call(this, center, zoom, origin, scale, delta)
+    } catch (e) {
+      if (e instanceof TypeError && /getZoomScale|get.*?options/.test(e.message)) {
+        console.warn('Suppressed Leaflet zoom animation error:', e.message)
+      } else {
+        throw e
+      }
+    }
+  }
+
+  // Patch #2: Suppress crashes in _onZoomTransitionEnd
+  const originalZoomTransitionEnd = map._onZoomTransitionEnd
+  map._onZoomTransitionEnd = function (e) {
+    try {
+      originalZoomTransitionEnd.call(this, e)
+    } catch (err) {
+      if (err instanceof TypeError && /options/.test(err.message)) {
+        console.warn('Suppressed Leaflet zoom transition error:', err.message)
+      } else {
+        throw err
+      }
+    }
+  }
+}
 
 /*
  * LEAFLET HANDLERS
