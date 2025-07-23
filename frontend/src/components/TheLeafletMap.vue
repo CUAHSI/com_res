@@ -45,17 +45,6 @@ onMounted(() => {
     minZoom: 0
   })
 
-  let CartoDB_PositronNoLabels = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
-    {
-      noWrap: true,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }
-  )
-
   let url =
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
   let Esri_WorldImagery = L.tileLayer(url, {
@@ -77,9 +66,8 @@ onMounted(() => {
   )
 
   const baselayers = {
-    'ESRI World Imagery': Esri_WorldImagery,
-    'CartoDB Positron No Labels': CartoDB_PositronNoLabels,
-    'USGS Imagery': USGS_Imagery
+    'USGS Imagery': USGS_Imagery,
+    'ESRI World Imagery': Esri_WorldImagery
   }
 
   // add the NOAA flowlines wms
@@ -94,8 +82,7 @@ onMounted(() => {
     updateWhenIdle: true
   })
 
-  USGS_Imagery.addTo(leaflet.value)
-  Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
+  Esri_WorldImagery.addTo(leaflet.value)
 
   // layer toggling
   let mixed = {
