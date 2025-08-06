@@ -1,5 +1,6 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
+  <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
 </template>
 <script setup>
 import 'leaflet/dist/leaflet.css'
@@ -10,7 +11,7 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded } from '@/helpers/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 
@@ -25,7 +26,8 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
+  // leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer').setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -148,8 +150,13 @@ onMounted(() => {
     'clear selected features'
   ).addTo(leaflet.value)
 
+  leaflet.value.on('zoomstart movestart', function () {
+    isZooming.value = true
+  })
+
   // on zoom event, log the current bounds and zoom level
   leaflet.value.on('zoomend moveend', function () {
+    isZooming.value = false
     let zoom = leaflet.value.getZoom()
     console.log('zoom level:', zoom)
     // log the bounds as [[lat, long], [lat, long]]
