@@ -56,7 +56,7 @@ const paths = [
   },
   {
     attrs: { to: '/resources' },
-    label: 'Resources'
+    label: 'Additional Resources'
   },
   {
     attrs: { to: '/about' },
