@@ -93,7 +93,7 @@ onMounted(() => {
     updateWhenIdle: true
   })
 
-  USGS_Imagery.addTo(leaflet.value)
+  CartoDB_PositronNoLabels.addTo(leaflet.value)
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
