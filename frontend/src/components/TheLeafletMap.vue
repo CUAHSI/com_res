@@ -25,7 +25,8 @@ const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
 onMounted(() => {
-  leaflet.value = L.map('mapContainer').setView([38.2, -96], 5)
+  // https://leafletjs.com/reference.html#map-zoomsnap
+  leaflet.value = L.map('mapContainer', {zoomSnap: 1}).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
