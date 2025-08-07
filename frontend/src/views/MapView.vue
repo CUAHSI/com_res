@@ -66,6 +66,8 @@
       <HistoricalPlot
         v-show="showHistorical"
         ref="historicalPlotRef"
+        :reachid="reach_id"
+        :reachname="reach_name"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
       />
 
@@ -102,8 +104,11 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-const { activeFeature } = storeToRefs(featureStore)
+const { activeFeature, getFeatureName } = storeToRefs(featureStore)
 const { stageValue } = storeToRefs(mapStore)
+
+const reach_name = ref(null)
+const reach_id = ref(null)
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -112,17 +117,21 @@ watch(
   () => activeFeature.value?.properties?.COMID,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      reachIdChanged(newVal)
+      reach_id.value = newVal
+      console.log('Active feature COMID changed, setting reach_id to: ', reach_id.value)
+
+      // when the COMID changes, so does the reach name
+      console.log('Feature Name: ' + getFeatureName)
     }
   }
 )
 
 const toggle = async (component_name) => {
-  console.log(component_name)
+  console.log('Toggling: ' + component_name)
 
   // get the feature id from the active feature
-  let reach_id = activeFeature.value?.properties?.COMID ?? null
-  if (reach_id === undefined || reach_id === null) {
+  reach_id.value = activeFeature.value?.properties?.COMID ?? null
+  if (reach_id.value === undefined || reach_id.value === null) {
     // if no feature is selected show a popup dialog
     alertStore.displayAlert({
       title: 'No River Reach Selected',
@@ -133,57 +142,23 @@ const toggle = async (component_name) => {
     })
     return
   }
-  let reach_name = activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
+  reach_name.value =
+    activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
 
   // toggle plot visualizations
   // based on which button was clicked.
   if (component_name === 'historical') {
     showHistorical.value = !showHistorical.value
-    await historicalPlotRef.value.getHistoricalData(
-      reach_id.toString(),
-      reach_name,
-      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-      new Date(Date.now())
-    )
+    //    await historicalPlotRef.value.getHistoricalData(
+    //      reach_id.toString(),
+    //      reach_name,
+    //      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+    //      new Date(Date.now())
+    //    )
   } else if (component_name === 'forecast') {
     showForecast.value = !showForecast.value
     await forecastPlotRef.value.getForecastData(
-      reach_id.toString(),
-      reach_name,
-      new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
-      'medium_range',
-      '3'
-    )
-  }
-}
-
-const reachIdChanged = async (selected_reach) => {
-  // if no reach is selected, clear the plot data.
-  if (selected_reach === undefined || selected_reach === null) {
-    await historicalPlotRef.value.clearPlot()
-    return
-  }
-
-  // get the active reach name, this is necessary to update
-  // the data displayed in the historical and forecast components
-  let reach_name = activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
-
-  // update the historical plot when the selected reach changes
-  // only if the historical component is visible
-  if (showHistorical.value) {
-    historicalPlotRef.value.getHistoricalData(
-      selected_reach.toString(),
-      reach_name,
-      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-      new Date(Date.now())
-    )
-  }
-
-  // update the forecast plot when the selected reach changes
-  // only if the forecast component is visible
-  if (showForecast.value) {
-    forecastPlotRef.value.getForecastData(
-      selected_reach.toString(),
+      reach_id.value.toString(),
       reach_name,
       new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
       'medium_range',
