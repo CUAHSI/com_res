@@ -14,7 +14,15 @@
 
   <v-sheet v-else class="mx-auto" elevation="2" rounded style="height: calc(25vh); width: 100%">
     <v-row align="center" justify="end" class="mb-2">
-      <v-menu location="right top" content-class="menu-content" attach="body">
+      <v-menu
+        v-model="timeSelectionMenu"
+        location="right top"
+        content-class="menu-content"
+        attach="body"
+        :close-on-content-click="false"
+        :persistent="true"
+        :retain-focus="false"
+      >
         <template #activator="{ props: menuProps }">
           <v-tooltip text="Adjust Start and End Dates" location="right" style="z-index: 9999">
             <template #activator="{ props: tooltipProps }">
@@ -42,9 +50,16 @@
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                  v-model="startDate"
-                  @update:modelValue="startMenu = false"
+                  v-model="tempStartDate"
                   :min="'2016-01-01'"
+                  :max="
+                    tempEndDate
+                      ? new Date(new Date(tempEndDate).setDate(new Date(tempEndDate).getDate() - 1))
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (startMenu = false)"
                 ></v-date-picker>
               </v-menu>
             </v-list-item>
@@ -60,11 +75,22 @@
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                  v-model="endDate"
-                  @update:modelValue="endMenu = false"
-                  :min="'2016-01-01'"
+                  v-model="tempEndDate"
+                  :min="
+                    tempStartDate
+                      ? new Date(
+                          new Date(tempStartDate).setDate(new Date(tempStartDate).getDate() + 1)
+                        )
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (endMenu = false)"
                 ></v-date-picker>
               </v-menu>
+            </v-list-item>
+            <v-list-item class="d-flex justify-end">
+              <v-btn class="mt-2" color="primary" @click="onTimeSelectionClose">Apply</v-btn>
             </v-list-item>
           </v-list>
         </v-sheet>
@@ -117,16 +143,20 @@ const error = ref(null)
 // these are the raw date values used in the date picker
 const startDate = ref(null)
 const endDate = ref(null)
+const tempStartDate = ref(null)
+const tempEndDate = ref(null)
 
 // bool that shows/hides the date picker menus
 // true = visible, false = hidden
 const startMenu = ref(false)
 const endMenu = ref(false)
+const timeSelectionMenu = ref(false)
 
 // helper function to convert Date objects to ISO date strings
 const toIsoDate = (date) => date.toISOString().split('T')[0]
 
-// Function to initialize startDate and endDate
+// Function to initialize startDate and endDate.
+// This is only called once when the component is mounted.
 const initializeDates = () => {
   // Set the initial state for the time ranges
   // used in the historical plot.
@@ -143,19 +173,19 @@ const initializeDates = () => {
 // Formatted display values
 const formattedStartDate = computed({
   get() {
-    return startDate.value ? new Date(startDate.value).toLocaleDateString() : ''
+    return tempStartDate.value ? new Date(tempStartDate.value).toLocaleDateString() : ''
   },
   set(value) {
-    startDate.value = value ? toIsoDate(new Date(value)) : null
+    tempStartDate.value = value ? toIsoDate(new Date(value)) : null
   }
 })
 
 const formattedEndDate = computed({
   get() {
-    return endDate.value ? new Date(endDate.value).toLocaleDateString() : ''
+    return tempEndDate.value ? new Date(tempEndDate.value).toLocaleDateString() : ''
   },
   set(value) {
-    endDate.value = value ? toIsoDate(new Date(value)) : null
+    tempEndDate.value = value ? toIsoDate(new Date(value)) : null
   }
 })
 
@@ -165,6 +195,21 @@ const clearPlot = () => {
   plot_style.value = {}
 }
 
+// function to handle the closing of the date selection menu,
+// this function is called when the user clicks the "Apply" button.
+// This is necessary to ensure that nested v-menus close properly.
+function onTimeSelectionClose() {
+  // Close the date selection menu
+  timeSelectionMenu.value = false
+
+  // Trigger data fetch with updated dates,
+  // which will trigger the watch function that
+  // updates the lineplot.
+  startDate.value = tempStartDate.value
+  endDate.value = tempEndDate.value
+}
+
+// Collects historical plot data from the CIROH NWM API
 const getHistoricalData = async () => {
   try {
     isLoading.value = true
@@ -195,10 +240,21 @@ const getHistoricalData = async () => {
   plot_title.value = 'Historical Streamflow - ' + reach_name.value
 }
 
-// Recompute when startDate or endDate changes
+// Re-collects historical plot data whenever the
+// startDate, endDate, or reachID change
 watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
+  }
+})
+
+// sync temp dates and actual dates when the menu opens
+// this is to ensure that the date pickers show the
+// actual dates in the lineplot when the menu is initially  opened
+watch(timeSelectionMenu, (isOpen) => {
+  if (isOpen) {
+    tempStartDate.value = startDate.value
+    tempEndDate.value = endDate.value
   }
 })
 
