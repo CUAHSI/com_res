@@ -88,7 +88,6 @@ class AnalysisAssim:
                 url = future_to_url[future]
                 try:
                     res = future.result()
-                    print(f"RESULT: {res}")
                     # attempt to get the status code.
                     # if one is not returned, we should log
                     # it as an error.
@@ -119,9 +118,6 @@ class AnalysisAssim:
         # query the api asynchronously with the parameters defined above
         responses, errors = self.fetch_async([params])
         # TODO: do something if we encounter an error.
-
-        print(f"responses = {responses}")
-        print(f"errors = {errors}")
 
         # filter out only the successful responses and
         # convert them into a single pandas dataframe
