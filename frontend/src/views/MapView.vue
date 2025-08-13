@@ -51,7 +51,7 @@
 
     <TheStageSlider
       v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
-      v-model="mapHelpers.stageValue"
+      v-model="mapHelpers.stageValue.value"
       :min="activeFeatureFimCogData.stages_m[0]"
       :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
       :stages="activeFeatureFimCogData.stages_m"
