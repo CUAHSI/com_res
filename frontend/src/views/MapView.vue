@@ -51,7 +51,7 @@
 
     <TheStageSlider
       v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
-      v-model="stageValue"
+      v-model="mapHelpers.stageValue"
       :min="activeFeatureFimCogData.stages_m[0]"
       :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
       :stages="activeFeatureFimCogData.stages_m"
@@ -195,13 +195,13 @@ const activeFeatureFimCogData = computed(() => {
 })
 
 const handleStageChange = () => {
-  console.log('Stage value changed:', stageValue.value)
+  console.log('Stage value changed:', mapHelpers.stageValue.value)
   // enable "snapping to nearest stage" functionality
   // if the stage value is not in the list of stages
-  if (!activeFeatureFimCogData.value.stages_m.includes(stageValue.value)) {
+  if (!activeFeatureFimCogData.value.stages_m.includes(mapHelpers.stageValue.value)) {
     // find the nearest stage value
     const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
-      return Math.abs(curr - stageValue.value) < Math.abs(prev - stageValue.value) ? curr : prev
+      return Math.abs(curr - mapHelpers.stageValue.value) < Math.abs(prev - mapHelpers.stageValue.value) ? curr : prev
     })
     mapHelpers.stageValue.value = nearestStage
     console.log('Snapped to nearest stage:', nearestStage)
@@ -213,7 +213,7 @@ const handleStageChange = () => {
   if (cogUrls.length === 0) {
     alertStore.displayAlert({
       title: 'No Data Available',
-      text: `There are no COGs available for the selected stage: ${stageValue.value}m.`,
+      text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}m.`,
       type: 'warning',
       closable: true,
       duration: 5
