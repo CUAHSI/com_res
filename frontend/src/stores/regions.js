@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import RoaringRiverStatePark from '@/assets/RoaringRiverStatePark.png'
+import RoaringRiver from '@/assets/RoaringRiver.png'
 import DeSoto from '@/assets/DeSoto.png'
 import SpringfieldGreeneCounty from '@/assets/SpringfieldGreeneCounty.png'
 import MountAscutney from '@/assets/MountAscutney.png'
@@ -13,9 +13,9 @@ export const useRegionsStore = defineStore('regions', () => {
   const currentRegion = ref(null)
   const regions = ref([
     {
-      image: RoaringRiverStatePark,
+      image: RoaringRiver,
       title: 'Roaring River State Park',
-      name: 'RoaringRiverStatePark',
+      name: 'RoaringRiver',
       text: `A popular outdoor destination nestled within the rugged terrain of the
              Ozark Plateau’s karst landscape, Roaring River State Park is located
              located eight miles south of Cassville in Barry County, Missouri, 
