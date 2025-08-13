@@ -89,7 +89,7 @@ onMounted(() => {
     format: 'image/png',
     minZoom: 8,
     maxZoom: MIN_REACH_SELECTION_ZOOM,
-    updateWhenIdle: true
+    // updateWhenIdle: true
   })
 
   CartoDB_PositronNoLabels.addTo(leaflet.value)

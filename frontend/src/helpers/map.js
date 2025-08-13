@@ -178,6 +178,7 @@ const addCogsToMap = (cogs) => {
             which means we can use GridLayer options like opacity.
             http://leafletjs.com/reference-1.2.0.html#gridlayer
           */
+        //  TODO: use a canvas to control the z-index
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
@@ -275,6 +276,8 @@ async function createWMSLayers(region) {
     console.log(`Creating WMS Layers for ${region.name}`)
     data.layers.forEach((layer) => {
       // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
+      // https://developers.arcgis.com/esri-leaflet/api-reference/layers/tiled-map-layer/
+      // TODO: change this to L.esri.tiledMapLayer
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
         pane: 'overlayPane',
@@ -282,7 +285,7 @@ async function createWMSLayers(region) {
         transparent: true,
         format: 'image/png',
         minZoom: MIN_WMS_ZOOM,
-        updateWhenIdle: true
+        // updateWhenIdle: true
       })
       //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
       //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
