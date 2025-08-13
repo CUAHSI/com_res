@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useMapStore } from '@/stores/map'
+import * as mapHelpers from '@/helpers/map'
 
 export const useFeaturesStore = defineStore(
   'features',
@@ -9,17 +9,16 @@ export const useFeaturesStore = defineStore(
     const activeFeature = ref(null)
     const querying = ref({ hydrocron: false, nodes: false })
 
-    const mapStore = useMapStore()
 
     function selectFeature(feature) {
       console.log('Selecting feature', feature)
-      mapStore.selectFeature(feature)
+      mapHelpers.selectFeature(feature)
       selectedFeatures.value.push(feature)
       activeFeature.value = feature
     }
 
     function deselectFeature(feature) {
-      mapStore.deselectFeature(feature)
+      mapHelpers.deselectFeature(feature)
       selectedFeatures.value = selectedFeatures.value.filter((f) => f.id !== feature.id)
       if (activeFeature.value.id === feature.id) {
         activeFeature.value = null
@@ -41,11 +40,11 @@ export const useFeaturesStore = defineStore(
 
     const clearSelectedFeatures = () => {
       for (const feature of selectedFeatures.value) {
-        mapStore.deselectFeature(feature)
+        mapHelpers.deselectFeature(feature)
       }
       selectedFeatures.value = []
       activeFeature.value = null
-      mapStore.clearAllFeatures()
+      mapHelpers.clearAllFeatures()
     }
 
     const checkFeatureSelected = (feature) => {

@@ -1,5 +1,5 @@
 <template>
-  <v-overlay :model-value="!mapStore.mapLoaded" class="align-center justify-center">
+  <v-overlay :model-value="!mapHelpers.mapLoaded" class="align-center justify-center">
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
 
@@ -80,7 +80,6 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
-import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
@@ -90,9 +89,9 @@ import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
 import InfoIcon from '../components/InfoTooltip.vue'
+import * as mapHelpers from '@/helpers/map'
 
 const { mdAndDown } = useDisplay()
-const mapStore = useMapStore()
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -103,7 +102,6 @@ const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
 const { activeFeature } = storeToRefs(featureStore)
-const { stageValue } = storeToRefs(mapStore)
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -205,10 +203,10 @@ const handleStageChange = () => {
     const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
       return Math.abs(curr - stageValue.value) < Math.abs(prev - stageValue.value) ? curr : prev
     })
-    stageValue.value = nearestStage
+    mapHelpers.stageValue.value = nearestStage
     console.log('Snapped to nearest stage:', nearestStage)
   }
-  const cogUrls = mapStore.determineCogsForStage(
+  const cogUrls = mapHelpers.determineCogsForStage(
     activeFeatureFimCogData.value.files,
     activeFeatureFimCogData.value.stages_m
   )
@@ -222,8 +220,8 @@ const handleStageChange = () => {
     })
     return
   }
-  mapStore.clearCogsFromMap()
-  mapStore.addCogsToMap(cogUrls)
+  mapHelpers.clearCogsFromMap()
+  mapHelpers.addCogsToMap(cogUrls)
 }
 </script>
 <style scoped>
