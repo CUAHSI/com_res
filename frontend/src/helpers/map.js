@@ -8,8 +8,9 @@ import { ENDPOINTS } from '@/constants'
 import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
 
-let _leaflet = shallowRef(null)
-const leaflet = _leaflet
+const leaflet = {
+  v: markRaw({}) // Use markRaw to prevent reactivity issues with Leaflet map instance})
+}
 const wmsLayers = ref({})
 const mapObject = ref(new Map())
 const flowlinesFeatureLayers = ref([])
@@ -32,10 +33,6 @@ const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
 const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
 //const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
-
-function setLeaflet(map) {
-  _leaflet.value = markRaw(map)
-}
 
 const deselectFeature = (feature) => {
   try {
@@ -203,8 +200,8 @@ const addCogsToMap = (cogs) => {
               bandIndex: 0, // Assuming the raster has a single band
               noDataValue: 0 // Assuming 0 is the no-data value
             })
-            raster.addTo(leaflet.value)
-            // leaflet.value.fitBounds(raster.getBounds())
+            raster.addTo(leaflet.v)
+            // leaflet.v.fitBounds(raster.getBounds())
             console.log(`Added GeoRasterLayer for ${cog}`)
           })
         })
@@ -226,10 +223,10 @@ const addCogsToMap = (cogs) => {
 
 const clearCogsFromMap = () => {
   console.log('Clearing all COGs from map')
-  leaflet.value.eachLayer((layer) => {
+  leaflet.v.eachLayer((layer) => {
     if (layer instanceof GeoRasterLayer) {
       console.log('Removing GeoRasterLayer:', layer)
-      leaflet.value.removeLayer(layer)
+      leaflet.v.removeLayer(layer)
     }
   })
 }
@@ -243,20 +240,20 @@ const limitToBounds = (region) => {
     }
     try {
       console.log('Setting bounds to:', bounds)
-      leaflet.value.setMaxBounds(null)
-      leaflet.value.setView([0, 0], 2)
-      leaflet.value.invalidateSize()
+      leaflet.v.setMaxBounds(null)
+      leaflet.v.setView([0, 0], 2)
+      leaflet.v.invalidateSize()
 
       // prevent panning from bounds
-      leaflet.value.setMaxBounds(bounds)
+      leaflet.v.setMaxBounds(bounds)
       // instead of fitbounds, use default zoom
-      // leaflet.value.fitBounds(bounds)
-      leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
-      const zoom = leaflet.value.getZoom()
+      // leaflet.v.fitBounds(bounds)
+      leaflet.v.setView(bounds.getCenter(), region.defaultZoom || 10)
+      const zoom = leaflet.v.getZoom()
       console.log('Current zoom level:', zoom)
       await nextTick()
       // prevent zooming out
-      leaflet.value.setMinZoom(zoom)
+      leaflet.v.setMinZoom(zoom)
     } catch (error) {
       console.warn('Error zooming to bounds:', error)
     }
@@ -324,7 +321,7 @@ async function addWMSLayers(region) {
       console.warn(`Skipping layer ${layer.name} for region ${region.name}`)
       continue
     }
-    layer.addTo(leaflet.value)
+    layer.addTo(leaflet.v)
     control.value.addOverlay(layer, layer.name)
   }
 }
@@ -345,7 +342,7 @@ const toggleWMSLayers = (region) => {
     if (regionName !== region.name) {
       console.log(`Removing WMS layers for region: ${regionName}`)
       wmsLayers.value[regionName].forEach((wmsLayer) => {
-        wmsLayer.removeFrom(leaflet.value)
+        wmsLayer.removeFrom(leaflet.v)
         control.value.removeLayer(wmsLayer)
       })
     }
@@ -402,10 +399,10 @@ function createFlowlinesFeatureLayer(region) {
           </ul>
       </p>
       `
-    popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.value)
+    popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.v)
     // zoom to the feature bounds
     const bounds = L.geoJSON(feature).getBounds()
-    leaflet.value.fitBounds(bounds)
+    leaflet.v.fitBounds(bounds)
   })
   return featureLayer
 }
@@ -438,10 +435,10 @@ const toggleFeatureLayer = async (region) => {
   console.log('Toggling feature layer:', region.name)
   flowlinesFeatureLayers.value.forEach((featureLayer) => {
     if (featureLayer.name !== region.name) {
-      featureLayer.removeFrom(leaflet.value)
+      featureLayer.removeFrom(leaflet.v)
       control.value.removeLayer(featureLayer)
     } else {
-      featureLayer.addTo(leaflet.value)
+      featureLayer.addTo(leaflet.v)
       activeFeatureLayer.value = featureLayer
       control.value.addOverlay(featureLayer, `Flowlines features - ${featureLayer.name}`)
     }
@@ -470,5 +467,4 @@ export {
   addCogsToMap,
   clearCogsFromMap,
   pendingLayerChanges,
-  setLeaflet,
 }

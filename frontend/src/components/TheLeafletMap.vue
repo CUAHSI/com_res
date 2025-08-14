@@ -10,8 +10,8 @@ import * as esriLeaflet from 'esri-leaflet'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, setLeaflet } from '@/helpers/map'
+import { onMounted, markRaw } from 'vue'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 
@@ -26,7 +26,7 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  setLeaflet(L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5))
+  leaflet.v = markRaw(L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5))
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -92,8 +92,8 @@ onMounted(() => {
     // updateWhenIdle: true
   })
 
-  CartoDB_PositronNoLabels.addTo(leaflet.value)
-  Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
+  CartoDB_PositronNoLabels.addTo(leaflet.v)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet.v)
 
   // layer toggling
   let mixed = {
@@ -118,7 +118,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  control.value = L.control.layers(baselayers, mixed).addTo(leaflet.value)
+  control.value = L.control.layers(baselayers, mixed).addTo(leaflet.v)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -131,14 +131,14 @@ onMounted(() => {
       title: ' Search',
       providers: providers
     })
-    .addTo(leaflet.value)
+    .addTo(leaflet.v)
 
   // add zoom control again they are ordered in the order they are added
   L.control
     .zoom({
       position: 'topleft'
     })
-    .addTo(leaflet.value)
+    .addTo(leaflet.v)
 
   // Erase
   L.easyButton(
@@ -147,21 +147,21 @@ onMounted(() => {
       clearSelection()
     },
     'clear selected features'
-  ).addTo(leaflet.value)
+  ).addTo(leaflet.v)
 
-  leaflet.value.on('zoomstart movestart', function () {
+  leaflet.v.on('zoomstart movestart', function () {
     isZooming.value = true
   })
 
   // on zoom event, log the current bounds and zoom level
-  leaflet.value.on('zoomend moveend', function () {
+  leaflet.v.on('zoomend moveend', function () {
     isZooming.value = false
-    let zoom = leaflet.value.getZoom()
+    let zoom = leaflet.v.getZoom()
     console.log('zoom level:', zoom)
     // log the bounds as [[lat, long], [lat, long]]
-    let bounds = leaflet.value.getBounds()
+    let bounds = leaflet.v.getBounds()
     console.log('bounds:', bounds._northEast, bounds._southWest)
-    console.log('map center:', leaflet.value.getCenter())
+    console.log('map center:', leaflet.v.getCenter())
   })
   mapLoaded.value = true
 })
@@ -271,7 +271,7 @@ function drawBbox() {
 
   mapObject.value.huclayers['BBOX'] = json_polygon
   if (featureStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(leaflet.value)
+    json_polygon.addTo(leaflet.v)
   }
 
   // TODO: Not sure if this is still needed
