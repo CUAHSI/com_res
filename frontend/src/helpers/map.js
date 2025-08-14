@@ -1,4 +1,4 @@
-import { nextTick, ref, shallowRef } from 'vue'
+import { nextTick, ref, shallowRef, markRaw } from 'vue'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
@@ -8,7 +8,8 @@ import { ENDPOINTS } from '@/constants'
 import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
 
-const leaflet = shallowRef(null)
+let _leaflet = shallowRef(null)
+const leaflet = _leaflet
 const wmsLayers = ref({})
 const mapObject = ref(new Map())
 const flowlinesFeatureLayers = ref([])
@@ -31,6 +32,10 @@ const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
 const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
 //const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
+
+function setLeaflet(map) {
+  _leaflet.value = markRaw(map)
+}
 
 const deselectFeature = (feature) => {
   try {
@@ -464,5 +469,6 @@ export {
   determineCogsForStage,
   addCogsToMap,
   clearCogsFromMap,
-  pendingLayerChanges
+  pendingLayerChanges,
+  setLeaflet,
 }
