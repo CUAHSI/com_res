@@ -234,6 +234,7 @@ const clearCogsFromMap = () => {
 
 const limitToBounds = (region) => {
   console.log('Limiting to bounds of region', region)
+  console.log('Region flowlines layer:', region.flowlinesLayer)
   region.flowlinesLayer.query().bounds(async function (error, bounds) {
     if (error) {
       console.log('Error running bounds query:')
@@ -276,32 +277,22 @@ async function createWMSLayers(region) {
   const response = await fetch(queryUrl)
   const data = await response.json()
   if (data && data.layers) {
-    console.log(`Creating WMS Layers for ${region.name}`)
     data.layers.forEach((layer) => {
-      // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
-      // https://developers.arcgis.com/esri-leaflet/api-reference/layers/tiled-map-layer/
-      // TODO: change this to L.esri.tiledMapLayer
-      const wmsLayer = esriLeaflet.dynamicMapLayer({
-        url: url,
-        pane: 'overlayPane',
-        layers: [layer.id],
+      url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region.name}/MapServer/WmsServer?`
+      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
+      console.log(layer)
+      
+      // https://leafletjs.com/examples/wms/wms.html
+      // https://leafletjs.com/reference.html#tilelayer-wms
+      const wmsLayer = L.tileLayer.wms(url,
+      {
+        layers: layer.id,
         transparent: true,
         format: 'image/png',
         minZoom: MIN_WMS_ZOOM,
-        // updateWhenIdle: true
+        tiled: true,
+        crossOrigin: true
       })
-      //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
-      //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
-      //      const wmsLayer = L.tileLayer.wms(url,
-      //      {
-      //        layers: layer.id,
-      //        transparent: true,
-      //        format: 'image/png',
-      //        minZoom: MIN_WMS_ZOOM,
-      //        tiled: true,
-      //        updateWhenIdle: true,
-      //            crossOrigin: true
-      //      })
 
       console.log(wmsLayer)
       wmsLayer.name = `${layer.name} - ${region.name}`
