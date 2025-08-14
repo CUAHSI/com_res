@@ -167,6 +167,8 @@ const determineCogsForStage = (cogs, stage) => {
 const addCogsToMap = (cogs) => {
   const alertStore = useAlertStore()
   console.log('Adding COGs to map:', cogs)
+  leaflet.value.createPane('rasterPane')
+  leaflet.value.getPane('rasterPane').style.zIndex = 600 // Set a high z-index for the raster pane
   try {
     for (let cog of cogs) {
       fetch(cog)
@@ -184,6 +186,7 @@ const addCogsToMap = (cogs) => {
               georaster: georaster,
               resolution: 128,
               opacity: 0.5,
+              pane: 'rasterPane',
               pixelValuesToColorFn: (pixelValues) => {
                 // Assuming pixelValues is an array of values, map them to colors
                 return pixelValues.map((value) => {
