@@ -1,4 +1,4 @@
-import { nextTick, ref, shallowRef, toRaw, markRaw } from 'vue'
+import { nextTick, ref, shallowRef } from 'vue'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
@@ -31,12 +31,6 @@ const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
 const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
 //const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
-
-const getRawMap = () => {
-  // Make sure to "unproxy" the map before using it with Leaflet
-  // https://stackoverflow.com/questions/65981712/uncaught-typeerror-this-map-is-null-vue-js-3-leaflet
-  return toRaw(leaflet.value)
-}
 
 const deselectFeature = (feature) => {
   try {
@@ -171,7 +165,6 @@ const determineCogsForStage = (cogs, stage) => {
  * @returns {void}
  */
 const addCogsToMap = (cogs) => {
-  const rawMap = getRawMap()
   const alertStore = useAlertStore()
   console.log('Adding COGs to map:', cogs)
   try {
@@ -205,8 +198,8 @@ const addCogsToMap = (cogs) => {
               bandIndex: 0, // Assuming the raster has a single band
               noDataValue: 0 // Assuming 0 is the no-data value
             })
-            raster.addTo(rawMap)
-            // rawMap.fitBounds(raster.getBounds())
+            raster.addTo(leaflet.value)
+            // leaflet.value.fitBounds(raster.getBounds())
             console.log(`Added GeoRasterLayer for ${cog}`)
           })
         })
@@ -228,17 +221,15 @@ const addCogsToMap = (cogs) => {
 
 const clearCogsFromMap = () => {
   console.log('Clearing all COGs from map')
-  const rawMap = getRawMap()
-  rawMap.eachLayer((layer) => {
+  leaflet.value.eachLayer((layer) => {
     if (layer instanceof GeoRasterLayer) {
       console.log('Removing GeoRasterLayer:', layer)
-      rawMap.removeLayer(layer)
+      leaflet.value.removeLayer(layer)
     }
   })
 }
 
 const limitToBounds = (region) => {
-  const rawMap = getRawMap()
   console.log('Limiting to bounds of region', region)
   region.flowlinesLayer.query().bounds(async function (error, bounds) {
     if (error) {
@@ -247,20 +238,20 @@ const limitToBounds = (region) => {
     }
     try {
       console.log('Setting bounds to:', bounds)
-      rawMap.setMaxBounds(null)
-      rawMap.setView([0, 0], 2)
-      rawMap.invalidateSize()
+      leaflet.value.setMaxBounds(null)
+      leaflet.value.setView([0, 0], 2)
+      leaflet.value.invalidateSize()
 
       // prevent panning from bounds
-      rawMap.setMaxBounds(bounds)
+      leaflet.value.setMaxBounds(bounds)
       // instead of fitbounds, use default zoom
-      // rawMap.fitBounds(bounds)
-      rawMap.setView(bounds.getCenter(), region.defaultZoom || 10)
-      const zoom = rawMap.getZoom()
+      // leaflet.value.fitBounds(bounds)
+      leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
+      const zoom = leaflet.value.getZoom()
       console.log('Current zoom level:', zoom)
       await nextTick()
       // prevent zooming out
-      rawMap.setMinZoom(zoom)
+      leaflet.value.setMinZoom(zoom)
     } catch (error) {
       console.warn('Error zooming to bounds:', error)
     }
@@ -322,20 +313,18 @@ async function createWMSLayers(region) {
 }
 
 async function addWMSLayers(region) {
-  const rawMap = getRawMap()
   for (let layer of wmsLayers.value[region.name] || []) {
     // only add layers that are part of the current region
     if (!layer.name.includes(region.name)) {
       console.warn(`Skipping layer ${layer.name} for region ${region.name}`)
       continue
     }
-    rawMap.addLayer(layer)
+    layer.addTo(leaflet.value)
     control.value.addOverlay(layer, layer.name)
   }
 }
 
 const toggleWMSLayers = (region) => {
-  const rawMap = getRawMap()
   // if the regionName is not in wmsLayers, create it
   if (!wmsLayers.value[region.name]) {
     createWMSLayers(region)
@@ -351,7 +340,7 @@ const toggleWMSLayers = (region) => {
     if (regionName !== region.name) {
       console.log(`Removing WMS layers for region: ${regionName}`)
       wmsLayers.value[regionName].forEach((wmsLayer) => {
-        rawMap.removeLayer(wmsLayer)
+        wmsLayer.removeFrom(leaflet.value)
         control.value.removeLayer(wmsLayer)
       })
     }
@@ -359,7 +348,6 @@ const toggleWMSLayers = (region) => {
 }
 
 function createFlowlinesFeatureLayer(region) {
-  const rawMap = getRawMap()
   const featureStore = useFeaturesStore()
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayer = esriLeaflet.featureLayer({
@@ -409,10 +397,10 @@ function createFlowlinesFeatureLayer(region) {
           </ul>
       </p>
       `
-    popup.setLatLng(e.latlng).setContent(content).openOn(rawMap)
+    popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.value)
     // zoom to the feature bounds
     const bounds = L.geoJSON(feature).getBounds()
-    rawMap.fitBounds(bounds)
+    leaflet.value.fitBounds(bounds)
   })
   return featureLayer
 }
@@ -432,7 +420,6 @@ function createFeatureLayerProvider(region) {
 }
 
 const toggleFeatureLayer = async (region) => {
-  const rawMap = getRawMap()
   // first check if the region is already added
   if (!flowlinesFeatureLayers.value.some((layer) => layer.name === region.name)) {
     console.log(`Adding feature layer for region: ${region.name}`)
@@ -446,10 +433,10 @@ const toggleFeatureLayer = async (region) => {
   console.log('Toggling feature layer:', region.name)
   flowlinesFeatureLayers.value.forEach((featureLayer) => {
     if (featureLayer.name !== region.name) {
-      featureLayer.removeFrom(rawMap)
+      featureLayer.removeFrom(leaflet.value)
       control.value.removeLayer(featureLayer)
     } else {
-      featureLayer.addTo(rawMap)
+      featureLayer.addTo(leaflet.value)
       activeFeatureLayer.value = featureLayer
       control.value.addOverlay(featureLayer, `Flowlines features - ${featureLayer.name}`)
     }
@@ -460,7 +447,6 @@ export {
   mapObject,
   mapLoaded,
   isZooming,
-  getRawMap,
   deselectFeature,
   selectFeature,
   clearAllFeatures,

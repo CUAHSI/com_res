@@ -11,7 +11,7 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, getRawMap } from '@/helpers/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 
@@ -92,10 +92,8 @@ onMounted(() => {
     // updateWhenIdle: true
   })
 
-  const rawMap = getRawMap()
-
-  CartoDB_PositronNoLabels.addTo(rawMap)
-  Esri_Hydro_Reference_Overlay.addTo(rawMap)
+  CartoDB_PositronNoLabels.addTo(leaflet.value)
+  Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
   let mixed = {
@@ -120,7 +118,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  control.value = L.control.layers(baselayers, mixed).addTo(rawMap)
+  control.value = L.control.layers(baselayers, mixed).addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -133,14 +131,14 @@ onMounted(() => {
       title: ' Search',
       providers: providers
     })
-    .addTo(rawMap)
+    .addTo(leaflet.value)
 
   // add zoom control again they are ordered in the order they are added
   L.control
     .zoom({
       position: 'topleft'
     })
-    .addTo(rawMap)
+    .addTo(leaflet.value)
 
   // Erase
   L.easyButton(
@@ -149,21 +147,21 @@ onMounted(() => {
       clearSelection()
     },
     'clear selected features'
-  ).addTo(rawMap)
+  ).addTo(leaflet.value)
 
-  rawMap.on('zoomstart movestart', function () {
+  leaflet.value.on('zoomstart movestart', function () {
     isZooming.value = true
   })
 
   // on zoom event, log the current bounds and zoom level
-  rawMap.on('zoomend moveend', function () {
+  leaflet.value.on('zoomend moveend', function () {
     isZooming.value = false
-    let zoom = rawMap.getZoom()
+    let zoom = leaflet.value.getZoom()
     console.log('zoom level:', zoom)
     // log the bounds as [[lat, long], [lat, long]]
-    let bounds = rawMap.getBounds()
+    let bounds = leaflet.value.getBounds()
     console.log('bounds:', bounds._northEast, bounds._southWest)
-    console.log('map center:', rawMap.getCenter())
+    console.log('map center:', leaflet.value.getCenter())
   })
   mapLoaded.value = true
 })
@@ -273,7 +271,7 @@ function drawBbox() {
 
   mapObject.value.huclayers['BBOX'] = json_polygon
   if (featureStore?.selectedModel?.input == 'bbox') {
-    json_polygon.addTo(rawMap)
+    json_polygon.addTo(leaflet.value)
   }
 
   // TODO: Not sure if this is still needed
