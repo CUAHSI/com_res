@@ -30,7 +30,7 @@ const stageValue = ref(5) // Default stage value for the slider
 const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
 const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
-//const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
+const COMRES_SERVICE_URL = 'https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes'
 
 const deselectFeature = (feature) => {
   try {
@@ -271,38 +271,45 @@ async function createWMSLayers(region) {
     console.log(`WMS layers for ${region.name} already exist, skipping creation.`)
     return
   }
-  let url = `${COMRES_REST_URL}/${region.name}/MapServer`
-  // first query the service just to get the layer names
-  const queryUrl = `${url}/layers?f=json`
-  const response = await fetch(queryUrl)
-  const data = await response.json()
-  if (data && data.layers) {
-    data.layers.forEach((layer) => {
-      url = `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region.name}/MapServer/WmsServer?`
-      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
-      console.log(layer)
-      
-      // https://leafletjs.com/examples/wms/wms.html
-      // https://leafletjs.com/reference.html#tilelayer-wms
-      const wmsLayer = L.tileLayer.wms(url,
-      {
-        layers: layer.id,
-        transparent: true,
-        format: 'image/png',
-        minZoom: MIN_WMS_ZOOM,
-        tiled: true,
-        crossOrigin: true
-      })
 
-      console.log(wmsLayer)
-      wmsLayer.name = `${layer.name} - ${region.name}`
+  const wmsUrl = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?request=GetCapabilities&service=WMS`;
+
+  try {
+    const response = await fetch(wmsUrl);
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(text, "text/xml");
+    
+    // Parse layer names from the XML
+    const layers = xmlDoc.getElementsByTagName("Layer");
+    for (let layer of layers) {
+      const nameElement = layer.getElementsByTagName("Name")[0];
+      if (!nameElement) continue;
+      
+      const titleElement = layer.getElementsByTagName("Title")[0];
+      const layerName = nameElement.textContent;
+      const layerTitle = titleElement ? titleElement.textContent : layerName;
+      
+      const wmsLayer = L.tileLayer.wms(
+        `https://arcgis.cuahsi.org/arcgis/services/CIROH-ComRes/${region.name}/MapServer/WmsServer?`, 
+        {
+          layers: layerName,
+          transparent: true,
+          format: 'image/png',
+          minZoom: MIN_WMS_ZOOM,
+          tiled: true,
+          crossOrigin: true
+        }
+      );
+      
+      wmsLayer.name = `${layerTitle} - ${region.name}`;
       wmsLayer.id = layer.id
-      wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
-      wmsLayers.value[region.name].push(wmsLayer)
+      wmsLayers.value[region.name] = wmsLayers.value[region.name] || [];
+      wmsLayers.value[region.name].push(wmsLayer);
       console.log(`Added WMS layer: ${wmsLayer.name} for region: ${region.name}`)
-    })
-  } else {
-    console.error(`No layers found for ${region.name}`)
+    }
+  } catch (error) {
+    console.error(`Error loading WMS capabilities for ${region.name}:`, error);
   }
 }
 
