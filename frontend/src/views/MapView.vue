@@ -191,7 +191,8 @@ const reachIdChanged = async (selected_reach) => {
 }
 
 const activeFeatureFimCogData = computed(() => {
-  return activeFeature.value?.properties?.fimCogData || null
+  if (!activeFeature.value || !activeFeature.value.properties) return null
+  return activeFeature.value.properties.fimCogData || null
 })
 
 const handleStageChange = () => {

@@ -1,4 +1,5 @@
 import { nextTick, ref, shallowRef } from 'vue'
+import { storeToRefs } from 'pinia'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
@@ -45,6 +46,8 @@ const deselectFeature = (feature) => {
 
 const selectFeature = async (feature) => {
   const alertStore = useAlertStore()
+  const featureStore = useFeaturesStore()
+  const { activeFeature } = storeToRefs(featureStore)
   try {
     activeFeatureLayer.value.setFeatureStyle(feature.id, {
       color: featureOptions.value.selectedColor,
@@ -59,7 +62,7 @@ const selectFeature = async (feature) => {
       console.log('Feature does not have FIM COG data, fetching...')
       // query FastAPI to get relevant geotiffs for the reach
       fimCogData = await fetchCogCatalogData(feature)
-      saveCatalogDataToFeature(feature, fimCogData)
+      saveCatalogDataToFeature(activeFeature, fimCogData)
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
@@ -113,13 +116,23 @@ const fetchCogCatalogData = async (feature) => {
   }
 }
 
-const saveCatalogDataToFeature = (feature, fimCogData) => {
+const saveCatalogDataToFeature = (featureRef, fimCogData) => {
   // Save the fetched FIM COG data to the feature properties
-  if (!feature.properties) {
-    feature.properties = {}
+  console.log('Saving FIM COG data to feature properties:')
+  if (!featureRef.value.properties) {
+    featureRef.value.properties = {}
   }
-  feature.properties.fimCogData = fimCogData
+  // featureRef.value.properties.fimCogData = fimCogData
+  featureRef.value = {
+  ...featureRef.value,
+  properties: {
+    ...featureRef.value.properties,
+    fimCogData: fimCogData
+  }
+}
+
   console.log('Saved FIM COG data to feature properties:', fimCogData)
+  console.log('Updated feature properties:', featureRef.value.properties)
 }
 
 /**
@@ -182,8 +195,9 @@ const addCogsToMap = (cogs) => {
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
-              resolution: 128,
-              opacity: 0.5,
+              resolution: 256,
+              opacity: 0.8,
+              zIndex: 1000, // Ensure it's above other layers
               pixelValuesToColorFn: (pixelValues) => {
                 // Assuming pixelValues is an array of values, map them to colors
                 return pixelValues.map((value) => {
@@ -207,7 +221,7 @@ const addCogsToMap = (cogs) => {
           console.error('Error fetching or parsing GeoTIFF:', error)
           alertStore.displayAlert({
             title: 'Error Loading COG',
-            text: 'There was an error loading the selected COG.',
+            text: `Failed to load COG: ${error.message}`,
             type: 'error',
             closable: true,
             duration: 5
@@ -216,6 +230,13 @@ const addCogsToMap = (cogs) => {
     }
   } catch (error) {
     console.error('Error loading GeoRasterLayer:', error)
+    alertStore.displayAlert({
+      title: 'Error',
+      text: `Failed to process COGs: ${error.message}`,
+      type: 'error',
+      closable: true,
+      duration: 5
+    })
   }
 }
 
@@ -284,7 +305,7 @@ async function createWMSLayers(region) {
         layers: [layer.id],
         transparent: true,
         format: 'image/png',
-        minZoom: MIN_WMS_ZOOM,
+        minZoom: MIN_WMS_ZOOM
         // updateWhenIdle: true
       })
       //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
