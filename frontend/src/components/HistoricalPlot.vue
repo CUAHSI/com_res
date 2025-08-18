@@ -1,17 +1,24 @@
 <template>
-  <v-sheet v-if="isLoading" class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
-    <v-skeleton-loader
-      v-if="isLoading"
-      type="heading, image "
-      :loading="isLoading"
-      class="mx-auto"
-    ></v-skeleton-loader>
-    <v-row justify="center" align="center" class="mt-4">
+  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+    <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
+    <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading historical data...</span>
     </v-row>
-  </v-sheet>
-  <LinePlot v-else :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+    <LinePlot v-if="!isLoading" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+    <v-card-actions class="position-relative">
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
+            :disabled="downloading.json" :loading="downloading.json" @click="downJson" icon size="small">
+            <v-icon :icon="mdiCodeJson"></v-icon>
+            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20"></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>Download JSON</span>
+      </v-tooltip>
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script setup>
@@ -19,6 +26,7 @@ import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose } from 'vue'
 import { API_BASE } from '@/constants'
+import { mdiCodeJson } from '@mdi/js'
 import {
   Chart as ChartJS,
   Title,
@@ -37,6 +45,7 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
+const downloading = ref({ json: false })
 const error = ref(null)
 
 const clearPlot = () => {
@@ -74,8 +83,50 @@ const getHistoricalData = async (reach_id, name, start_date, end_date) => {
   plot_title.value = 'Historical Streamflow - ' + name
 }
 
+async function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const downJson = async () => {
+  downloading.value.json = true
+  const jsonData = JSON.stringify(plot_timeseries.value, null, 2)
+  const blob = new Blob([jsonData], { type: 'application/json' })
+  let filename = getFileName()
+  await downloadBlob(blob, filename)
+  downloading.value.json = false
+}
+
+const getFileName = () => {
+  const date = new Date().toISOString().split('T')[0]
+  let filename = `${plot_title.value}${date}`
+  return filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+}
+
 defineExpose({
   getHistoricalData,
   clearPlot
 })
+
+defineProps({
+  show: {
+    type: Boolean,
+    required: true
+  }
+})
 </script>
+
+<style scoped>
+.chart-tooltip {
+  z-index: 99999 !important;
+}
+
+.chart-tooltip span {
+  white-space: normal;
+  word-break: normal;
+}
+</style>
