@@ -1,4 +1,5 @@
 import { nextTick, ref, shallowRef } from 'vue'
+import { storeToRefs } from 'pinia'
 import L, { canvas } from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
@@ -45,6 +46,8 @@ const deselectFeature = (feature) => {
 
 const selectFeature = async (feature) => {
   const alertStore = useAlertStore()
+  const featureStore = useFeaturesStore()
+  const { activeFeature } = storeToRefs(featureStore)
   try {
     activeFeatureLayer.value.setFeatureStyle(feature.id, {
       color: featureOptions.value.selectedColor,
@@ -59,7 +62,7 @@ const selectFeature = async (feature) => {
       console.log('Feature does not have FIM COG data, fetching...')
       // query FastAPI to get relevant geotiffs for the reach
       fimCogData = await fetchCogCatalogData(feature)
-      saveCatalogDataToFeature(feature, fimCogData)
+      saveCatalogDataToFeature(activeFeature, fimCogData)
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
@@ -113,13 +116,23 @@ const fetchCogCatalogData = async (feature) => {
   }
 }
 
-const saveCatalogDataToFeature = (feature, fimCogData) => {
+const saveCatalogDataToFeature = (featureRef, fimCogData) => {
   // Save the fetched FIM COG data to the feature properties
-  if (!feature.properties) {
-    feature.properties = {}
+  console.log('Saving FIM COG data to feature properties:')
+  if (!featureRef.value.properties) {
+    featureRef.value.properties = {}
   }
-  feature.properties.fimCogData = fimCogData
+  // featureRef.value.properties.fimCogData = fimCogData
+  featureRef.value = {
+  ...featureRef.value,
+  properties: {
+    ...featureRef.value.properties,
+    fimCogData: fimCogData
+  }
+}
+
   console.log('Saved FIM COG data to feature properties:', fimCogData)
+  console.log('Updated feature properties:', featureRef.value.properties)
 }
 
 /**
