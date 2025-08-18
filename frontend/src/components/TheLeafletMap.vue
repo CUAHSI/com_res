@@ -11,7 +11,7 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, toggleFeatureLayer, toggleWMSLayers } from '@/helpers/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, toggleFeatureLayer, createWMSLayers, addWMSLayers, toggleWMSLayers, wmsLayers } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '../stores/regions'
@@ -95,7 +95,7 @@ onMounted(() => {
   })
 
   CartoDB_PositronNoLabels.addTo(leaflet.value)
-  Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
+  // Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
   let mixed = {
@@ -114,74 +114,6 @@ onMounted(() => {
 
   // add the address search provider to the featureLayerProviders
   const providers = [addressSearchProvider, ...featureLayerProviders.value]
-
-  const wmsLayers = ref({})
-
-  const testWMS = async () => {
-    const REGION = "RoaringRiver"
-    const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
-    url = `${COMRES_REST_URL}/${REGION}/MapServer`
-    // first query the service just to get the layer names
-    const queryUrl = `${url}/layers?f=json`
-    const response = await fetch(queryUrl)
-    const data = await response.json()
-    if (data && data.layers) {
-      console.log(`Creating WMS Layers for ${REGION}`)
-      data.layers.forEach((layer) => {
-        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
-        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/tiled-map-layer/
-        // TODO: change this to L.esri.tiledMapLayer
-        const wmsLayer = esriLeaflet.dynamicMapLayer({
-          url: url,
-          pane: 'overlayPane',
-          layers: [layer.id],
-          transparent: true,
-          format: 'image/png',
-          minZoom: 9,
-          // updateWhenIdle: true
-        })
-        //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
-        //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
-        //      const wmsLayer = L.tileLayer.wms(url,
-        //      {
-        //        layers: layer.id,
-        //        transparent: true,
-        //        format: 'image/png',
-        //        minZoom: MIN_WMS_ZOOM,
-        //        tiled: true,
-        //        updateWhenIdle: true,
-        //            crossOrigin: true
-        //      })
-
-        console.log(wmsLayer)
-        wmsLayer.name = `${layer.name} - ${REGION}`
-        wmsLayer.id = layer.id
-        wmsLayer.addTo(leaflet.value)
-        control.value.addOverlay(wmsLayer, wmsLayer.name)
-        wmsLayers.value[REGION] = wmsLayers.value[REGION] || []
-        wmsLayers.value[REGION].push(wmsLayer)
-        console.log(`Added WMS layer: ${wmsLayer.name} for region: ${REGION}`)
-      })
-    } else {
-      console.error(`No layers found for ${REGION}`)
-    }
-  }
-
-  const region = regionsStore.regions[0]
-
-  // testWMS()
-  // if we use toggleWMSLayers, we get errors
-  toggleWMSLayers(region)
-
-  toggleFeatureLayer(region)
-
-  // zoom to bounds
-const mapCenter = {
-  "lat": 36.595684037179076,
-  "lng": -93.78015518188478
-}
-
-  leaflet.value.setView(mapCenter, 10)
 
   // /*
   //  * LEAFLET BUTTONS
@@ -233,6 +165,96 @@ const mapCenter = {
     console.log('bounds:', bounds._northEast, bounds._southWest)
     console.log('map center:', leaflet.value.getCenter())
   })
+
+  const testWMS = async () => {
+    const REGION = "RoaringRiver"
+    const wmsLayers = ref({})
+    const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
+    url = `${COMRES_REST_URL}/${REGION}/MapServer`
+    // first query the service just to get the layer names
+    const queryUrl = `${url}/layers?f=json`
+    const response = await fetch(queryUrl)
+    const data = await response.json()
+    if (data && data.layers) {
+      console.log(`Creating WMS Layers for ${REGION}`)
+      data.layers.forEach((layer) => {
+        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
+        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/tiled-map-layer/
+        // TODO: change this to L.esri.tiledMapLayer
+        const wmsLayer = esriLeaflet.dynamicMapLayer({
+          url: url,
+          pane: 'overlayPane',
+          layers: [layer.id],
+          transparent: true,
+          format: 'image/png',
+          minZoom: 9,
+          // updateWhenIdle: true
+        })
+        //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
+        //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
+        //      const wmsLayer = L.tileLayer.wms(url,
+        //      {
+        //        layers: layer.id,
+        //        transparent: true,
+        //        format: 'image/png',
+        //        minZoom: MIN_WMS_ZOOM,
+        //        tiled: true,
+        //        updateWhenIdle: true,
+        //            crossOrigin: true
+        //      })
+
+        console.log(wmsLayer)
+        wmsLayer.name = `${layer.name} - ${REGION}`
+        wmsLayer.id = layer.id
+        wmsLayer.addTo(leaflet.value)
+        control.value.addOverlay(wmsLayer, wmsLayer.name)
+        wmsLayers.value[REGION] = wmsLayers.value[REGION] || []
+        wmsLayers.value[REGION].push(wmsLayer)
+        console.log(`Added WMS layer: ${wmsLayer.name} for region: ${REGION}`)
+      })
+    } else {
+      console.error(`No layers found for ${REGION}`)
+    }
+  }
+
+  const region = regionsStore.regions[0]
+
+  // testWMS()
+
+  const testAdd = async () => {
+    console.log('Adding WMS Layers')
+    // addWMSLayers(region)
+    for (let layer of wmsLayers.value[region.name] || []) {
+      // only add layers that are part of the current region
+      if (!layer.name.includes(region.name)) {
+        console.warn(`Skipping layer ${layer.name} for region ${region.name}`)
+        continue
+      }
+      layer.addTo(leaflet.value)
+      control.value.addOverlay(layer, layer.name)
+      console.log(`Added WMS layer: ${layer.name} for region: ${region.name}`)
+    }
+  }
+
+  const testToggle = async () => {
+    console.log('Toggling WMS Layers')
+    await createWMSLayers(region)
+    // addWMSLayers(region)
+    testAdd()
+  }
+
+  testToggle()
+  // toggleFeatureLayer(region)
+
+  // zoom to bounds
+  const mapCenter = {
+    "lat": 36.595684037179076,
+    "lng": -93.78015518188478
+  }
+
+  leaflet.value.setView(mapCenter, 10)
+
+
   mapLoaded.value = true
 })
 

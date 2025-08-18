@@ -9,7 +9,8 @@ import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
 
 const leaflet = shallowRef(null)
-const wmsLayers = ref({})
+// TODO: looks like we need to make these layers shallow!
+const wmsLayers = shallowRef({})
 const mapObject = ref(new Map())
 const flowlinesFeatureLayers = ref([])
 const featureLayerProviders = shallowRef([])
@@ -305,7 +306,7 @@ async function createWMSLayers(region) {
       wmsLayer.id = layer.id
       wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
       wmsLayers.value[region.name].push(wmsLayer)
-      console.log(`Added WMS layer: ${wmsLayer.name} for region: ${region.name}`)
+      console.log(`Created WMS layer: ${wmsLayer.name} for region: ${region.name}`)
     })
   } else {
     console.error(`No layers found for ${region.name}`)
@@ -464,6 +465,7 @@ export {
   stageValue,
   determineCogsForStage,
   addCogsToMap,
+  addWMSLayers,
   clearCogsFromMap,
   pendingLayerChanges
 }
