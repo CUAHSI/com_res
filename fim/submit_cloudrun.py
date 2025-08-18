@@ -11,17 +11,19 @@ Notes:
 pip install google-auth google-auth-oauthlib google-api-python-client
 """
 
+import re
 import time
-from datetime import datetime
 import json
-from pathlib import Path
-from typing import List
 import typer
+from typing import List
+from pathlib import Path
 from rich.live import Live
 from rich.table import Table
-from rich.console import Console
-
+from datetime import datetime
 from google.auth import default
+from google.cloud import storage
+from rich.console import Console
+from typing_extensions import Annotated
 from googleapiclient.discovery import build
 
 
@@ -32,6 +34,7 @@ console = Console()
 PROJECT_ID = "com-res"
 REGION = "us-central1"
 JOB_NAME = "fimserv"
+GCS_BUCKET_NAME = "com_res_fim_output"
 
 
 def execute_job(run_client, args: List[str]):
@@ -67,36 +70,8 @@ def get_execution_status(run_client, execution_id):
     return "PENDING"
 
 
-@app.command()
-def run(file: Path):
-
-    # Use ADC
-    credentials, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-    run_client = build("run", "v2", credentials=credentials)
-
-    # Read lines (args)
-    lines = [line.strip() for line in file.read_text().splitlines() if line.strip()]
-    jobs = []
-
-    # Start all jobs
-    for line in lines:
-        args = line.split(",")
-
-        # pass the reachid as an argument so that outputs are saved in
-        # a subdirectory named after the reachid
-        args.append(f"{args[2]}")
-
-        execution_id = execute_job(run_client, args)
-        jobs.append(
-            {
-                "args": line,
-                "execution": execution_id,
-                "status": "Starting",
-                "start_time": datetime.now(),
-                "elapsed_time": "---",
-            }
-        )
-
+def show_progress_long(run_client, jobs):
+    failed = []
     # Live status table
     TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELLED"}
     with Live(refresh_per_second=2) as live:
@@ -121,6 +96,9 @@ def run(file: Path):
                         f"{round(minutes,0)} min {round(seconds,0)} sec"
                     )
 
+                    if job["status"] == "FAILED":
+                        failed.append(job["args"].split(",")[2])
+
                 # add data to the table
                 table.add_row(
                     job["execution"].split("/")[-1],
@@ -141,6 +119,124 @@ def run(file: Path):
             # exit if all jobs are done
             if all_done:
                 break
+    return failed
+
+
+def show_progress_short(run_client, jobs):
+    failed = []
+
+    # Live status table
+    TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELLED"}
+    count_succeeded = 0
+    count_running = len(jobs)
+    with Live(refresh_per_second=2) as live:
+        while True:
+            all_done = True
+            table = Table(title="Cloud Run Job Status", expand=True)
+            table.add_column("Number of Jobs", style="magenta")
+            table.add_column("Status", style="green", no_wrap=True)
+
+            for job in jobs:
+                if job["status"] not in TERMINAL_STATES:
+                    # only recheck the status of running jobs
+                    job["status"] = get_execution_status(run_client, job["execution"])
+
+                    if job["status"] == "FAILED":
+                        failed.append(job["args"].split(",")[2])
+                        count_running -= 1
+                    elif job["status"] == "SUCCEEDED":
+                        count_succeeded += 1
+                        count_running -= 1
+
+                # if one job is still running, we need to keep checking
+                if job["status"] not in TERMINAL_STATES:
+                    all_done = False
+
+            # add data to the table
+            table.add_row(str(count_running), "Running")
+            table.add_row(str(count_succeeded), "Succeeded")
+            table.add_row(str(len(failed)), "Failed")
+
+            # update the ui
+            live.update(table)
+            time.sleep(3)
+
+            # exit if all jobs are done
+            if all_done:
+                break
+    return failed
+
+
+@app.command()
+def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False):
+
+    # Use ADC
+    credentials, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+    run_client = build("run", "v2", credentials=credentials)
+
+    # Read lines (args)
+    lines = [line.strip() for line in file.read_text().splitlines() if line.strip()]
+    jobs = []
+
+    print("Reading data stored in cloud bucket...", end="", flush=True)
+    client = storage.Client()
+    pattern = re.compile(r"^flood_[\d]+/[\d]+_inundation/\d+/")
+    matching_dirs = []
+    for blob in client.list_blobs(GCS_BUCKET_NAME):
+        match = pattern.match(blob.name)
+        if match:
+            matching_dirs.append(match.group(0))
+    print("done")
+
+    failed_reachids = []
+    if Path("failed_reachids.txt").exists():
+        with open(Path("failed_reachids.txt"), "r") as f:
+            failed_reachids = f.read().splitlines()
+
+    # Start all jobs
+    submitted_job_count = 0
+    for line in lines:
+        args = line.split(",")
+
+        # skip jobs that already have been processed and saved in the output bucket
+        out_dir_name_in_cloud = f"flood_{args[1]}/{args[1]}_inundation/{args[2]}/"
+        if out_dir_name_in_cloud in matching_dirs:
+            continue
+
+        # skip jobs that have failed before
+        if args[2] in failed_reachids:
+            continue
+
+        # pass the reachid as an argument so that outputs are saved in
+        # a subdirectory named after the reachid
+        args.append(f"{args[2]}")
+
+        execution_id = execute_job(run_client, args)
+        jobs.append(
+            {
+                "args": line,
+                "execution": execution_id,
+                "status": "Starting",
+                "start_time": datetime.now(),
+                "elapsed_time": "---",
+            }
+        )
+        submitted_job_count += 1
+        if submitted_job_count >= 140:
+            print("Reached the maximum number of jobs to submit (140).")
+            break
+
+    print(f"Number of Jobs submitted: {submitted_job_count}")
+
+    if verbose:
+        failed = show_progress_long(run_client, jobs)
+    else:
+        failed = show_progress_short(run_client, jobs)
+
+    # save the failed jobs to review later
+    print(f"{len(failed)} jobs failed. See failed_reachids.txt for details.")
+    with open("failed_reachids.txt", "a") as f:
+        f.write("\n".join(failed))
 
 
 if __name__ == "__main__":
