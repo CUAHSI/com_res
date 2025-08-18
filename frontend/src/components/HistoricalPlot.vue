@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="show" class="mx-auto chart-card" elevation="8" style="height: calc(30vh); width: 100%">
+  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
     <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
@@ -121,16 +121,10 @@ defineProps({
 </script>
 
 <style scoped>
-.chart-card {
-  position: relative; /* Needed for z-index context */
-  z-index: 1; /* Base z-index */
-}
-
 .chart-tooltip {
-  z-index: 1000 !important; /* Higher than other elements */
+  z-index: 99999 !important;
 }
 
-/* Optional: Make tooltip text wrap properly */
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
