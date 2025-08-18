@@ -9,9 +9,9 @@ import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
 
 const leaflet = shallowRef(null)
-const wmsLayers = ref({})
+const wmsLayers = shallowRef({})
 const mapObject = ref(new Map())
-const flowlinesFeatureLayers = ref([])
+const flowlinesFeatureLayers = shallowRef([])
 const featureLayerProviders = shallowRef([])
 const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
