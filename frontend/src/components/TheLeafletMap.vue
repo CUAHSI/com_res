@@ -11,7 +11,7 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, toggleFeatureLayer } from '@/helpers/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, toggleFeatureLayer, toggleWMSLayers } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import { useRegionsStore } from '../stores/regions'
@@ -167,9 +167,11 @@ onMounted(() => {
     }
   }
 
-  testWMS()
-
   const region = regionsStore.regions[0]
+
+  // testWMS()
+  // if we use toggleWMSLayers, we get errors
+  toggleWMSLayers(region)
 
   toggleFeatureLayer(region)
 
