@@ -458,6 +458,7 @@ export {
   featureLayerProviders,
   activeFeatureLayer,
   toggleWMSLayers,
+  createWMSLayers,
   toggleFeatureLayer,
   control,
   stageValue,

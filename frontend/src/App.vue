@@ -72,17 +72,17 @@ function toggleMobileNav() {
   showMobileNavigation.value = !showMobileNavigation.value
 }
 
-watch(
-  () => router.currentRoute.value.path,
-  async (path) => {
-    if (path === '/maps') {
-      const { region } = router.currentRoute.value.query
-      if (region) {
-        regionsStore.setRegion(region)
-      }
-    }
-  }
-)
+// watch(
+//   () => router.currentRoute.value.path,
+//   async (path) => {
+//     if (path === '/maps') {
+//       const { region } = router.currentRoute.value.query
+//       if (region) {
+//         regionsStore.setRegion(region)
+//       }
+//     }
+//   }
+// )
 </script>
 
 <style scoped>

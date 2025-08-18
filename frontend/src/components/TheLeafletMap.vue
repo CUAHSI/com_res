@@ -10,7 +10,7 @@ import * as esriLeaflet from 'esri-leaflet'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
@@ -26,7 +26,7 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer', { zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false }).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -112,6 +112,68 @@ onMounted(() => {
 
   // add the address search provider to the featureLayerProviders
   const providers = [addressSearchProvider, ...featureLayerProviders.value]
+
+  const wmsLayers = ref({})
+
+  const testWMS = async () => {
+    const REGION = "RoaringRiver"
+    const COMRES_REST_URL = 'https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes'
+    url = `${COMRES_REST_URL}/${REGION}/MapServer`
+    // first query the service just to get the layer names
+    const queryUrl = `${url}/layers?f=json`
+    const response = await fetch(queryUrl)
+    const data = await response.json()
+    if (data && data.layers) {
+      console.log(`Creating WMS Layers for ${REGION}`)
+      data.layers.forEach((layer) => {
+        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
+        // https://developers.arcgis.com/esri-leaflet/api-reference/layers/tiled-map-layer/
+        // TODO: change this to L.esri.tiledMapLayer
+        const wmsLayer = esriLeaflet.dynamicMapLayer({
+          url: url,
+          pane: 'overlayPane',
+          layers: [layer.id],
+          transparent: true,
+          format: 'image/png',
+          minZoom: 9,
+          // updateWhenIdle: true
+        })
+        //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
+        //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
+        //      const wmsLayer = L.tileLayer.wms(url,
+        //      {
+        //        layers: layer.id,
+        //        transparent: true,
+        //        format: 'image/png',
+        //        minZoom: MIN_WMS_ZOOM,
+        //        tiled: true,
+        //        updateWhenIdle: true,
+        //            crossOrigin: true
+        //      })
+
+        console.log(wmsLayer)
+        wmsLayer.name = `${layer.name} - ${REGION}`
+        wmsLayer.id = layer.id
+        wmsLayer.addTo(leaflet.value)
+        control.value.addOverlay(wmsLayer, wmsLayer.name)
+        wmsLayers.value[REGION] = wmsLayers.value[REGION] || []
+        wmsLayers.value[REGION].push(wmsLayer)
+        console.log(`Added WMS layer: ${wmsLayer.name} for region: ${REGION}`)
+      })
+    } else {
+      console.error(`No layers found for ${REGION}`)
+    }
+  }
+
+  testWMS()
+
+  // zoom to bounds
+const mapCenter = {
+  "lat": 36.595684037179076,
+  "lng": -93.78015518188478
+}
+
+  leaflet.value.setView(mapCenter, 10)
 
   // /*
   //  * LEAFLET BUTTONS
