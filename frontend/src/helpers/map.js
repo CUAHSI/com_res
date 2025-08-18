@@ -124,12 +124,12 @@ const saveCatalogDataToFeature = (featureRef, fimCogData) => {
   }
   // featureRef.value.properties.fimCogData = fimCogData
   featureRef.value = {
-  ...featureRef.value,
-  properties: {
-    ...featureRef.value.properties,
-    fimCogData: fimCogData
+    ...featureRef.value,
+    properties: {
+      ...featureRef.value.properties,
+      fimCogData: fimCogData
+    }
   }
-}
 
   console.log('Saved FIM COG data to feature properties:', fimCogData)
   console.log('Updated feature properties:', featureRef.value.properties)
@@ -191,7 +191,6 @@ const addCogsToMap = (cogs) => {
             which means we can use GridLayer options like opacity.
             http://leafletjs.com/reference-1.2.0.html#gridlayer
           */
-        //  TODO: use a canvas to control the z-index
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
@@ -403,7 +402,7 @@ function createFlowlinesFeatureLayer(region) {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
-    const popup = L.popup()
+
     const content = `
       ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
       ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
@@ -418,7 +417,15 @@ function createFlowlinesFeatureLayer(region) {
           </ul>
       </p>
       `
-    popup.setLatLng(e.latlng).setContent(content).openOn(leaflet.value)
+    L.popup({
+      keepInView: true, // This ensures the popup stays visible when zooming
+      autoClose: false, // Optional: keeps the popup open
+      maxWidth: 300 // Optional: sets maximum width
+    })
+      .setLatLng(e.latlng)
+      .setContent(content)
+      .openOn(leaflet.value)
+
     // zoom to the feature bounds
     const bounds = L.geoJSON(feature).getBounds()
     leaflet.value.fitBounds(bounds)
