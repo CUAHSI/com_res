@@ -1,21 +1,21 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import RoaringRiverStatePark from '@/assets/RoaringRiverStatePark.png'
+import RoaringRiver from '@/assets/RoaringRiver.png'
 import DeSoto from '@/assets/DeSoto.png'
 import SpringfieldGreeneCounty from '@/assets/SpringfieldGreeneCounty.png'
 import MountAscutney from '@/assets/MountAscutney.png'
 import TwoRiversOttauquechee from '@/assets/TwoRiversOttauquechee.png'
 import Windham from '@/assets/Windham.png'
-import { useMapStore } from '@/stores/map'
+import * as mapHelpers from '@/helpers/map'
 import { nextTick } from 'vue'
 
 export const useRegionsStore = defineStore('regions', () => {
   const currentRegion = ref(null)
   const regions = ref([
     {
-      image: RoaringRiverStatePark,
+      image: RoaringRiver,
       title: 'Roaring River State Park',
-      name: 'RoaringRiverStatePark',
+      name: 'RoaringRiver',
       text: `A popular outdoor destination nestled within the rugged terrain of the
              Ozark Plateau’s karst landscape, Roaring River State Park is located
              located eight miles south of Cassville in Barry County, Missouri, 
@@ -90,21 +90,20 @@ export const useRegionsStore = defineStore('regions', () => {
   ])
   const setRegion = async (regionName) => {
     console.log('Setting region to:', regionName)
-    const mapStore = useMapStore()
     const region = regions.value.find((region) => region.name === regionName)
     if (!region) {
       console.error(`Region ${regionName} not found`)
       return
     }
     currentRegion.value = region
-    mapStore.toggleWMSLayers(region)
+    mapHelpers.toggleWMSLayers(region)
     await nextTick()
     try {
-      await mapStore.toggleFeatureLayer(region)
+      await mapHelpers.toggleFeatureLayer(region)
     } catch (error) {
       console.error('Error toggling feature layer:', error)
     }
-    mapStore.limitToBounds(region)
+    mapHelpers.limitToBounds(region)
   }
 
   return {

@@ -268,8 +268,8 @@ def __convert_to_cog(root_dir: Path) -> None:
                 text=True,
             )
 
-            os.remove(input_tif)
-            print(f"Converted to COG and deleted original: {input_tif}")
+        # os.remove(input_tif)
+        # print(f"Converted to COG and deleted original: {input_tif}")
 
         except subprocess.CalledProcessError as e:
             msg = f"Error converting {input_tif} to COG: {e}. STDOUT: {e.stdout}. STDERR: {e.stderr}"

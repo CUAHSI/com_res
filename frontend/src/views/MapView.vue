@@ -1,5 +1,5 @@
 <template>
-  <v-overlay :model-value="!mapStore.mapLoaded" class="align-center justify-center">
+  <v-overlay :model-value="!mapHelpers.mapLoaded" class="align-center justify-center">
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
 
@@ -51,7 +51,7 @@
 
     <TheStageSlider
       v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
-      v-model="stageValue"
+      v-model="mapHelpers.stageValue.value"
       :min="activeFeatureFimCogData.stages_m[0]"
       :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
       :stages="activeFeatureFimCogData.stages_m"
@@ -82,7 +82,6 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
-import { useMapStore } from '@/stores/map'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
@@ -92,9 +91,9 @@ import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
 import InfoIcon from '../components/InfoTooltip.vue'
+import * as mapHelpers from '@/helpers/map'
 
 const { mdAndDown } = useDisplay()
-const mapStore = useMapStore()
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -105,7 +104,6 @@ const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
 const { activeFeature, getFeatureName } = storeToRefs(featureStore)
-const { stageValue } = storeToRefs(mapStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -168,37 +166,38 @@ const toggle = async (component_name) => {
 }
 
 const activeFeatureFimCogData = computed(() => {
-  return activeFeature.value?.properties?.fimCogData || null
+  if (!activeFeature.value || !activeFeature.value.properties) return null
+  return activeFeature.value.properties.fimCogData || null
 })
 
 const handleStageChange = () => {
-  console.log('Stage value changed:', stageValue.value)
+  console.log('Stage value changed:', mapHelpers.stageValue.value)
   // enable "snapping to nearest stage" functionality
   // if the stage value is not in the list of stages
-  if (!activeFeatureFimCogData.value.stages_m.includes(stageValue.value)) {
+  if (!activeFeatureFimCogData.value.stages_m.includes(mapHelpers.stageValue.value)) {
     // find the nearest stage value
     const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
-      return Math.abs(curr - stageValue.value) < Math.abs(prev - stageValue.value) ? curr : prev
+      return Math.abs(curr - mapHelpers.stageValue.value) < Math.abs(prev - mapHelpers.stageValue.value) ? curr : prev
     })
-    stageValue.value = nearestStage
+    mapHelpers.stageValue.value = nearestStage
     console.log('Snapped to nearest stage:', nearestStage)
   }
-  const cogUrls = mapStore.determineCogsForStage(
+  const cogUrls = mapHelpers.determineCogsForStage(
     activeFeatureFimCogData.value.files,
     activeFeatureFimCogData.value.stages_m
   )
   if (cogUrls.length === 0) {
     alertStore.displayAlert({
       title: 'No Data Available',
-      text: `There are no COGs available for the selected stage: ${stageValue.value}m.`,
+      text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}m.`,
       type: 'warning',
       closable: true,
       duration: 5
     })
     return
   }
-  mapStore.clearCogsFromMap()
-  mapStore.addCogsToMap(cogUrls)
+  mapHelpers.clearCogsFromMap()
+  mapHelpers.addCogsToMap(cogUrls)
 }
 </script>
 <style scoped>
