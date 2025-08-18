@@ -88,7 +88,6 @@ class AnalysisAssim:
                 url = future_to_url[future]
                 try:
                     res = future.result()
-
                     # attempt to get the status code.
                     # if one is not returned, we should log
                     # it as an error.

@@ -156,12 +156,6 @@ onMounted(() => {
   // on zoom event, log the current bounds and zoom level
   leaflet.value.on('zoomend moveend', function () {
     isZooming.value = false
-    let zoom = leaflet.value.getZoom()
-    console.log('zoom level:', zoom)
-    // log the bounds as [[lat, long], [lat, long]]
-    let bounds = leaflet.value.getBounds()
-    console.log('bounds:', bounds._northEast, bounds._southWest)
-    console.log('map center:', leaflet.value.getCenter())
   })
   mapLoaded.value = true
 })

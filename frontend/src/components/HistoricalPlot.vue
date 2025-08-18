@@ -1,5 +1,5 @@
 <template>
-  <v-sheet v-if="isLoading" class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
+  <v-sheet v-if="isLoading" class="mx-auto" elevation="2" style="height: calc(25vh); width: 100%">
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
@@ -11,13 +11,105 @@
       <span class="ml-3">Loading historical data...</span>
     </v-row>
   </v-sheet>
-  <LinePlot v-else :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+
+  <v-sheet v-else class="mx-auto" elevation="2" rounded style="height: calc(25vh); width: 100%">
+    <v-row align="center" justify="end" class="mb-2">
+      <v-menu
+        v-model="timeSelectionMenu"
+        location="right top"
+        content-class="menu-content"
+        attach="body"
+        :close-on-content-click="false"
+        :persistent="true"
+        :retain-focus="false"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-tooltip text="Adjust Start and End Dates" location="right" style="z-index: 9999">
+            <template #activator="{ props: tooltipProps }">
+              <v-btn
+                v-bind="{ ...menuProps, ...tooltipProps }"
+                icon
+                style="position: absolute; right: 8px; top: 8px; z-index: 1000"
+              >
+                <v-icon color="green-darken-2">{{ mdiCalendarExpandHorizontal }}</v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
+        </template>
+        <v-sheet style="margin-left: 16px; min-width: 300px">
+          <v-list>
+            <v-list-item>
+              <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedStartDate"
+                    label="Start Date"
+                    readonly
+                    density="compact"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="tempStartDate"
+                  :min="'2016-01-01'"
+                  :max="
+                    tempEndDate
+                      ? new Date(new Date(tempEndDate).setDate(new Date(tempEndDate).getDate() - 1))
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (startMenu = false)"
+                ></v-date-picker>
+              </v-menu>
+            </v-list-item>
+            <v-list-item>
+              <v-menu v-model="endMenu" :close-on-content-click="false" offset-y min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedEndDate"
+                    label="End Date"
+                    readonly
+                    density="compact"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="tempEndDate"
+                  :min="
+                    tempStartDate
+                      ? new Date(
+                          new Date(tempStartDate).setDate(new Date(tempStartDate).getDate() + 1)
+                        )
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (endMenu = false)"
+                ></v-date-picker>
+              </v-menu>
+            </v-list-item>
+            <v-list-item class="d-flex justify-end">
+              <v-btn class="mt-2" color="primary" @click="onTimeSelectionClose">Apply</v-btn>
+            </v-list-item>
+          </v-list>
+        </v-sheet>
+      </v-menu>
+    </v-row>
+    <LinePlot
+      :timeseries="plot_timeseries"
+      :title="plot_title"
+      :style="plot_style"
+      style="box-shadow: none !important; margin: 0; padding: 0"
+    />
+  </v-sheet>
 </template>
 
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose } from 'vue'
+import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
+import { mdiCalendarExpandHorizontal } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import {
   Chart as ChartJS,
@@ -33,11 +125,69 @@ import {
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
+// define properties that can be passed to this component
+const props = defineProps({
+  reachid: Number,
+  reachname: String
+})
+const reach_id = toRef(props, 'reachid') // make this property reactive to it triggers watch()
+const reach_name = toRef(props, 'reachname') // make this property reactive to it triggers watch()
+
 const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
 const error = ref(null)
+
+// objects to hold the date values
+// these are the raw date values used in the date picker
+const startDate = ref(null)
+const endDate = ref(null)
+const tempStartDate = ref(null)
+const tempEndDate = ref(null)
+
+// bool that shows/hides the date picker menus
+// true = visible, false = hidden
+const startMenu = ref(false)
+const endMenu = ref(false)
+const timeSelectionMenu = ref(false)
+
+// helper function to convert Date objects to ISO date strings
+const toIsoDate = (date) => date.toISOString().split('T')[0]
+
+// Function to initialize startDate and endDate.
+// This is only called once when the component is mounted.
+const initializeDates = () => {
+  // Set the initial state for the time ranges
+  // used in the historical plot.
+
+  // start date is 90 days before the current date
+  const today = new Date()
+  const initialStart = new Date(today)
+  initialStart.setDate(today.getDate() - 90)
+
+  startDate.value = initialStart
+  endDate.value = today
+}
+
+// Formatted display values
+const formattedStartDate = computed({
+  get() {
+    return tempStartDate.value ? new Date(tempStartDate.value).toLocaleDateString() : ''
+  },
+  set(value) {
+    tempStartDate.value = value ? toIsoDate(new Date(value)) : null
+  }
+})
+
+const formattedEndDate = computed({
+  get() {
+    return tempEndDate.value ? new Date(tempEndDate.value).toLocaleDateString() : ''
+  },
+  set(value) {
+    tempEndDate.value = value ? toIsoDate(new Date(value)) : null
+  }
+})
 
 const clearPlot = () => {
   plot_timeseries.value = []
@@ -45,17 +195,33 @@ const clearPlot = () => {
   plot_style.value = {}
 }
 
-const getHistoricalData = async (reach_id, name, start_date, end_date) => {
+// function to handle the closing of the date selection menu,
+// this function is called when the user clicks the "Apply" button.
+// This is necessary to ensure that nested v-menus close properly.
+function onTimeSelectionClose() {
+  // Close the date selection menu
+  timeSelectionMenu.value = false
+
+  // Trigger data fetch with updated dates,
+  // which will trigger the watch function that
+  // updates the lineplot.
+  startDate.value = tempStartDate.value
+  endDate.value = tempEndDate.value
+}
+
+// Collects historical plot data from the CIROH NWM API
+const getHistoricalData = async () => {
   try {
     isLoading.value = true
     error.value = null
 
     const params = new URLSearchParams({
-      reach_id: reach_id,
-      start_date: start_date.toISOString().split('T')[0],
-      end_date: end_date.toISOString().split('T')[0],
+      reach_id: reach_id.value,
+      start_date: toIsoDate(startDate.value),
+      end_date: toIsoDate(endDate.value),
       offset: 3
     })
+
     const response = await fetch(`${API_BASE}/timeseries/nwm-historical?${params.toString()}`)
 
     if (!response.ok) {
@@ -71,11 +237,40 @@ const getHistoricalData = async (reach_id, name, start_date, end_date) => {
     isLoading.value = false
   }
 
-  plot_title.value = 'Historical Streamflow - ' + name
+  plot_title.value = 'Historical Streamflow - ' + reach_name.value
 }
+
+// Re-collects historical plot data whenever the
+// startDate, endDate, or reachID change
+watch([startDate, endDate, reach_id], async () => {
+  if (startDate.value && endDate.value && reach_id.value) {
+    await getHistoricalData()
+  }
+})
+
+// sync temp dates and actual dates when the menu opens
+// this is to ensure that the date pickers show the
+// actual dates in the lineplot when the menu is initially  opened
+watch(timeSelectionMenu, (isOpen) => {
+  if (isOpen) {
+    tempStartDate.value = startDate.value
+    tempEndDate.value = endDate.value
+  }
+})
 
 defineExpose({
   getHistoricalData,
   clearPlot
 })
+
+onMounted(() => {
+  // Call the initialization function on setup
+  initializeDates()
+})
 </script>
+
+<style>
+.menu-content {
+  z-index: 5000 !important;
+}
+</style>
