@@ -182,8 +182,9 @@ const addCogsToMap = (cogs) => {
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
-              resolution: 128,
-              opacity: 0.5,
+              resolution: 256,
+              opacity: 0.8,
+              zIndex: 1000, // Ensure it's above other layers
               pixelValuesToColorFn: (pixelValues) => {
                 // Assuming pixelValues is an array of values, map them to colors
                 return pixelValues.map((value) => {
@@ -207,7 +208,7 @@ const addCogsToMap = (cogs) => {
           console.error('Error fetching or parsing GeoTIFF:', error)
           alertStore.displayAlert({
             title: 'Error Loading COG',
-            text: 'There was an error loading the selected COG.',
+            text: `Failed to load COG: ${error.message}`,
             type: 'error',
             closable: true,
             duration: 5
@@ -216,6 +217,13 @@ const addCogsToMap = (cogs) => {
     }
   } catch (error) {
     console.error('Error loading GeoRasterLayer:', error)
+    alertStore.displayAlert({
+      title: 'Error',
+      text: `Failed to process COGs: ${error.message}`,
+      type: 'error',
+      closable: true,
+      duration: 5
+    })
   }
 }
 
@@ -284,7 +292,7 @@ async function createWMSLayers(region) {
         layers: [layer.id],
         transparent: true,
         format: 'image/png',
-        minZoom: MIN_WMS_ZOOM,
+        minZoom: MIN_WMS_ZOOM
         // updateWhenIdle: true
       })
       //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
