@@ -154,7 +154,9 @@ onMounted(() => {
   })
 
   // on zoom event, log the current bounds and zoom level
-  leaflet.value.on('zoomend moveend', function () {})
+  leaflet.value.on('zoomend moveend', function () {
+    isZooming.value = false
+  })
   mapLoaded.value = true
 })
 
