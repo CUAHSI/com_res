@@ -1,39 +1,24 @@
 <template>
-  <v-sheet v-if="show" class="mx-auto" elevation="8" style="height: calc(25vh); width: 100%">
-    <v-skeleton-loader
-      v-if="isLoading"
-      type="heading, image "
-      :loading="isLoading"
-      class="mx-auto"
-    ></v-skeleton-loader>
+  <v-card v-if="show" class="mx-auto chart-card" elevation="8" style="height: calc(30vh); width: 100%">
+    <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading forecasted data...</span>
     </v-row>
-    <LinePlot
-      v-if="!isLoading"
-      :timeseries="plot_timeseries"
-      :title="plot_title"
-      :style="plot_style"
-    />
-    <v-btn
-      v-if="plot_timeseries.length > 0 && !isLoading"
-      color="primary"
-      :disabled="downloading.json"
-      :loading="downloading.json"
-      @click="downJson"
-    >
-      <v-icon :icon="mdiCodeJson" class="mr-1"></v-icon>
-      Download
-      <v-progress-circular
-        v-if="downloading.json"
-        indeterminate
-        color="white"
-        size="20"
-        class="ml-2"
-      ></v-progress-circular>
-    </v-btn>
-  </v-sheet>
+    <LinePlot v-if="!isLoading" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+    <v-card-actions class="position-relative">
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
+            :disabled="downloading.json" :loading="downloading.json" @click="downJson" icon size="small">
+            <v-icon :icon="mdiCodeJson"></v-icon>
+            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20"></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>Download JSON</span>
+      </v-tooltip>
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script setup>
@@ -135,3 +120,20 @@ defineProps({
   }
 })
 </script>
+
+<style scoped>
+.chart-card {
+  position: relative; /* Needed for z-index context */
+  z-index: 1; /* Base z-index */
+}
+
+.chart-tooltip {
+  z-index: 1000 !important; /* Higher than other elements */
+}
+
+/* Optional: Make tooltip text wrap properly */
+.chart-tooltip span {
+  white-space: normal;
+  word-break: normal;
+}
+</style>
