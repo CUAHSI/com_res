@@ -1,10 +1,8 @@
 <template>
-  <v-sheet class="mx-auto" elevation="8">
-    <h5>{{ props.title }}</h5>
-    <div style="height: calc(25vh); width: 100%">
-      <Line :data="chartData" :options="chartOptions" />
-    </div>
-  </v-sheet>
+  <h5>{{ props.title }}</h5>
+  <div style="height: calc(23vh); width: 100%">
+    <Line :data="chartData" :options="chartOptions" />
+  </div>
 </template>
 
 <script setup>

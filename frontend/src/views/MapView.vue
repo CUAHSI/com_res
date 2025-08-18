@@ -67,12 +67,14 @@
         v-show="showHistorical"
         ref="historicalPlotRef"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
+        :show="showHistorical"
       />
 
       <ForecastPlot
         v-show="showForecast"
         ref="forecastPlotRef"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
+        :show="showForecast"
       />
     </div>
   </v-container>
