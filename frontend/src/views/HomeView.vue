@@ -1,5 +1,12 @@
 <template>
   <v-container fluid>
+    <!-- === Banner section === -->
+    <v-sheet class="pa-6 mb-6 text-center banner" rounded>
+      <h2 class="mb-2 banner-title">FloodSavvy</h2>
+      <p>Turning NOAA’s National Water Model data into clear, local flood risk insights.</p>
+    </v-sheet>
+    <!-- ===================== -->
+     
     <v-row class="fill-height">
       <v-col>
         <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
@@ -52,7 +59,7 @@
     </v-sheet>
 
     <v-sheet class="pa-6 mx-auto ma-4" max-width="1200" rounded>
-      <h3 class="text-center mb-4">Regions in Missouri</h3>
+      <h3 class="text-center mb-4">Regions in Vermont</h3>
       <v-row align="center" justify="center">
         <v-col
           v-for="region in regionsStore.regions.slice(3, 6)"
@@ -116,5 +123,14 @@ const handleCardClick = (region) => {
       max-width: 100%;
     }
   }
+}
+.banner {
+  background-color: rgba(107, 218, 235, 0.85); 
+  color: white;
+}
+
+.banner-title {
+  color: rgb(61, 59, 59); 
+  font-weight: 600;
 }
 </style>
