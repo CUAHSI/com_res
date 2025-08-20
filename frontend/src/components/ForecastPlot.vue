@@ -1,5 +1,26 @@
 <template>
   <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+    <div class="position-absolute" style="top: 6px; right: 8px; z-index: 2;">
+      <InfoIcon
+        content-class="plot-info-tooltip"
+        :z-index="200000" 
+        :max-width="420"
+        style="margin-left: 4px"
+        text="This graph shows streamflow (in cubic feet per second) forecasted over the
+        next 10 days.  
+        If you see a high flow on this graph, and would like more information on flood
+        risk in this area, please visit water.noaa.gov to view Flood Impact Statements 
+        (for guidance, go to FloodSavvy's RESOURCES page) or consider contacting the local
+        National Weather Forecast Office. If this graph has a zero value, this means the
+        river you selected is intermittent, and only has brief periods of streamflow after
+        heavy rainfall occurs upstream. 
+        This data comes from the medium-range simulations of the National Water Model. 
+        The forecast shown here represents just one possible scenario, extending out to 10 days.
+        To learn more about how this information is modeled or how to access and retrieve the data, 
+        please visit: 
+        https://www.sciencedirect.com/science/article/pii/S1364815224001841"
+      />
+    </div>
     <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
@@ -27,6 +48,7 @@ import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose } from 'vue'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson } from '@mdi/js'
+import InfoIcon from '@/components/InfoTooltip.vue'
 import {
   Chart as ChartJS,
   Title,
@@ -130,4 +152,5 @@ defineProps({
   white-space: normal;
   word-break: normal;
 }
+
 </style>

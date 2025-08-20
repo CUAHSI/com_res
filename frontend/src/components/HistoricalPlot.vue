@@ -1,12 +1,28 @@
 <template>
   <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+    <div class="position-absolute" style="top: 6px; right: 8px; z-index: 2;">
+      <InfoIcon
+        content-class="plot-info-tooltip"
+        :z-index="200000" 
+        :max-width="420"
+        style="margin-left: 4px"
+        text="This graph shows streamflow (in cubic feet per second) for the past 90 days. 
+        You can explore a different timeframe by clicking the button in the bottom-right 
+        corner and adjusting the start and end dates. This data is sourced from the analysis
+        and assimilation simulation of the National Water Model, which combines observed data 
+        with model simulations to generate the most accurate estimates of current conditions. 
+        To learn more about how this information is modeled or how to access and retrieve the data, 
+        please visit: 
+        https://www.sciencedirect.com/science/article/pii/S1364815224001841"
+      />
+    </div>
     <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading historical data...</span>
     </v-row>
     <LinePlot v-if="!isLoading" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
-    <v-card-actions class="position-relative">
+    <v-card-actions class="position-relative">      
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
@@ -27,6 +43,7 @@ import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose } from 'vue'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson } from '@mdi/js'
+import InfoIcon from '../components/InfoTooltip.vue'
 import {
   Chart as ChartJS,
   Title,
@@ -129,4 +146,5 @@ defineProps({
   white-space: normal;
   word-break: normal;
 }
+
 </style>
