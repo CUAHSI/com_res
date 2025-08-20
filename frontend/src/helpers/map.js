@@ -416,7 +416,7 @@ function createFlowlinesFeatureLayer(region) {
       `
     L.popup({
       keepInView: true, // This ensures the popup stays visible when zooming
-      autoPan: false,
+      // autoPan: false,
       autoClose: false, // Optional: keeps the popup open
       maxWidth: 300 // Optional: sets maximum width
     })
