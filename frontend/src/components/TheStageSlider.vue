@@ -2,7 +2,7 @@
   <div class="slider-wrapper">
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
-      <h3>Stage-Flow Controller</h3>
+      <h3>Stage-Flow</h3>
       <InfoTooltip
         text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values, or use keyboard arrows for precise control. The color gradient indicates intensity levels." />
     </div>
@@ -209,10 +209,10 @@ const stopDrag = () => {
   box-sizing: border-box;
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
-  padding: 12px;
+  padding: 12px 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  width: 120px;
-  /* Wider container to fit header and footer */
+  width: 140px;
+  min-height: 450px;
 }
 
 .thermometer-slider-container {
@@ -221,48 +221,54 @@ const stopDrag = () => {
   pointer-events: none;
   box-sizing: border-box;
   width: 100%;
+  margin: 5px 0;
 }
 
-/* Add these new styles for the header and footer */
+/* Header styles */
 .slider-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   width: 100%;
   position: relative;
   z-index: 1001;
-  /* Higher than container to ensure visibility */
   pointer-events: auto;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .slider-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
   white-space: nowrap;
   text-align: center;
+  font-weight: bold;
+  line-height: 1.2;
 }
 
+/* Footer styles */
 .slider-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
+  margin-top: 8px;
   width: 100%;
   font-size: 12px;
   color: #666;
   position: relative;
   z-index: 1001;
-  /* Higher than container to ensure visibility */
   pointer-events: auto;
+  gap: 4px;
 }
 
 /* Ensure tooltips have high z-index */
 .slider-header>>>.v-overlay__content,
 .slider-footer>>>.v-overlay__content {
   z-index: 1002 !important;
-  /* Even higher for tooltips */
+  max-width: 200px;
+  white-space: normal;
 }
 
 .thermometer {
