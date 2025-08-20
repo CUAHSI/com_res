@@ -1,6 +1,10 @@
 <template>
   <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
-    <div class="position-absolute" style="top: 6px; right: 8px; z-index: 2;">
+    <div 
+      v-if="!isLoading"
+      class="position-absolute" 
+      style="top: 6px; right: 8px; z-index: 2;"
+    >
       <InfoIcon
         content-class="plot-info-tooltip"
         :z-index="200000" 
