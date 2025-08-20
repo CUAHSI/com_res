@@ -44,7 +44,11 @@
       fill-height
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
-      <v-col style="padding: 0px; margin: 0px">
+      <v-col style="padding: 0px; margin: 0px; position: relative;">
+        <!-- Add RegionSelector inside the map container -->
+        <div class="region-selector-container">
+          <TheRegionSelector />
+        </div>
         <TheLeafletMap />
       </v-col>
     </v-row>
@@ -92,6 +96,7 @@ import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
 import InfoIcon from '../components/InfoTooltip.vue'
 import * as mapHelpers from '@/helpers/map'
+import TheRegionSelector from '../components/TheRegionSelector.vue'
 
 const { mdAndDown } = useDisplay()
 
@@ -233,6 +238,7 @@ const handleStageChange = () => {
 <style scoped>
 .desktop-map-container {
   height: calc(100vh - 165px);
+  position: relative;
 }
 .desktop-plot-container {
   width: 500px;
@@ -246,17 +252,25 @@ const handleStageChange = () => {
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(45px, 0px);
+  transform: translate(45px, 60px);
 }
-
 .mobile-map-container {
   height: calc(100vh - 500px);
   min-height: 40vh;
+  position: relative;
 }
 .mobile-plot-container {
   width: 102%;
   height: 100%;
   position: static;
   margin: 20px -10px;
+}
+.region-selector-container {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  width: 300px;
 }
 </style>
