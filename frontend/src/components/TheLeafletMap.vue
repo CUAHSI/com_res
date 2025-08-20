@@ -18,7 +18,6 @@ import { useAlertStore } from '@/stores/alerts'
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
-const MIN_REACH_SELECTION_ZOOM = 11
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
@@ -26,20 +25,13 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer', { zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false }).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
   mapObject.value.huclayers = []
   mapObject.value.reaches = {}
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
-
-  let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
-    url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
-    layers: 0,
-    transparent: 'true',
-    format: 'image/png',
-  })
 
   let CartoDB_PositronNoLabels = L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
@@ -74,11 +66,38 @@ onMounted(() => {
   }
 
   CartoDB_PositronNoLabels.addTo(leaflet.value)
+
+  const Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
+    url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
+    layers: 0,
+    transparent: 'true',
+    format: 'image/png',
+  })
+
+  const stamenTerrain = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.jpg', {
+    attribution: 'Map tiles by <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://stamen.com">Stamen Design</a>, Data by <a href="https://openstreetmap.org">OpenStreetMap</a>, under <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>'
+  })
+
+  const openTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: © <a href="https://opentopomap.org">OpenTopoMap</a>'
+  })
+
+  const USGSShadedReliefOnly = L.tileLayer.wms('https://basemap.nationalmap.gov/arcgis/services/USGSShadedReliefOnly/MapServer/WMSServer?', {
+    layers: '0', // The layer index for contours
+    format: 'image/png',
+    transparent: true,
+    opacity: 0.7,
+    attribution: 'Shaded Relief © <a href="https://www.usgs.gov/">USGS</a>'
+})
+
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
   let overlays = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
+    'USGS Shaded Relief': USGSShadedReliefOnly,
+    'Stamen Terrain': stamenTerrain,
+    'OpenTopoMap': openTopo
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
