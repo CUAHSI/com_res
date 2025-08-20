@@ -3,7 +3,7 @@
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
 
-  <v-container fluid>
+  <v-container fluid class="map-view-container">
     <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
@@ -44,23 +44,28 @@
       fill-height
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
-      <v-col style="padding: 0px; margin: 0px">
+      <v-col style="padding: 0px; margin: 0px; position: relative;">
+        <!-- Add RegionSelector inside the map container -->
+        <div class="region-selector-container">
+          <TheRegionSelector />
+        </div>
         <TheLeafletMap />
+        
+        <!-- Position the StageSlider inside the map container -->
+        <div class="stage-slider-container" v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0">
+          <TheStageSlider
+            v-model="mapHelpers.stageValue.value"
+            :min="activeFeatureFimCogData.stages_m[0]"
+            :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+            :stages="activeFeatureFimCogData.stages_m"
+            :flows="activeFeatureFimCogData.flows_cms"
+            width="50px"
+            height="400px"
+            @update:modelValue="handleStageChange"
+          />
+        </div>
       </v-col>
     </v-row>
-
-    <TheStageSlider
-      v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
-      v-model="mapHelpers.stageValue.value"
-      :min="activeFeatureFimCogData.stages_m[0]"
-      :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-      :stages="activeFeatureFimCogData.stages_m"
-      :flows="activeFeatureFimCogData.flows_cms"
-      width="50px"
-      height="400px"
-      @update:modelValue="handleStageChange"
-      style="z-index: 99999"
-    />
 
     <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
       <HistoricalPlot
@@ -92,6 +97,7 @@ import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
 import InfoIcon from '../components/InfoTooltip.vue'
 import * as mapHelpers from '@/helpers/map'
+import TheRegionSelector from '../components/TheRegionSelector.vue'
 
 const { mdAndDown } = useDisplay()
 
@@ -231,9 +237,16 @@ const handleStageChange = () => {
 }
 </script>
 <style scoped>
+.map-view-container {
+  position: relative;
+  height: 100%;
+}
+
 .desktop-map-container {
   height: calc(100vh - 165px);
+  position: relative;
 }
+
 .desktop-plot-container {
   width: 500px;
   height: calc(100vh - 310px);
@@ -241,22 +254,48 @@ const handleStageChange = () => {
   top: 225px;
   z-index: 99999;
 }
+
 .desktop-plot-buttons-container {
   width: 400px;
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(45px, 0px);
+  transform: translate(45px, 60px);
 }
 
 .mobile-map-container {
   height: calc(100vh - 500px);
   min-height: 40vh;
+  position: relative;
 }
+
 .mobile-plot-container {
   width: 102%;
   height: 100%;
   position: static;
   margin: 20px -10px;
+}
+
+.region-selector-container {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  width: 300px;
+}
+
+.stage-slider-container {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 99999;
+  pointer-events: none;
+}
+
+/* Ensure the slider itself has pointer events */
+.stage-slider-container >>> .thermometer-slider-container {
+  pointer-events: auto;
 }
 </style>
