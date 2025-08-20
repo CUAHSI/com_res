@@ -39,10 +39,14 @@ import { ref, watch } from 'vue'
 import { useAlertStore } from './stores/alerts'
 import { useRegionsStore } from './stores/regions'
 import DisclaimerDialog from './components/DisclaimerDialog.vue'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
+
+const { need_disclaimer } = storeToRefs(alertStore)
+const { currentRegion } = storeToRefs(regionsStore)
 
 let showMobileNavigation = ref(false)
 const paths = [
@@ -73,14 +77,14 @@ function toggleMobileNav() {
 }
 
 watch(
-  () => router.currentRoute.value.path,
-  async (path) => {
+  [() => need_disclaimer.value, () => router.currentRoute.value.path],
+  async ([newNeedDisclaimer, path]) => {
     if (path === '/maps') {
       const { region } = router.currentRoute.value.query
       if (region) {
         regionsStore.setRegion(region)
       }
-      else {
+      if (!newNeedDisclaimer && !currentRegion.value) {
         alertStore.displayAlert({
           title: 'No Region Selected',
           text: 'You must select a region to view its data.',
