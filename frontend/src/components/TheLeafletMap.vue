@@ -73,25 +73,12 @@ onMounted(() => {
     'USGS Imagery': USGS_Imagery
   }
 
-  // add the NOAA flowlines wms
-  url =
-    'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer'
-  let flowlines = L.tileLayer.wms(url, {
-    layers: 0,
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: 8,
-    maxZoom: MIN_REACH_SELECTION_ZOOM,
-    // updateWhenIdle: true
-  })
-
   CartoDB_PositronNoLabels.addTo(leaflet.value)
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
   let overlays = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
-    'Flowlines WMS': flowlines
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
