@@ -1,5 +1,14 @@
 <template>
   <div class="thermometer-slider-container" :style="containerStyle">
+    <!-- Header with title and info tooltip -->
+    <div class="slider-header">
+      <h3>Stage-Flow Controller</h3>
+      <InfoTooltip
+        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values, or use keyboard arrows for precise control. The color gradient indicates intensity levels."
+        popupLocation="left"
+      />
+    </div>
+
     <div class="thermometer">
       <!-- Mercury fill -->
       <div class="mercury" :style="mercuryStyle"></div>
@@ -10,45 +19,37 @@
       </div>
 
       <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
-      <v-slider
-        v-model="modelValue"
-        vertical
-        :max="max"
-        :min="min"
-        :step="step"
-        hide-details
-        class="slider-input"
-        @update:modelValue="$emit('update:modelValue', modelValue)"
-      ></v-slider>
+      <v-slider v-model="modelValue" vertical :max="max" :min="min" :step="step" hide-details class="slider-input"
+        @update:modelValue="$emit('update:modelValue', modelValue)"></v-slider>
 
       <!-- Tick marks -->
       <div class="ticks">
-        <div
-          v-for="(_, index) in ticks"
-          :key="index"
-          class="tick"
+        <div v-for="(_, index) in ticks" :key="index" class="tick"
           :class="{ 'major-tick': index % majorTickInterval === 0 }"
-          :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
-        ></div>
+          :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"></div>
       </div>
 
       <!-- Labels inside thermometer -->
       <div class="labels-inside">
-        <div
-          v-for="(stage, index) in visibleStages"
-          :key="index"
-          class="label-inside"
-          :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
-        >
+        <div v-for="(stage, index) in visibleStages" :key="index" class="label-inside"
+          :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }">
           {{ stage }}
         </div>
       </div>
+    </div>
+
+    <!-- Footer with additional info -->
+    <div class="slider-footer">
+      <span>Stage (ft)</span>
+      <InfoTooltip
+        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs)." />
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
+import InfoTooltip from './InfoTooltip.vue' // Make sure to import the InfoTooltip
 
 const props = defineProps({
   modelValue: {
@@ -131,7 +132,7 @@ const containerStyle = computed(() => ({
   right: '20px',
   top: '50%',
   transform: 'translateY(-50%)',
-  padding: '20px 0' // Add vertical padding
+  padding: '20px 0', // Add vertical padding
 }))
 
 const mercuryStyle = computed(() => ({
@@ -203,6 +204,8 @@ const stopDrag = () => {
   position: absolute;
   z-index: 10;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   pointer-events: none;
   box-sizing: border-box;
@@ -211,21 +214,25 @@ const stopDrag = () => {
 .thermometer {
   position: relative;
   width: 100%;
-  height: calc(100% - 40px); /* Account for padding */
+  height: calc(100% - 40px);
+  /* Account for padding */
   background-color: #f5f5f5;
   border-radius: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   border: 2px solid #ddd;
   overflow: visible;
   pointer-events: auto;
-  margin: 20px 0; /* Add vertical padding */
-  padding-right: 30px; /* Make room for labels */
+  margin: 20px 0;
+  /* Add vertical padding */
+  padding-right: 30px;
+  /* Make room for labels */
 }
 
 .mercury {
   position: absolute;
   bottom: 0;
-  width: calc(100% - 20px); /* Account for horizontal padding */
+  width: calc(100% - 20px);
+  /* Account for horizontal padding */
   transition: height 0.2s ease;
   border-radius: 0 0 18px 18px;
   margin: 0 10px;
@@ -270,6 +277,30 @@ const stopDrag = () => {
   height: 100%;
   width: 100%;
   opacity: 0;
+}
+
+.slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.slider-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.slider-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  width: 100%;
+  font-size: 12px;
+  color: #666;
 }
 
 .ticks {

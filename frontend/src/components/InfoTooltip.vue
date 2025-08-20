@@ -1,5 +1,5 @@
 <template>
-  <v-tooltip location="bottom" max-width="200px" style="white-space: normal">
+  <v-tooltip :location="popupLocation" max-width="200px" style="white-space: normal">
     <template #activator="{ props }">
       <v-icon
         v-bind="props"
@@ -16,6 +16,7 @@
 <script setup>
 import { mdiInformationOutline } from '@mdi/js'
 const props = defineProps({
-  text: { type: String, default: '' }
+  text: { type: String, default: '' },
+  popupLocation: { type: String, default: 'bottom' }
 })
 </script>
