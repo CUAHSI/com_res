@@ -42,7 +42,7 @@
       <v-card-title>Create an Issue</v-card-title>
       <v-card-text class="d-flex flex-wrap justify-center">
         <p class="text-body-1">
-          Please report any issues you find with FloodWise to our GitHub repository.
+          Please report any issues you find with FloodSavvy to our GitHub repository.
         </p>
         <v-btn
           variant="outlined"
@@ -70,7 +70,7 @@
 import { ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import imgUrl from '@/assets/floodwise_icon.jpg'
+import imgUrl from '@/assets/floodsavvy_icon.jpg'
 defineProps(['paths'])
 defineEmits(['toggleMobileNav'])
 import { mdiGithub } from '@mdi/js'
