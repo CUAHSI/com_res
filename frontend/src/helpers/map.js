@@ -16,7 +16,6 @@ const flowlinesFeatureLayers = shallowRef([])
 const featureLayerProviders = shallowRef([])
 const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
-const pendingLayerChanges = ref([])
 const featureOptions = ref({
   selectedColor: '#00FFFF', // Cyan color for selected features
   defaultColor: 'blue',
@@ -492,5 +491,4 @@ export {
   determineCogsForStage,
   addCogsToMap,
   clearCogsFromMap,
-  pendingLayerChanges
 }
