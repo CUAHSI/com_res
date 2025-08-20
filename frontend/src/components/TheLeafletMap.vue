@@ -26,7 +26,7 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer', { zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false }).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -119,7 +119,30 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
+  const createCustomLayerControl = () => {
+    const control = L.control.layers(baselayers, overlays)
+
+    // Override the _onInputClick method to preserve view
+    const originalOnInputClick = control._onInputClick
+    control._onInputClick = function (e) {
+      // Store current view before changing layers
+      const currentCenter = leaflet.value.getCenter()
+      const currentZoom = leaflet.value.getZoom()
+      console.log(`Current view before layer change: ${currentCenter}, ${currentZoom}`)
+
+      // Call original method
+      originalOnInputClick.call(this, e)
+
+      // Restore view after layer change
+      setTimeout(() => {
+        console.log(`Restoring view to: ${currentCenter}, ${currentZoom}`)
+        leaflet.value.setView(currentCenter, currentZoom, { animate: false })
+      }, 1000)
+    }
+
+    return control
+  }
+  control.value = createCustomLayerControl().addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
