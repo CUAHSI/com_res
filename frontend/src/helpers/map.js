@@ -426,8 +426,8 @@ function createFlowlinesFeatureLayer(region) {
       .openOn(leaflet.value)
 
     // zoom to the feature bounds
-    const bounds = L.geoJSON(feature).getBounds()
-    leaflet.value.fitBounds(bounds)
+    // const bounds = L.geoJSON(feature).getBounds()
+    // leaflet.value.fitBounds(bounds)
   })
   return featureLayer
 }
