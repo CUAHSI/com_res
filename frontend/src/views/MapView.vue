@@ -281,7 +281,7 @@ const handleStageChange = () => {
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 99999;
+  z-index: 999;
   width: 300px;
 }
 
