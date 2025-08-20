@@ -4,7 +4,9 @@
     <div class="slider-header">
       <h3>Stage-Flow</h3>
       <InfoTooltip
-        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values, or use keyboard arrows for precise control. The color gradient indicates intensity levels." />
+        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
+        size="x-small"
+      />
     </div>
 
     <div class="thermometer-slider-container" :style="containerStyle">
