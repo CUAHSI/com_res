@@ -18,7 +18,7 @@ const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
 const pendingLayerChanges = ref([])
 const featureOptions = ref({
-  selectedColor: 'red',
+  selectedColor: '#00FFFF', // Cyan color for selected features
   defaultColor: 'blue',
   defaultWeight: 2,
   selectedWeight: 5,
