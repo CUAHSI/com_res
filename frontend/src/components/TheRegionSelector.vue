@@ -14,6 +14,7 @@
       variant="outlined"
       hide-details
       @update:modelValue="handleRegionChange"
+      :error="!selectedRegion"
     ></v-select>
   </v-card>
 </template>

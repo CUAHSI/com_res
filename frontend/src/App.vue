@@ -80,6 +80,15 @@ watch(
       if (region) {
         regionsStore.setRegion(region)
       }
+      else {
+        alertStore.displayAlert({
+          title: 'No Region Selected',
+          text: 'You must select a region to view its data.',
+          type: 'error',
+          closable: true,
+          duration: 2
+        })
+      }
     }
   }
 )
