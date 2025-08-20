@@ -39,8 +39,6 @@ onMounted(() => {
     layers: 0,
     transparent: 'true',
     format: 'image/png',
-    maxZoom: MIN_REACH_SELECTION_ZOOM,
-    minZoom: 0
   })
 
   let CartoDB_PositronNoLabels = L.tileLayer(
@@ -50,7 +48,6 @@ onMounted(() => {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
-      maxZoom: 20
     }
   )
 
@@ -60,8 +57,6 @@ onMounted(() => {
     noWrap: true,
     variant: 'World_Imagery',
     attribution: 'Esri',
-    maxZoom: 18,
-    minZoom: 0
   })
 
   let USGS_Imagery = L.tileLayer(
@@ -69,8 +64,6 @@ onMounted(() => {
     {
       attribution: 'USGS',
       noWrap: true,
-      maxZoom: 18,
-      minZoom: 0
     }
   )
 
@@ -80,25 +73,12 @@ onMounted(() => {
     'USGS Imagery': USGS_Imagery
   }
 
-  // add the NOAA flowlines wms
-  url =
-    'https://maps.water.noaa.gov/server/services/reference/static_nwm_flowlines/MapServer/WMSServer'
-  let flowlines = L.tileLayer.wms(url, {
-    layers: 0,
-    transparent: 'true',
-    format: 'image/png',
-    minZoom: 8,
-    maxZoom: MIN_REACH_SELECTION_ZOOM,
-    // updateWhenIdle: true
-  })
-
   CartoDB_PositronNoLabels.addTo(leaflet.value)
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
-  let mixed = {
+  let overlays = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
-    'Flowlines WMS': flowlines
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
@@ -118,7 +98,7 @@ onMounted(() => {
   //  */
 
   // Layer Control
-  control.value = L.control.layers(baselayers, mixed).addTo(leaflet.value)
+  control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -156,12 +136,6 @@ onMounted(() => {
   // on zoom event, log the current bounds and zoom level
   leaflet.value.on('zoomend moveend', function () {
     isZooming.value = false
-    let zoom = leaflet.value.getZoom()
-    console.log('zoom level:', zoom)
-    // log the bounds as [[lat, long], [lat, long]]
-    let bounds = leaflet.value.getBounds()
-    console.log('bounds:', bounds._northEast, bounds._southWest)
-    console.log('map center:', leaflet.value.getCenter())
   })
   mapLoaded.value = true
 })

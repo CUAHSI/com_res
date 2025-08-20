@@ -17,7 +17,7 @@
         <v-img :width="70" cover :src="imgUrl" alt="home"></v-img>
       </router-link>
     </template>
-    <v-app-bar-title class="text-h4">FloodWise</v-app-bar-title>
+    <v-app-bar-title class="text-h4">FloodSavvy</v-app-bar-title>
 
     <v-tabs v-if="!mdAndDown" v-model="path" align-tabs="title">
       <v-tab

@@ -161,6 +161,9 @@ const reachIdChanged = async (selected_reach) => {
   // if no reach is selected, clear the plot data.
   if (selected_reach === undefined || selected_reach === null) {
     await historicalPlotRef.value.clearPlot()
+    await forecastPlotRef.value.clearPlot()
+    showHistorical.value = false
+    showForecast.value = false
     return
   }
 
