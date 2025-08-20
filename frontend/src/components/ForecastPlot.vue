@@ -5,7 +5,10 @@
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading forecasted data...</span>
     </v-row>
-    <LinePlot v-if="!isLoading" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+    <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
+      <span class="ml-3">No forecasted data available.</span>
+    </v-row>
+    <LinePlot v-if="!isLoading && hasData" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
     <v-card-actions class="position-relative">
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
@@ -45,6 +48,7 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
+const hasData = ref(false)
 const downloading = ref({ json: false })
 const error = ref(null)
 
@@ -73,7 +77,9 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     }
 
     const data = await response.json()
-    plot_timeseries.value = Object.entries(data).map(([x, y]) => ({ x, y }))
+    let formattedData = Object.entries(data).map(([x, y]) => ({ x, y }))
+    hasData.value = formattedData.length > 0
+    plot_timeseries.value = formattedData
   } catch (err) {
     error.value = `Failed to load data: ${err.message}`
     console.error('API error:', err)
