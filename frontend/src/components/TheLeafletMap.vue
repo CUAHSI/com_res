@@ -39,8 +39,6 @@ onMounted(() => {
     layers: 0,
     transparent: 'true',
     format: 'image/png',
-    maxZoom: MIN_REACH_SELECTION_ZOOM,
-    minZoom: 0
   })
 
   let CartoDB_PositronNoLabels = L.tileLayer(
@@ -50,8 +48,6 @@ onMounted(() => {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
-      maxZoom: 18,
-      minZoom: 0
     }
   )
 
@@ -61,8 +57,6 @@ onMounted(() => {
     noWrap: true,
     variant: 'World_Imagery',
     attribution: 'Esri',
-    maxZoom: 18,
-    minZoom: 0
   })
 
   let USGS_Imagery = L.tileLayer(
@@ -70,8 +64,6 @@ onMounted(() => {
     {
       attribution: 'USGS',
       noWrap: true,
-      maxZoom: 18,
-      minZoom: 0
     }
   )
 
