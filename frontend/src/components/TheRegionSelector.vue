@@ -22,9 +22,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRegionsStore } from '@/stores/regions'
 import { useDisplay } from 'vuetify'
+import { useRouter } from 'vue-router'
 
 const { mdAndDown } = useDisplay()
 const regionsStore = useRegionsStore()
+const router = useRouter()
 
 const regions = computed(() => regionsStore.regions)
 const selectedRegion = ref(null)
@@ -46,6 +48,13 @@ watch(
 )
 
 const handleRegionChange = (regionName) => {
+  router.push({
+    name: 'maps',
+    query: {
+      region: regionName
+    }
+  })
+  
   regionsStore.setRegion(regionName)
 }
 </script>
@@ -55,9 +64,21 @@ const handleRegionChange = (regionName) => {
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 4px;
   padding: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Make it more compact on mobile */
 .mobile-region-selector {
-  width: 250px;
+  width: 200px;
+}
+
+/* Make the select field more compact */
+:deep(.v-select .v-field) {
+  font-size: 0.875rem;
+}
+
+:deep(.v-select .v-field .v-field__input) {
+  min-height: 40px;
+  padding-top: 0;
 }
 </style>
