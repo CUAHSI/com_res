@@ -38,6 +38,11 @@ const deselectFeature = (feature) => {
       color: featureOptions.value.defaultColor,
       weight: featureOptions.value.defaultWeight
     })
+    // dismiss leaflet popups
+    leaflet.value.closePopup()
+
+    // clear the cogs from the map
+    clearCogsFromMap()
   } catch (error) {
     console.warn('Attempted to deselect feature:', error)
   }
@@ -489,5 +494,5 @@ export {
   stageValue,
   determineCogsForStage,
   addCogsToMap,
-  clearCogsFromMap,
+  clearCogsFromMap
 }
