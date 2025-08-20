@@ -26,7 +26,7 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer', { zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false }).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -150,6 +150,45 @@ onMounted(() => {
     'clear selected features'
   ).addTo(leaflet.value)
 
+  let currentMapState = null
+
+  // Store map state regularly
+  const storeMapState = () => {
+    currentMapState = {
+      center: leaflet.value.getCenter(),
+      zoom: leaflet.value.getZoom(),
+      bounds: leaflet.value.getBounds()
+    }
+    console.log('Storing map state:', currentMapState)
+  }
+
+  // Restore map state
+  const restoreMapState = () => {
+    console.log('Restoring map state')
+    if (currentMapState) {
+      console.log('Current map state:', currentMapState)
+      leaflet.value.setView(currentMapState.center, currentMapState.zoom, {
+        animate: false
+      })
+      // zoom in
+      leaflet.value.fitBounds(currentMapState.bounds, {
+        animate: false,
+        maxZoom: currentMapState.zoom
+      })
+    }
+  }
+
+  // Handle layer changes
+  leaflet.value.on('baselayerchange', function (e) {
+    // Restore state after a brief delay to allow layer to load
+    setTimeout(restoreMapState, 150)
+  })
+
+  // Also handle overlay changes if needed
+  leaflet.value.on('overlayadd overlayremove', function (e) {
+    setTimeout(restoreMapState, 150)
+  })
+
   leaflet.value.on('zoomstart movestart', function () {
     isZooming.value = true
   })
@@ -157,6 +196,7 @@ onMounted(() => {
   // on zoom event, log the current bounds and zoom level
   leaflet.value.on('zoomend moveend', function () {
     isZooming.value = false
+    setTimeout(storeMapState, 150)
   })
   mapLoaded.value = true
 })
