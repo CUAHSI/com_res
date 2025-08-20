@@ -4,6 +4,7 @@
   </v-overlay>
 
   <v-container fluid>
+    <TheRegionSelector />
     <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
@@ -92,6 +93,7 @@ import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
 import InfoIcon from '../components/InfoTooltip.vue'
 import * as mapHelpers from '@/helpers/map'
+import TheRegionSelector from '../components/TheRegionSelector.vue'
 
 const { mdAndDown } = useDisplay()
 
@@ -246,7 +248,7 @@ const handleStageChange = () => {
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(45px, 0px);
+  transform: translate(45px, 50px);
 }
 
 .mobile-map-container {
