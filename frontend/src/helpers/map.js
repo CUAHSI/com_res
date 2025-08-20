@@ -325,7 +325,7 @@ async function createWMSLayers(region) {
       //      })
 
       console.log(wmsLayer)
-      wmsLayer.name = `${layer.name} - ${region.name}`
+      wmsLayer.name = `${layer.name}`
       wmsLayer.id = layer.id
       wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
       wmsLayers.value[region.name].push(wmsLayer)
