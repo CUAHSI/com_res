@@ -10,16 +10,16 @@
       <v-card :prepend-icon="mdiAlertCircle" title="Disclaimer">
         <v-card-text>
           <p>
-            FloodWise is an experimental application that provides visualizations of potential flood
+            FloodSavvy is an experimental application that provides visualizations of potential flood
             extents based on forecasts from NOAA's National Water Model and associated flood
-            inundation mapping (FIM) services. While FloodWise aims to offer useful insights into
+            inundation mapping (FIM) services. While FloodSavvy aims to offer useful insights into
             where flooding may occur, the outputs are estimates and inherently include uncertainty.
             These maps are not official flood products from NOAA or the National Weather Service,
             although they utilize methodologies similar to those found in NOAA's experimental FIM
-            services. The purpose of FloodWise is to support public understanding and exploration of
+            services. The purpose of FloodSavvy is to support public understanding and exploration of
             historical and potential future flood scenarios. All underlying data are sourced from
             publicly available datasets. For official flood forecasts, warnings, and authoritative
-            flood maps, please refer to the resources provided in the "Resources" tab. FloodWise is
+            flood maps, please refer to the resources provided in the "Resources" tab. FloodSavvy is
             intended for informational and educational use only and should not be relied upon for
             emergency decision-making or as a substitute for official guidance.
           </p>
