@@ -329,7 +329,7 @@ async function createWMSLayers(region) {
       wmsLayer.id = layer.id
       wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
       wmsLayers.value[region.name].push(wmsLayer)
-      console.log(`Added WMS layer: ${wmsLayer.name} for region: ${region.name}`)
+      console.log(`Created WMS layer: ${wmsLayer.name} for region: ${region.name}`)
     })
   } else {
     console.error(`No layers found for ${region.name}`)
@@ -338,12 +338,8 @@ async function createWMSLayers(region) {
 
 async function addWMSLayers(region) {
   for (let layer of wmsLayers.value[region.name] || []) {
-    // only add layers that are part of the current region
-    if (!layer.name.includes(region.name)) {
-      console.warn(`Skipping layer ${layer.name} for region ${region.name}`)
-      continue
-    }
     layer.addTo(leaflet.value)
+    console.log(`Adding WMS layer: ${layer.name} to map for region: ${region.name}`)
     control.value.addOverlay(layer, layer.name)
   }
 }
