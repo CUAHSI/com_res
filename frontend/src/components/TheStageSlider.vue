@@ -4,7 +4,7 @@
     <div class="slider-header">
       <h3>Stage-Flow Controller</h3>
       <InfoTooltip
-        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values, or use keyboard arrows for precise control. The color gradient indicates intensity levels."
+        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
         popupLocation="left"
       />
     </div>
@@ -283,8 +283,9 @@ const stopDrag = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
   width: 100%;
+  z-index: 11; /* Higher than container to ensure visibility */
 }
 
 .slider-header h3 {
@@ -297,10 +298,11 @@ const stopDrag = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
+  margin-top: 0px;
   width: 100%;
   font-size: 12px;
   color: #666;
+  z-index: 11; /* Higher than container to ensure visibility */
 }
 
 .ticks {
