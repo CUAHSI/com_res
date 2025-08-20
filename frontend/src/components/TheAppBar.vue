@@ -36,6 +36,7 @@
         </v-btn>
       </template>
     </v-tooltip>
+    <v-app-bar-nav-icon @click="$emit('toggleMobileNav')" v-if="mdAndDown" />
   </v-app-bar>
   <v-dialog v-model="showGithubDialog" max-width="500">
     <v-card>
