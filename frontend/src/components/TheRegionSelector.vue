@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRegionsStore } from '@/stores/regions'
 import { useDisplay } from 'vuetify'
 
@@ -35,6 +35,16 @@ onMounted(() => {
   }
 })
 
+// Watch for changes to the current region
+watch(
+  () => regionsStore.currentRegion,
+  (newRegion) => {
+    if (newRegion) {
+      selectedRegion.value = newRegion.name
+    }
+  }
+)
+
 const handleRegionChange = (regionName) => {
   regionsStore.setRegion(regionName)
 }
@@ -42,12 +52,6 @@ const handleRegionChange = (regionName) => {
 
 <style scoped>
 .region-selector {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 99999;
-  width: 300px;
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 4px;
   padding: 8px;
@@ -55,6 +59,5 @@ const handleRegionChange = (regionName) => {
 
 .mobile-region-selector {
   width: 250px;
-  top: 5px;
 }
 </style>
