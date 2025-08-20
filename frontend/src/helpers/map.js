@@ -16,7 +16,6 @@ const flowlinesFeatureLayers = shallowRef([])
 const featureLayerProviders = shallowRef([])
 const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
-const pendingLayerChanges = ref([])
 const featureOptions = ref({
   selectedColor: '#00FFFF', // Cyan color for selected features
   defaultColor: 'blue',
@@ -406,7 +405,6 @@ function createFlowlinesFeatureLayer(region) {
     const content = `
       ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
       ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-      <p>
           <ul>
         ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
         ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
@@ -415,10 +413,10 @@ function createFlowlinesFeatureLayer(region) {
         ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
         ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
           </ul>
-      </p>
       `
     L.popup({
       keepInView: true, // This ensures the popup stays visible when zooming
+      // autoPan: false,
       autoClose: false, // Optional: keeps the popup open
       maxWidth: 300 // Optional: sets maximum width
     })
@@ -492,5 +490,4 @@ export {
   determineCogsForStage,
   addCogsToMap,
   clearCogsFromMap,
-  pendingLayerChanges
 }
