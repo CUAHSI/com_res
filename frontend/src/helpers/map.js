@@ -434,15 +434,36 @@ function createFlowlinesFeatureLayer(region) {
         </ul>
       `;
       
+      // Get map bounds to ensure popup stays within visible area
+      const mapBounds = leaflet.value.getBounds();
+      let popupLatLng = e.latlng;
+      
+      // Adjust position if near the edge of the map
+      const buffer = 0.01; // Small buffer in degrees
+      if (popupLatLng.lat > mapBounds.getNorth() - buffer) {
+        popupLatLng.lat = mapBounds.getNorth() - buffer;
+      }
+      if (popupLatLng.lat < mapBounds.getSouth() + buffer) {
+        popupLatLng.lat = mapBounds.getSouth() + buffer;
+      }
+      if (popupLatLng.lng > mapBounds.getEast() - buffer) {
+        popupLatLng.lng = mapBounds.getEast() - buffer;
+      }
+      if (popupLatLng.lng < mapBounds.getWest() + buffer) {
+        popupLatLng.lng = mapBounds.getWest() + buffer;
+      }
+      
       // Create and open popup
       hoverPopup = L.popup({
         closeOnClick: false,
         autoClose: false,
         closeButton: false,
         className: 'hover-popup',
-        maxWidth: 300
+        maxWidth: 300,
+        autoPan: false, // Disable auto-pan to prevent map jiggling
+        // keepInView: true
       })
-        .setLatLng(e.latlng)
+        .setLatLng(popupLatLng)
         .setContent(content)
         .openOn(leaflet.value);
     }, 100); // 100ms delay
