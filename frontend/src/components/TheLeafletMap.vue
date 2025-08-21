@@ -358,7 +358,7 @@ function updateContextMenuPosition() {
 // Update the onMapClick function to also reset the tracked position
 function onMapClick(event) {
   // if the click was not a right-click, hide the context menu
-  if (event.originalEvent.button !== 2) {
+  if (event?.originalEvent?.button !== 2) {
     contextMenu.value.show = false;
     contextMenuFeatureLatLng.value = null;
   }
@@ -387,30 +387,11 @@ function contextZoomToFeature() {
 }
 
 function selectFeatureHelper(feature) {
-  // This function should handle styling the selected feature
-  // Implementation depends on your specific needs
-  console.log('Selecting feature:', feature);
-
-  // Example implementation:
-  if (activeFeatureLayer.value) {
-    activeFeatureLayer.value.eachLayer(layer => {
-      if (layer.feature === feature) {
-        // Apply selected style
-        layer.setStyle({
-          color: '#ff0000',
-          weight: 3,
-          opacity: 1
-        });
-      } else {
-        // Reset to default style
-        layer.setStyle({
-          color: '#3388ff',
-          weight: 2,
-          opacity: 1
-        });
-      }
-    });
-  }
+    featureStore.clearSelectedFeatures()
+    if (!featureStore.checkFeatureSelected(feature)) {
+      // Only allow one feature to be selected at a time
+      featureStore.selectFeature(feature)
+    }
 }
 
 function contextSelectFeature() {
