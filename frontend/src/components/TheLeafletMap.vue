@@ -1,5 +1,5 @@
 <template>
-  <div v-show="$route.meta.showMap" id="mapContainer"></div>
+  <div v-show="$route.meta.showMap" id="mapContainer" @contextmenu="onMapRightClick"></div>
   <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
   <ContextMenu 
     v-if="contextMenu.show" 
@@ -334,11 +334,15 @@ function contextFeatureRightClick(event) {
   const feature = event.layer?.feature;
   if (!feature) return;
 
+  // Get the mouse position relative to the viewport
+  const clientX = event.originalEvent.clientX;
+  const clientY = event.originalEvent.clientY;
+
   // Show the context menu at the click position
   contextMenu.value = {
     show: true,
-    x: event.originalEvent.clientX,
-    y: event.originalEvent.clientY,
+    x: clientX,
+    y: clientY,
     feature: feature,
     latlng: event.latlng
   };
@@ -443,10 +447,5 @@ function contextShowFeatureInfo() {
   height: 100%;
   position: relative;
   z-index: 1;
-}
-
-/* Ensure the context menu appears above the map */
-:deep(.v-menu__content) {
-  z-index: 10000;
 }
 </style>
