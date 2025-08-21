@@ -410,63 +410,71 @@ function createFlowlinesFeatureLayer(region) {
 
   // Show popup on mouseover
   featureLayer.on('mouseover', function (e) {
-    // Clear any existing timeout
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout)
-      hoverTimeout = null
+    // Set a timeout to show the popup after a brief delay (prevents flickering)
+    const feature = e.layer.feature
+    const properties = feature.properties
+
+    const content = `
+      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
+      <ul>
+        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
+        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
+      </ul>
+    `
+
+    // Determine if we're near the top edge of the map
+    // const mapBounds = leaflet.value.getBounds();
+    const mapSize = leaflet.value.getSize()
+    const point = leaflet.value.latLngToContainerPoint(e.latlng)
+    const isNearTopEdge = point.y < mapSize.y * 0.25 // 25% from top
+    let belowLatLng = null
+
+    // For top-edge features, manually reposition the popup below the feature
+    if (isNearTopEdge) {
+      const popupHeight = 10 // Adjust this based on your popup height
+
+      // Position the popup below the feature (adjusting for popup height)
+      const belowPoint = L.point(point.x, point.y + popupHeight)
+
+      // Convert container point back to latlng
+      belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
+      console.log('Repositioning popup below feature at:', belowLatLng)
     }
 
-    // Set a timeout to show the popup after a brief delay (prevents flickering)
-    hoverTimeout = setTimeout(() => {
-      const feature = e.layer.feature
-      const properties = feature.properties
+    // Create and open popup
+    hoverPopup = L.popup({
+      closeOnClick: false,
+      autoClose: false,
+      closeButton: false,
+      className: 'hover-popup',
+      maxWidth: 300,
+      autoPan: false,
+      keepInView: false,
+      offset: belowLatLng ? L.point(0, belowLatLng.y) : L.point(0, 0)
+    })
+      .setLatLng(belowLatLng ? belowLatLng : e.latlng)
+      .setContent(content)
+      .openOn(leaflet.value)
 
-      const content = `
-        ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-        ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-        <ul>
-          ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-          ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-          ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-          ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-          ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-          ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-        </ul>
-      `
-
-      // Determine if we're near the top edge of the map
-      // const mapBounds = leaflet.value.getBounds();
-      const mapSize = leaflet.value.getSize()
-      const point = leaflet.value.latLngToContainerPoint(e.latlng)
-      const isNearTopEdge = point.y < mapSize.y * 0.2 // 20% from top
-      let belowLatLng = null
-
-      // For top-edge features, manually reposition the popup below the feature
-      if (isNearTopEdge) {
-        const popupHeight = 100 // Adjust this based on your popup height
-
-        // Position the popup below the feature (adjusting for popup height)
-        const belowPoint = L.point(point.x, point.y + popupHeight)
-
-        // Convert container point back to latlng
-        belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
-      }
-
-      // Create and open popup
-      hoverPopup = L.popup({
-        closeOnClick: false,
-        autoClose: false,
-        closeButton: false,
-        className: 'hover-popup',
-        maxWidth: 300,
-        autoPan: false,
-        keepInView: false,
-        offset: belowLatLng ? L.point(0, belowLatLng.y) : L.point(0, 0)
-      })
-        .setLatLng(e.latlng)
-        .setContent(content)
-        .openOn(leaflet.value)
-    }, 100) // 100ms delay
+    if (isNearTopEdge) {
+      setTimeout(() => {
+      const popupElement = hoverPopup?.getElement();
+        if (popupElement) {
+          // Adjust the tip to point upward
+          const tipElement = popupElement.querySelector('.leaflet-popup-tip');
+          if (tipElement) {
+            // Remove the tip
+            // TODO figure out how to translate and rotate the tip
+            tipElement.remove();
+          }
+        }
+      }, 100);
+    }
   })
 
   // Hide popup on mouseout
