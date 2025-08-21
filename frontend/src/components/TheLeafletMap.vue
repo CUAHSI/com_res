@@ -20,7 +20,7 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref, watch } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer } from '@/helpers/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer, showHoverPopup } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
@@ -422,30 +422,10 @@ function contextSelectFeature() {
 }
 
 function contextShowFeatureInfo() {
-  if (contextMenu.value.feature && contextMenu.value.latlng) {
-    const properties = contextMenu.value.feature.properties;
-
-    const content = `
-      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-      <ul>
-        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-      </ul>
-    `;
-
-    L.popup({
-      keepInView: true,
-      autoClose: false,
-      maxWidth: 300
-    })
-      .setLatLng(contextMenu.value.latlng)
-      .setContent(content)
-      .openOn(leaflet.value);
+  let feature = contextMenu?.value?.feature
+  let latLng = contextMenu?.value?.latlng
+  if (feature && latLng) {
+    showHoverPopup(feature, latLng)
   }
   contextMenu.value.show = false;
   contextMenuFeatureLatLng.value = null;
