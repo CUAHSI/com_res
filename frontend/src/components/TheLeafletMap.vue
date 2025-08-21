@@ -19,8 +19,8 @@ import * as esriLeaflet from 'esri-leaflet'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, ref, watch } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer, showHoverPopup } from '@/helpers/map'
+import { onMounted, ref, watch, nextTick } from 'vue'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer, showHoverPopup, layerControlIsExpanded } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
@@ -39,6 +39,7 @@ const contextMenu = ref({
 })
 
 const contextMenuFeatureLatLng = ref(null);
+const layerControlExpanded = ref(false)
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
@@ -175,6 +176,10 @@ onMounted(() => {
   // Layer Control
   control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
 
+  nextTick(() => {
+    setupLayerControlObserver()
+  })
+
   leaflet.value.on('dragstart', () => {
     contextMenu.value.pending = true;
     isMapMoving.value = true;
@@ -202,6 +207,8 @@ onMounted(() => {
     updateContextMenuPosition();
   });
 
+  // TODO: update when the layer control is expanded/collapsed
+  // update layerControlIsExpanded.value
 
   mapLoaded.value = true
 })
@@ -431,11 +438,50 @@ function contextShowFeatureInfo() {
   contextMenuFeatureLatLng.value = null;
 }
 
+function setupLayerControlObserver() {
+  // Find the layer control element
+  const layerControlElement = document.querySelector('.leaflet-control-layers')
+  if (!layerControlElement) {
+    console.warn('Layer control element not found')
+    return
+  }
+  
+  // Create a MutationObserver to watch for class changes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        const isExpanded = layerControlElement.classList.contains('leaflet-control-layers-expanded')
+        layerControlExpanded.value = isExpanded
+        layerControlIsExpanded.value = isExpanded
+      }
+    })
+  })
+  
+  // Start observing the layer control element
+  observer.observe(layerControlElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
+  
+  // Store the observer for cleanup
+  mapObject.value.layerControlObserver = observer
+  
+  // Set initial state
+  const isInitiallyExpanded = layerControlElement.classList.contains('leaflet-control-layers-expanded')
+  layerControlExpanded.value = isInitiallyExpanded
+  layerControlIsExpanded.value = isInitiallyExpanded
+}
+
 onUnmounted(() => {
   if (leaflet.value) {
-    leaflet.value.off('moveend', updateContextMenuPosition);
+    leaflet.value.off('moveend', updateContextMenuPosition)
   }
-});
+  
+  // Disconnect the observer when component is unmounted
+  if (mapObject.value.layerControlObserver) {
+    mapObject.value.layerControlObserver.disconnect()
+  }
+})
 </script>
 <style scoped>
 #mapContainer {
