@@ -318,7 +318,6 @@ watch(activeFeatureLayer, (newLayer, oldLayer) => {
 
 function contextFeatureRightClick(event) {
   // Prevent the default browser context menu
-  console.log('New Right-clicked on feature:', event);
   event.originalEvent.preventDefault();
 
   // Get the feature from the event

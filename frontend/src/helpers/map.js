@@ -443,7 +443,6 @@ function createFlowlinesFeatureLayer(region) {
 
       // Convert container point back to latlng
       belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
-      console.log('Repositioning popup below feature at:', belowLatLng)
     }
 
     // Create and open popup
