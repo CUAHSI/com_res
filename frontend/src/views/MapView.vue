@@ -284,8 +284,8 @@ const handleStageChange = () => {
 
 .stage-slider-container {
   position: absolute;
-  right: 20px;
-  top: 50%;
+  right: -10px;
+  top: 470px;
   transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
