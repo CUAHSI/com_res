@@ -4,6 +4,9 @@
   </v-overlay>
 
   <v-container fluid class="map-view-container">
+    <div class="region-selector-container">
+      <TheRegionSelector :z-index="999999" />
+    </div>
     <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
@@ -45,10 +48,6 @@
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
       <v-col style="padding: 0px; margin: 0px; position: relative;">
-        <!-- Add RegionSelector inside the map container -->
-        <div class="region-selector-container">
-          <TheRegionSelector />
-        </div>
         <TheLeafletMap />
         
         <!-- Position the StageSlider inside the map container -->
@@ -251,7 +250,7 @@ const handleStageChange = () => {
   width: 500px;
   height: calc(100vh - 310px);
   position: fixed;
-  top: 225px;
+  top: 250px;
   z-index: 99999;
 }
 
@@ -260,7 +259,7 @@ const handleStageChange = () => {
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(45px, 60px);
+  transform: translate(0px, 60px);
 }
 
 .mobile-map-container {
@@ -271,7 +270,6 @@ const handleStageChange = () => {
 
 .mobile-plot-container {
   width: 102%;
-  height: 100%;
   position: static;
   margin: 20px -10px;
 }
@@ -279,9 +277,8 @@ const handleStageChange = () => {
 .region-selector-container {
   position: absolute;
   top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
+  left: 15px;
+  z-index: 999999; /* Match this with the prop value */
   width: 300px;
 }
 
