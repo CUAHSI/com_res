@@ -88,7 +88,7 @@ onMounted(() => {
     transparent: true,
     opacity: 0.7,
     attribution: 'Shaded Relief © <a href="https://www.usgs.gov/">USGS</a>'
-})
+  })
 
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
@@ -113,11 +113,15 @@ onMounted(() => {
   const providers = [addressSearchProvider, ...featureLayerProviders.value]
 
   // /*
-  //  * LEAFLET BUTTONS
+  //  * LEAFLET CONTROLS
   //  */
 
-  // Layer Control
-  control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
+  // zoom control
+  L.control
+    .zoom({
+      position: 'topright'
+    })
+    .addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -132,21 +136,22 @@ onMounted(() => {
     })
     .addTo(leaflet.value)
 
-  // add zoom control again they are ordered in the order they are added
-  L.control
-    .zoom({
-      position: 'topleft'
-    })
-    .addTo(leaflet.value)
-
   // Erase
   L.easyButton(
-    'fa-eraser',
-    function () {
-      clearSelection()
-    },
-    'clear selected features'
+    {
+      states: [{
+        icon: 'fa-eraser',
+        onClick: function () {
+          clearSelection()
+        },
+        title: 'Clear Selected Features'
+      }],
+      position: 'topright'
+    }
   ).addTo(leaflet.value)
+
+  // Layer Control
+  control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
 
   leaflet.value.on('zoomstart movestart', function () {
     isZooming.value = true

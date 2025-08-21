@@ -1,11 +1,11 @@
 <template>
   <v-app>
     <v-main>
-      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '999999' }"></AlertPopup>
+      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '1000000' }"></AlertPopup>
       <DisclaimerDialog
         v-if="!alertStore.disclaimer_accepted"
         @accept="alertStore.acceptDisclaimer"
-        :style="{ 'z-index': '999999' }"
+        :z-index="9999999"
       />
       <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />
       <TheMobileNavDrawer

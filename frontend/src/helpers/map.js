@@ -66,7 +66,18 @@ const selectFeature = async (feature) => {
       console.log('Feature does not have FIM COG data, fetching...')
       // query FastAPI to get relevant geotiffs for the reach
       fimCogData = await fetchCogCatalogData(feature)
-      saveCatalogDataToFeature(activeFeature, fimCogData)
+      if (!fimCogData) {
+        alertStore.displayAlert({
+          title: 'FIM COG Data',
+          text: `No FIM COG data found for reach: ${feature.properties?.reach_id || feature.properties?.COMID}.`,
+          type: 'warning',
+          closable: true,
+          duration: 3
+        })
+        return
+      }else{
+        saveCatalogDataToFeature(activeFeature, fimCogData)
+      }
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m

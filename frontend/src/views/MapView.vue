@@ -4,6 +4,9 @@
   </v-overlay>
 
   <v-container fluid class="map-view-container">
+    <div class="region-selector-container">
+      <TheRegionSelector :z-index="999999" />
+    </div>
     <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
@@ -45,27 +48,22 @@
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
       <v-col style="padding: 0px; margin: 0px; position: relative;">
-        <!-- Add RegionSelector inside the map container -->
-        <div class="region-selector-container">
-          <TheRegionSelector />
-        </div>
         <TheLeafletMap />
-        
-        <!-- Position the StageSlider inside the map container -->
-        <div class="stage-slider-container" v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0">
-          <TheStageSlider
-            v-model="mapHelpers.stageValue.value"
-            :min="activeFeatureFimCogData.stages_m[0]"
-            :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-            :stages="activeFeatureFimCogData.stages_m"
-            :flows="activeFeatureFimCogData.flows_cms"
-            width="50px"
-            height="400px"
-            @update:modelValue="handleStageChange"
-          />
-        </div>
       </v-col>
     </v-row>
+
+    <div :class="{ 'desktop-stage-slider-container': !mdAndDown, 'mobile-stage-slider-container': mdAndDown }" v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0">
+      <TheStageSlider
+        v-model="mapHelpers.stageValue.value"
+        :min="activeFeatureFimCogData.stages_m[0]"
+        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+        :stages="activeFeatureFimCogData.stages_m"
+        :flows="activeFeatureFimCogData.flows_cms"
+        :width="mdAndDown ? '40px' : '50px'"
+        :height="mdAndDown ? '100px' : '400px'"
+        @update:modelValue="handleStageChange"
+      />
+    </div>
 
     <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
       <HistoricalPlot
@@ -251,7 +249,7 @@ const handleStageChange = () => {
   width: 500px;
   height: calc(100vh - 310px);
   position: fixed;
-  top: 225px;
+  top: 250px;
   z-index: 99999;
 }
 
@@ -260,7 +258,7 @@ const handleStageChange = () => {
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(45px, 60px);
+  transform: translate(0px, 60px);
 }
 
 .mobile-map-container {
@@ -271,7 +269,6 @@ const handleStageChange = () => {
 
 .mobile-plot-container {
   width: 102%;
-  height: 100%;
   position: static;
   margin: 20px -10px;
 }
@@ -279,23 +276,31 @@ const handleStageChange = () => {
 .region-selector-container {
   position: absolute;
   top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
+  left: 15px;
+  z-index: 999999; /* Match this with the prop value */
   width: 300px;
 }
 
-.stage-slider-container {
+.desktop-stage-slider-container {
   position: absolute;
-  right: 20px;
-  top: 50%;
+  right: 15px;
+  top: 475px;
+  transform: translateY(-50%);
+  z-index: 99999;
+  pointer-events: none;
+}
+.mobile-stage-slider-container {
+  position: absolute;
+  right: 15px;
+  top: 325px;
   transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
 }
 
 /* Ensure the slider itself has pointer events */
-.stage-slider-container >>> .thermometer-slider-container {
+.desktop-stage-slider-container >>> .thermometer-slider-container,
+.mobile-stage-slider-container >>> .thermometer-slider-container {
   pointer-events: auto;
 }
 </style>
