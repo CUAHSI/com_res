@@ -22,6 +22,7 @@ import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZoomin
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
+import { onUnmounted } from 'vue'
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -31,8 +32,11 @@ const contextMenu = ref({
   x: 0,
   y: 0,
   feature: null,
-  latlng: null
+  latlng: null,
+  pending: false
 })
+
+const contextMenuFeatureLatLng = ref(null);
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
@@ -181,6 +185,11 @@ onMounted(() => {
   // Dismiss context menu click
   leaflet.value.on('click', onMapClick);
 
+  leaflet.value.on('movestart', function () {
+    contextMenu.value.pending = true;
+  });
+  leaflet.value.on('moveend', updateContextMenuPosition);
+
   mapLoaded.value = true
 })
 
@@ -307,13 +316,6 @@ watch(activeFeatureLayer, (newLayer, oldLayer) => {
   }
 }, { immediate: true });
 
-function onMapClick(event) {
-  // if the click was not a right-click, hide the context menu
-  if (event.originalEvent.button !== 2) {
-    contextMenu.value.show = false;
-  }
-}
-
 function contextFeatureRightClick(event) {
   // Prevent the default browser context menu
   console.log('New Right-clicked on feature:', event);
@@ -323,18 +325,44 @@ function contextFeatureRightClick(event) {
   const feature = event.layer?.feature;
   if (!feature) return;
 
-  // Get the mouse position relative to the viewport
-  const clientX = event.originalEvent.clientX;
-  const clientY = event.originalEvent.clientY;
+  // Store the feature's geographic position
+  contextMenuFeatureLatLng.value = event.latlng;
+
+  // Update the context menu position
+  updateContextMenuPosition();
 
   // Show the context menu at the click position
   contextMenu.value = {
     show: true,
-    x: clientX,
-    y: clientY,
+    x: event.originalEvent.clientX,
+    y: event.originalEvent.clientY,
     feature: feature,
     latlng: event.latlng
   };
+}
+
+function updateContextMenuPosition() {
+  if (contextMenu.value.show && contextMenuFeatureLatLng.value) {
+    // Convert the feature's geographic position to screen coordinates
+    const containerPoint = leaflet.value.latLngToContainerPoint(contextMenuFeatureLatLng.value);
+    
+    // Get the map container's position relative to the viewport
+    const mapRect = leaflet.value.getContainer().getBoundingClientRect();
+    
+    // Update the context menu position
+    contextMenu.value.x = mapRect.left + containerPoint.x;
+    contextMenu.value.y = mapRect.top + containerPoint.y;
+  }
+  contextMenu.value.pending = false;
+}
+
+// Update the onMapClick function to also reset the tracked position
+function onMapClick(event) {
+  // if the click was not a right-click, hide the context menu
+  if (event.originalEvent.button !== 2) {
+    contextMenu.value.show = false;
+    contextMenuFeatureLatLng.value = null;
+  }
 }
 
 function contextZoomToFeature() {
@@ -356,6 +384,7 @@ function contextZoomToFeature() {
     }
   }
   contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
 }
 
 function selectFeatureHelper(feature) {
@@ -399,6 +428,7 @@ function contextSelectFeature() {
     }
   }
   contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
 }
 
 function contextShowFeatureInfo() {
@@ -428,7 +458,14 @@ function contextShowFeatureInfo() {
       .openOn(leaflet.value);
   }
   contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
 }
+
+onUnmounted(() => {
+  if (leaflet.value) {
+    leaflet.value.off('moveend', updateContextMenuPosition);
+  }
+});
 </script>
 <style scoped>
 #mapContainer {

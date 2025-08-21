@@ -1,6 +1,10 @@
 <template>
-  <div v-if="context.show" class="context-menu-container" :style="{ left: context.x + 'px', top: context.y + 'px' }">
-    <v-card elevation="4">
+  <div 
+    v-if="context.show" 
+    class="context-menu-container"
+    :style="{ left: context.x + 'px', top: context.y + 'px' }"
+  >
+    <v-card elevation="4" :disabled="context.pending">
       <v-list density="compact">
         <v-list-item @click="$emit('zoom-to-feature')">
           <v-list-item-title>Zoom to Feature</v-list-item-title>
@@ -13,6 +17,7 @@
         </v-list-item>
       </v-list>
     </v-card>
+    <v-progress-linear v-if="context.pending" indeterminate color="primary"></v-progress-linear>
   </div>
 </template>
 
@@ -34,6 +39,7 @@ defineEmits(['close', 'zoom-to-feature', 'select-feature', 'show-feature-info'])
   background: white;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, 0); /* Center the menu horizontally on the point */
 }
 
 .context-menu-container .v-card {
