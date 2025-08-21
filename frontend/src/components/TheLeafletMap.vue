@@ -1,13 +1,15 @@
 <template>
-  <div v-show="$route.meta.showMap" id="mapContainer" @click="onMapClick"></div>
-  <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
+  <div v-show="$route.meta.showMap" id="mapContainer"></div>
+  <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
   <ContextMenu 
-    v-if="contextMenu.show" 
+    v-if="contextMenu.show"
     :context="contextMenu"
     @close="contextMenu.show = false"
     @zoom-to-feature="contextZoomToFeature"
     @select-feature="contextSelectFeature"
-    @show-feature-info="contextShowFeatureInfo" />
+    @show-feature-info="contextShowFeatureInfo"
+    @dismiss="dismissContextMenu"
+  />
 </template>
 <script setup>
 import 'leaflet/dist/leaflet.css'
@@ -18,7 +20,7 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref, watch } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, activeFeatureLayer } from '@/helpers/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
@@ -173,22 +175,33 @@ onMounted(() => {
   // Layer Control
   control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
 
-  leaflet.value.on('zoomstart movestart', function () {
-    isZooming.value = true
-  })
-
-  // on zoom event, log the current bounds and zoom level
-  leaflet.value.on('zoomend moveend', function () {
-    isZooming.value = false
-  })
-
-  // Dismiss context menu click
-  leaflet.value.on('click', onMapClick);
-
-  leaflet.value.on('movestart', function () {
+  leaflet.value.on('dragstart', () => {
     contextMenu.value.pending = true;
+    isMapMoving.value = true;
   });
-  leaflet.value.on('moveend', updateContextMenuPosition);
+
+  leaflet.value.on('dragend', () => {
+    updateContextMenuPosition();
+  });
+
+  leaflet.value.on('movestart', () => {
+    contextMenu.value.pending = true;
+    isMapMoving.value = true;
+  });
+
+  leaflet.value.on('moveend', () => {
+    updateContextMenuPosition();
+  });
+
+  leaflet.value.on('zoomstart', () => {
+    contextMenu.value.pending = true;
+    isMapMoving.value = true;
+  });
+
+  leaflet.value.on('zoomend', () => {
+    updateContextMenuPosition();
+  });
+
 
   mapLoaded.value = true
 })
@@ -344,24 +357,21 @@ function updateContextMenuPosition() {
   if (contextMenu.value.show && contextMenuFeatureLatLng.value) {
     // Convert the feature's geographic position to screen coordinates
     const containerPoint = leaflet.value.latLngToContainerPoint(contextMenuFeatureLatLng.value);
-    
+
     // Get the map container's position relative to the viewport
     const mapRect = leaflet.value.getContainer().getBoundingClientRect();
-    
+
     // Update the context menu position
     contextMenu.value.x = mapRect.left + containerPoint.x;
     contextMenu.value.y = mapRect.top + containerPoint.y;
   }
   contextMenu.value.pending = false;
+  isMapMoving.value = false;
 }
 
-// Update the onMapClick function to also reset the tracked position
-function onMapClick(event) {
-  // if the click was not a right-click, hide the context menu
-  if (event?.originalEvent?.button !== 2) {
-    contextMenu.value.show = false;
-    contextMenuFeatureLatLng.value = null;
-  }
+function dismissContextMenu(event) {
+  contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
 }
 
 function contextZoomToFeature() {
@@ -387,11 +397,11 @@ function contextZoomToFeature() {
 }
 
 function selectFeatureHelper(feature) {
-    featureStore.clearSelectedFeatures()
-    if (!featureStore.checkFeatureSelected(feature)) {
-      // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature)
-    }
+  featureStore.clearSelectedFeatures()
+  if (!featureStore.checkFeatureSelected(feature)) {
+    // Only allow one feature to be selected at a time
+    featureStore.selectFeature(feature)
+  }
 }
 
 function contextSelectFeature() {

@@ -5,6 +5,17 @@
     :style="{ left: context.x + 'px', top: context.y + 'px' }"
   >
     <v-card elevation="4" :disabled="context.pending">
+      <div class="d-flex justify-end">
+        <v-btn
+          icon
+          size="x-small"
+          variant="text"
+          @click="$emit('dismiss')"
+          class="close-button"
+        >
+          <v-icon>{{ mdiClose }}</v-icon>
+        </v-btn>
+      </div>
       <v-list density="compact">
         <v-list-item @click="$emit('zoom-to-feature')">
           <v-list-item-title>Zoom to Feature</v-list-item-title>
@@ -29,7 +40,9 @@ defineProps({
   }
 })
 
-defineEmits(['close', 'zoom-to-feature', 'select-feature', 'show-feature-info'])
+defineEmits(['close', 'zoom-to-feature', 'select-feature', 'show-feature-info', 'dismiss'])
+
+import { mdiClose } from '@mdi/js'
 </script>
 
 <style scoped>

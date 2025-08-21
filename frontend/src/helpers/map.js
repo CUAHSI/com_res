@@ -24,7 +24,7 @@ const featureOptions = ref({
   opacity: 0.7
 })
 const mapLoaded = ref(false)
-const isZooming = ref(false) // Track if the map is currently zooming
+const isMapMoving = ref(false) // Track if the map is currently moving
 const stageValue = ref(5) // Default stage value for the slider
 
 const MIN_WMS_ZOOM = 9
@@ -547,7 +547,7 @@ const toggleFeatureLayer = async (region) => {
 export {
   mapObject,
   mapLoaded,
-  isZooming,
+  isMapMoving,
   deselectFeature,
   selectFeature,
   clearAllFeatures,
