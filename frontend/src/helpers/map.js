@@ -457,7 +457,7 @@ function createFlowlinesFeatureLayer(region) {
         closeOnClick: false,
         autoClose: false,
         closeButton: false,
-        className: isNearTopEdge ? 'hover-popup top-edge-popup' : 'hover-popup',
+        className: 'hover-popup',
         maxWidth: 300,
         autoPan: false,
         keepInView: false,
@@ -465,57 +465,29 @@ function createFlowlinesFeatureLayer(region) {
       })
         .setLatLng(e.latlng)
         .setContent(content)
-        .openOn(leaflet.value);
-      
-      // For top-edge features, we need to completely restructure the popup
-      if (isNearTopEdge) {
-        // Wait for the popup to be rendered
-        setTimeout(() => {
-          const popupElement = hoverPopup.getElement();
-          if (popupElement) {
-            // Completely rebuild the popup structure for top placement
-            const tipElement = popupElement.querySelector('.leaflet-popup-tip');
-            const contentWrapper = popupElement.querySelector('.leaflet-popup-content-wrapper');
-            
-            if (tipElement && contentWrapper) {
-              // Remove the tip from its current position
-              tipElement.remove();
+        .openOn(leaflet.value)
+
+        if (isNearTopEdge) {
+          setTimeout(() => {
+          const popupElement = hoverPopup?.getElement();
+            if (popupElement) {
+              // Adjust the tip to point upward
+              const tipElement = popupElement.querySelector('.leaflet-popup-tip');
+              if (tipElement) {
+                // Position tip at the top of the popup pointing upward
+                tipElement.style.top = '0';
+                tipElement.style.bottom = 'auto';
+                tipElement.style.transform = 'translateX(50%) rotate(180deg)';
+              }
               
-              // Create a new container for the tip at the top
-              const tipContainer = document.createElement('div');
-              tipContainer.className = 'leaflet-popup-tip-container-top';
-              tipContainer.style.position = 'absolute';
-              tipContainer.style.top = '0';
-              tipContainer.style.left = '50%';
-              tipContainer.style.transform = 'translateX(-50%)';
-              tipContainer.style.width = '20px';
-              tipContainer.style.height = '10px';
-              tipContainer.style.overflow = 'hidden';
-              tipContainer.style.zIndex = '1001';
-              
-              // Add the tip back to the top container
-              tipElement.style.position = 'absolute';
-              tipElement.style.top = '0';
-              tipElement.style.left = '0';
-              tipElement.style.margin = '0';
-              tipElement.style.transform = 'rotate(180deg)';
-              
-              tipContainer.appendChild(tipElement);
-              
-              // Insert the tip container at the top of the popup
-              popupElement.insertBefore(tipContainer, contentWrapper);
-              
-              // Add margin to the content wrapper to make space for the tip
-              contentWrapper.style.marginTop = '15px';
-              
-              // Adjust the popup position to be below the feature
-              const belowPoint = L.point(point.x, point.y + 20);
-              const belowLatLng = leaflet.value.containerPointToLatLng(belowPoint);
-              hoverPopup.setLatLng(belowLatLng);
+              // Update the popup content container position
+              const contentContainer = popupElement.querySelector('.leaflet-popup-content-wrapper');
+              if (contentContainer) {
+                contentContainer.style.marginTop = '10px'; // Add space for the tip
+              }
             }
-          }
-        }, 100);
-      }
+          }, 100);
+        }
     }, 100) // 100ms delay
   })
 
@@ -523,30 +495,30 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.on('mouseout', function (e) {
     // Clear the timeout if it hasn't triggered yet
     if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      hoverTimeout = null;
+      clearTimeout(hoverTimeout)
+      hoverTimeout = null
     }
-    
+
     // Close the hover popup
     if (hoverPopup) {
-      leaflet.value.closePopup(hoverPopup);
-      hoverPopup = null;
+      leaflet.value.closePopup(hoverPopup)
+      hoverPopup = null
     }
-  });
+  })
 
   // Keep click functionality for feature selection
   featureLayer.on('click', function (e) {
-    const feature = e.layer.feature;
-    const properties = feature.properties;
-    console.log('Feature clicked:', feature);
-    featureStore.clearSelectedFeatures();
+    const feature = e.layer.feature
+    const properties = feature.properties
+    console.log('Feature clicked:', feature)
+    featureStore.clearSelectedFeatures()
     if (!featureStore.checkFeatureSelected(feature)) {
       // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature);
+      featureStore.selectFeature(feature)
     }
-  });
+  })
 
-  return featureLayer;
+  return featureLayer
 }
 
 function createFeatureLayerProvider(region) {
