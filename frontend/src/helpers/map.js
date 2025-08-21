@@ -24,7 +24,7 @@ const featureOptions = ref({
   opacity: 0.7
 })
 const mapLoaded = ref(false)
-const isZooming = ref(false) // Track if the map is currently zooming
+const isMapMoving = ref(false) // Track if the map is currently moving
 const stageValue = ref(5) // Default stage value for the slider
 
 const MIN_WMS_ZOOM = 9
@@ -66,7 +66,18 @@ const selectFeature = async (feature) => {
       console.log('Feature does not have FIM COG data, fetching...')
       // query FastAPI to get relevant geotiffs for the reach
       fimCogData = await fetchCogCatalogData(feature)
-      saveCatalogDataToFeature(activeFeature, fimCogData)
+      if (!fimCogData) {
+        alertStore.displayAlert({
+          title: 'FIM COG Data',
+          text: `No FIM COG data found for reach: ${feature.properties?.reach_id || feature.properties?.COMID}.`,
+          type: 'warning',
+          closable: true,
+          duration: 3
+        })
+        return
+      } else {
+        saveCatalogDataToFeature(activeFeature, fimCogData)
+      }
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
@@ -367,6 +378,74 @@ const toggleWMSLayers = (region) => {
   })
 }
 
+const showHoverPopup = (feature, latlng) => {
+  // Variables to track hover state
+  feature.hoverPopup = null
+  feature.hoverTimeout = null
+  const properties = feature.properties
+
+  const content = `
+      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
+      <ul>
+        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
+        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
+      </ul>
+    `
+
+  // Determine if we're near the top edge of the map
+  // const mapBounds = leaflet.value.getBounds();
+  const mapSize = leaflet.value.getSize()
+  const point = leaflet.value.latLngToContainerPoint(latlng)
+  const isNearTopEdge = point.y < mapSize.y * 0.25 // 25% from top
+  let belowLatLng = null
+
+  // For top-edge features, manually reposition the popup below the feature
+  if (isNearTopEdge) {
+    const popupHeight = 10 // Adjust this based on your popup height
+
+    // Position the popup below the feature (adjusting for popup height)
+    const belowPoint = L.point(point.x, point.y + popupHeight)
+
+    // Convert container point back to latlng
+    belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
+  }
+
+  // Create and open popup
+  feature.hoverPopup = L.popup({
+    closeOnClick: false,
+    autoClose: false,
+    closeButton: false,
+    className: 'hover-popup',
+    maxWidth: 300,
+    autoPan: false,
+    keepInView: false,
+    offset: belowLatLng ? L.point(0, belowLatLng.y) : L.point(0, 0)
+  })
+    .setLatLng(belowLatLng ? belowLatLng : latlng)
+    .setContent(content)
+    .openOn(leaflet.value)
+
+  if (isNearTopEdge) {
+    setTimeout(() => {
+      const popupElement = feature.hoverPopup?.getElement()
+      if (popupElement) {
+        // Adjust the tip to point upward
+        const tipElement = popupElement.querySelector('.leaflet-popup-tip')
+        if (tipElement) {
+          // Remove the tip
+          // TODO figure out how to translate and rotate the tip
+          tipElement.remove()
+        }
+      }
+    }, 100)
+  }
+}
+
 function createFlowlinesFeatureLayer(region) {
   const featureStore = useFeaturesStore()
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
@@ -393,42 +472,38 @@ function createFlowlinesFeatureLayer(region) {
   })
   featureLayer.name = region.name
 
+  // Show popup on mouseover
+  featureLayer.on('mouseover', (e) => {
+    showHoverPopup(e.layer.feature, e.latlng)
+  })
+
+  // Hide popup on mouseout
+  featureLayer.on('mouseout', function (e) {
+    let feature = e.layer.feature
+    // Clear the timeout if it hasn't triggered yet
+    if (feature.hoverTimeout) {
+      clearTimeout(feature.hoverTimeout)
+      feature.hoverTimeout = null
+    }
+
+    // Close the hover popup
+    if (feature.hoverPopup) {
+      leaflet.value.closePopup(feature.hoverPopup)
+      feature.hoverPopup = null
+    }
+  })
+
+  // Keep click functionality for feature selection
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
-    const properties = feature.properties
     console.log('Feature clicked:', feature)
     featureStore.clearSelectedFeatures()
     if (!featureStore.checkFeatureSelected(feature)) {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
-
-    const content = `
-      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-          <ul>
-        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-          </ul>
-      `
-    L.popup({
-      keepInView: true, // This ensures the popup stays visible when zooming
-      // autoPan: false,
-      autoClose: false, // Optional: keeps the popup open
-      maxWidth: 300 // Optional: sets maximum width
-    })
-      .setLatLng(e.latlng)
-      .setContent(content)
-      .openOn(leaflet.value)
-
-    // zoom to the feature bounds
-    // const bounds = L.geoJSON(feature).getBounds()
-    // leaflet.value.fitBounds(bounds)
   })
+
   return featureLayer
 }
 
@@ -473,7 +548,7 @@ const toggleFeatureLayer = async (region) => {
 export {
   mapObject,
   mapLoaded,
-  isZooming,
+  isMapMoving,
   deselectFeature,
   selectFeature,
   clearAllFeatures,
@@ -490,5 +565,6 @@ export {
   stageValue,
   determineCogsForStage,
   addCogsToMap,
-  clearCogsFromMap
+  clearCogsFromMap,
+  showHoverPopup
 }

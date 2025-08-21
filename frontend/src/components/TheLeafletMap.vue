@@ -1,6 +1,15 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
-  <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
+  <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
+  <ContextMenu 
+    v-if="contextMenu.show"
+    :context="contextMenu"
+    @close="contextMenu.show = false"
+    @zoom-to-feature="contextZoomToFeature"
+    @select-feature="contextSelectFeature"
+    @show-feature-info="contextShowFeatureInfo"
+    @dismiss="dismissContextMenu"
+  />
 </template>
 <script setup>
 import 'leaflet/dist/leaflet.css'
@@ -10,13 +19,26 @@ import * as esriLeaflet from 'esri-leaflet'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
+import { onMounted, ref, watch } from 'vue'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer, showHoverPopup } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
+import ContextMenu from '@/components/ContextMenu.vue'
+import { onUnmounted } from 'vue'
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
+
+const contextMenu = ref({
+  show: false,
+  x: 0,
+  y: 0,
+  feature: null,
+  latlng: null,
+  pending: false
+})
+
+const contextMenuFeatureLatLng = ref(null);
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
@@ -88,7 +110,7 @@ onMounted(() => {
     transparent: true,
     opacity: 0.7,
     attribution: 'Shaded Relief © <a href="https://www.usgs.gov/">USGS</a>'
-})
+  })
 
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
@@ -113,11 +135,15 @@ onMounted(() => {
   const providers = [addressSearchProvider, ...featureLayerProviders.value]
 
   // /*
-  //  * LEAFLET BUTTONS
+  //  * LEAFLET CONTROLS
   //  */
 
-  // Layer Control
-  control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
+  // zoom control
+  L.control
+    .zoom({
+      position: 'topright'
+    })
+    .addTo(leaflet.value)
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
@@ -132,30 +158,51 @@ onMounted(() => {
     })
     .addTo(leaflet.value)
 
-  // add zoom control again they are ordered in the order they are added
-  L.control
-    .zoom({
-      position: 'topleft'
-    })
-    .addTo(leaflet.value)
-
   // Erase
   L.easyButton(
-    'fa-eraser',
-    function () {
-      clearSelection()
-    },
-    'clear selected features'
+    {
+      states: [{
+        icon: 'fa-eraser',
+        onClick: function () {
+          clearSelection()
+        },
+        title: 'Clear Selected Features'
+      }],
+      position: 'topright'
+    }
   ).addTo(leaflet.value)
 
-  leaflet.value.on('zoomstart movestart', function () {
-    isZooming.value = true
-  })
+  // Layer Control
+  control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
 
-  // on zoom event, log the current bounds and zoom level
-  leaflet.value.on('zoomend moveend', function () {
-    isZooming.value = false
-  })
+  leaflet.value.on('dragstart', () => {
+    contextMenu.value.pending = true;
+    isMapMoving.value = true;
+  });
+
+  leaflet.value.on('dragend', () => {
+    updateContextMenuPosition();
+  });
+
+  leaflet.value.on('movestart', () => {
+    contextMenu.value.pending = true;
+    isMapMoving.value = true;
+  });
+
+  leaflet.value.on('moveend', () => {
+    updateContextMenuPosition();
+  });
+
+  leaflet.value.on('zoomstart', () => {
+    contextMenu.value.pending = true;
+    isMapMoving.value = true;
+  });
+
+  leaflet.value.on('zoomend', () => {
+    updateContextMenuPosition();
+  });
+
+
   mapLoaded.value = true
 })
 
@@ -269,10 +316,132 @@ function drawBbox() {
 
   // TODO: Not sure if this is still needed
 }
+
+// Watch for activeFeatureLayer changes and add contextmenu event
+watch(activeFeatureLayer, (newLayer, oldLayer) => {
+  console.log("swapping contextmenu listener")
+  if (oldLayer) {
+    oldLayer.off('contextmenu');
+  }
+
+  if (newLayer) {
+    newLayer.on('contextmenu', contextFeatureRightClick);
+  }
+}, { immediate: true });
+
+function contextFeatureRightClick(event) {
+  // Prevent the default browser context menu
+  event.originalEvent.preventDefault();
+
+  // Get the feature from the event
+  const feature = event.layer?.feature;
+  if (!feature) return;
+
+  // Store the feature's geographic position
+  contextMenuFeatureLatLng.value = event.latlng;
+
+  // Update the context menu position
+  updateContextMenuPosition();
+
+  // Show the context menu at the click position
+  contextMenu.value = {
+    show: true,
+    x: event.originalEvent.clientX,
+    y: event.originalEvent.clientY,
+    feature: feature,
+    latlng: event.latlng
+  };
+}
+
+function updateContextMenuPosition() {
+  if (contextMenu.value.show && contextMenuFeatureLatLng.value) {
+    // Convert the feature's geographic position to screen coordinates
+    const containerPoint = leaflet.value.latLngToContainerPoint(contextMenuFeatureLatLng.value);
+
+    // Get the map container's position relative to the viewport
+    const mapRect = leaflet.value.getContainer().getBoundingClientRect();
+
+    // Update the context menu position
+    contextMenu.value.x = mapRect.left + containerPoint.x;
+    contextMenu.value.y = mapRect.top + containerPoint.y;
+  }
+  contextMenu.value.pending = false;
+  isMapMoving.value = false;
+}
+
+function dismissContextMenu(event) {
+  contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
+}
+
+function contextZoomToFeature() {
+  if (contextMenu.value.feature) {
+    try {
+      // Get the bounds of the feature and zoom to it
+      const layer = L.geoJSON(contextMenu.value.feature);
+      const bounds = layer.getBounds();
+      leaflet.value.fitBounds(bounds, { padding: [50, 50] });
+    } catch (error) {
+      console.error('Error zooming to feature:', error);
+      alertStore.displayAlert({
+        title: 'Zoom Error',
+        text: 'Could not zoom to the selected feature',
+        type: 'error',
+        closable: true,
+        duration: 3
+      });
+    }
+  }
+  contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
+}
+
+function selectFeatureHelper(feature) {
+  featureStore.clearSelectedFeatures()
+  if (!featureStore.checkFeatureSelected(feature)) {
+    // Only allow one feature to be selected at a time
+    featureStore.selectFeature(feature)
+  }
+}
+
+function contextSelectFeature() {
+  if (contextMenu.value.feature) {
+    // Clear any currently selected features
+    featureStore.clearSelectedFeatures();
+
+    // Select the right-clicked feature
+    featureStore.selectFeature(contextMenu.value.feature);
+
+    // Use the helper function to style the selected feature
+    if (activeFeatureLayer.value) {
+      selectFeatureHelper(contextMenu.value.feature);
+    }
+  }
+  contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
+}
+
+function contextShowFeatureInfo() {
+  let feature = contextMenu?.value?.feature
+  let latLng = contextMenu?.value?.latlng
+  if (feature && latLng) {
+    showHoverPopup(feature, latLng)
+  }
+  contextMenu.value.show = false;
+  contextMenuFeatureLatLng.value = null;
+}
+
+onUnmounted(() => {
+  if (leaflet.value) {
+    leaflet.value.off('moveend', updateContextMenuPosition);
+  }
+});
 </script>
 <style scoped>
 #mapContainer {
   width: 100%;
   height: 100%;
+  position: relative;
+  z-index: 1;
 }
 </style>

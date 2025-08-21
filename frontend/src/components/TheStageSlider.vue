@@ -1,5 +1,5 @@
 <template>
-  <div class="slider-wrapper">
+  <v-card class="slider-wrapper">
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
       <h3>Stage-Flow</h3>
@@ -46,7 +46,7 @@
       <InfoTooltip
         text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs)." />
     </div>
-  </div>
+  </v-card>
 </template>
 
 <script setup>
@@ -199,11 +199,6 @@ const stopDrag = () => {
 
 <style scoped>
 .slider-wrapper {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -213,8 +208,6 @@ const stopDrag = () => {
   border-radius: 8px;
   padding: 12px 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  width: 140px;
-  min-height: 450px;
 }
 
 .thermometer-slider-container {

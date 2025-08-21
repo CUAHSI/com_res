@@ -3,6 +3,7 @@
     class="region-selector"
     :class="{ 'mobile-region-selector': mdAndDown }"
     variant="flat"
+    :style="{ zIndex: zIndex }"
   >
     <v-select
       v-model="selectedRegion"
@@ -15,6 +16,7 @@
       hide-details
       @update:modelValue="handleRegionChange"
       :error="!selectedRegion"
+      :menu-props="{ contentClass: 'region-selector-menu', zIndex: menuZIndex }"
     ></v-select>
   </v-card>
 </template>
@@ -29,8 +31,23 @@ const { mdAndDown } = useDisplay()
 const regionsStore = useRegionsStore()
 const router = useRouter()
 
+const props = defineProps({
+  zIndex: {
+    type: [Number, String],
+    default: 999999
+  }
+})
+
 const regions = computed(() => regionsStore.regions)
 const selectedRegion = ref(null)
+
+// Compute menu z-index to be slightly higher than the container
+const menuZIndex = computed(() => {
+  const baseZIndex = typeof props.zIndex === 'string' 
+    ? parseInt(props.zIndex, 10) 
+    : props.zIndex
+  return baseZIndex + 1
+})
 
 onMounted(() => {
   if (regionsStore.currentRegion) {
@@ -55,7 +72,6 @@ const handleRegionChange = (regionName) => {
       region: regionName
     }
   })
-  
   regionsStore.setRegion(regionName)
 }
 </script>
@@ -66,6 +82,7 @@ const handleRegionChange = (regionName) => {
   border-radius: 4px;
   padding: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 /* Make it more compact on mobile */
