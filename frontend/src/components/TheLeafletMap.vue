@@ -1,6 +1,13 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
   <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
+  <ContextMenu 
+    v-if="contextMenu.show" 
+    :context="contextMenu"
+    @close="contextMenu.value.show = false"
+    @zoom-to-feature="contextZoomToFeature"
+    @select-feature="contextSelectFeature"
+    @show-feature-info="contextShowFeatureInfo" />
 </template>
 <script setup>
 import 'leaflet/dist/leaflet.css'
@@ -10,13 +17,22 @@ import * as esriLeaflet from 'esri-leaflet'
 // WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
+import { onMounted, ref, watch } from 'vue'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming, activeFeatureLayer } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
+import ContextMenu from '@/components/ContextMenu.vue'
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
+
+const contextMenu = ref({
+  show: false,
+  x: 0,
+  y: 0,
+  feature: null,
+  latlng: null
+})
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
@@ -274,10 +290,117 @@ function drawBbox() {
 
   // TODO: Not sure if this is still needed
 }
+
+// Watch for activeFeatureLayer changes and add contextmenu event
+watch(activeFeatureLayer, (newLayer, oldLayer) => {
+  console.log("swapping contextmenu listener")
+  if (oldLayer) {
+    oldLayer.off('contextmenu');
+  }
+
+  if (newLayer) {
+    newLayer.on('contextmenu', onFeatureRightClick);
+  }
+}, { immediate: true });
+
+function onMapRightClick(event) {
+  // Hide context menu if clicking elsewhere on the map
+  contextMenu.value.show = false;
+}
+
+function contextFeatureRightClick(event) {
+  // Prevent the default browser context menu
+  event.originalEvent.preventDefault();
+
+  // Get the feature from the event
+  const feature = event.layer?.feature;
+  if (!feature) return;
+
+  // Show the context menu at the click position
+  contextMenu.value = {
+    show: true,
+    x: event.originalEvent.clientX,
+    y: event.originalEvent.clientY,
+    feature: feature,
+    latlng: event.latlng
+  };
+}
+
+function contextZoomToFeature() {
+  if (contextMenu.value.feature) {
+    try {
+      // Get the bounds of the feature and zoom to it
+      const layer = L.geoJSON(contextMenu.value.feature);
+      const bounds = layer.getBounds();
+      leaflet.value.fitBounds(bounds, { padding: [50, 50] });
+    } catch (error) {
+      console.error('Error zooming to feature:', error);
+      alertStore.displayAlert({
+        title: 'Zoom Error',
+        text: 'Could not zoom to the selected feature',
+        type: 'error',
+        closable: true,
+        duration: 3
+      });
+    }
+  }
+  contextMenu.value.show = false;
+}
+
+function contextSelectFeature() {
+  if (contextMenu.value.feature) {
+    // Clear any currently selected features
+    featureStore.clearSelectedFeatures();
+
+    // Select the right-clicked feature
+    featureStore.selectFeature(contextMenu.value.feature);
+
+    // Use the helper function to style the selected feature
+    if (activeFeatureLayer.value) {
+      selectFeatureHelper(contextMenu.value.feature);
+    }
+  }
+  contextMenu.value.show = false;
+}
+
+function contextShowFeatureInfo() {
+  if (contextMenu.value.feature && contextMenu.value.latlng) {
+    const properties = contextMenu.value.feature.properties;
+
+    const content = `
+      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
+      <ul>
+        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
+        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
+      </ul>
+    `;
+
+    L.popup({
+      keepInView: true,
+      autoClose: false,
+      maxWidth: 300
+    })
+      .setLatLng(contextMenu.value.latlng)
+      .setContent(content)
+      .openOn(leaflet.value);
+  }
+  contextMenu.value.show = false;
+}
 </script>
 <style scoped>
 #mapContainer {
   width: 100%;
   height: 100%;
+}
+
+/* Style for the context menu */
+.v-menu__content {
+  z-index: 10000;
+  /* Ensure it appears above map layers */
 }
 </style>
