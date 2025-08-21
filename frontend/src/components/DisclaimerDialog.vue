@@ -1,12 +1,6 @@
 <template>
-  <div class="pa-4 text-center">
-    <v-dialog
-      v-model="need_disclaimer"
-      max-width="800"
-      persistent
-      scrollable
-      transition="dialog-bottom-transition"
-    >
+  <div class="pa-4 text-center" :style="{ zIndex: zIndex }">
+    <v-dialog v-model="need_disclaimer" max-width="800" persistent scrollable transition="dialog-bottom-transition">
       <v-card :prepend-icon="mdiAlertCircle" title="Disclaimer">
         <v-card-text>
           <p>
@@ -26,27 +20,15 @@
           <!-- Logo row -->
           <v-row class="mt-4" justify="space-around" align="center">
             <v-col v-for="(logo, index) in logos" :key="index" cols="12" sm="4" md="3">
-              <v-img
-                :src="logo.image"
-                :alt="logo.alt"
-                :lazy-src="logo.image"
-                contain
-                height="100"
-                class="mx-auto"
-                :cover="logo.shouldCover !== false"
-              ></v-img>
+              <v-img :src="logo.image" :alt="logo.alt" :lazy-src="logo.image" contain height="100" class="mx-auto"
+                :cover="logo.shouldCover !== false"></v-img>
             </v-col>
           </v-row>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            text="Acknowledge"
-            variant="tonal"
-            @click="dismiss_disclaimer"
-          ></v-btn>
+          <v-btn color="primary" text="Acknowledge" variant="tonal" @click="dismiss_disclaimer"></v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -57,6 +39,7 @@
 import { mdiAlertCircle } from '@mdi/js'
 import { useAlertStore } from '@/stores/alerts'
 import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 
 import CIROH from '@/assets/CIROH.png'
 import CUAHSI from '@/assets/CUAHSI.png'
@@ -64,6 +47,21 @@ import GRI from '@/assets/GRI_RGB_Monogram_Red+B.png' // Example logo, replace w
 
 const alertStore = useAlertStore()
 const { need_disclaimer } = storeToRefs(alertStore)
+
+const props = defineProps({
+  zIndex: {
+    type: [Number, String],
+    default: 9999999
+  }
+})
+
+// Compute content z-index to be slightly higher than the container
+const contentZIndex = computed(() => {
+  const baseZIndex = typeof props.zIndex === 'string'
+    ? parseInt(props.zIndex, 10)
+    : props.zIndex
+  return baseZIndex + 1
+})
 
 const logos = [
   { image: CIROH, alt: 'CIROH', shouldCover: false },
@@ -75,3 +73,16 @@ function dismiss_disclaimer() {
   alertStore.acceptDisclaimer()
 }
 </script>
+
+<style scoped>
+.disclaimer-dialog-container {
+  position: relative;
+  z-index: v-bind(zIndex);
+}
+</style>
+
+<style>
+.disclaimer-dialog-content {
+  z-index: v-bind(contentZIndex) !important;
+}
+</style>

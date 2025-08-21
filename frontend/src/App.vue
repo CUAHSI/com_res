@@ -5,7 +5,7 @@
       <DisclaimerDialog
         v-if="!alertStore.disclaimer_accepted"
         @accept="alertStore.acceptDisclaimer"
-        :style="{ 'z-index': '999999' }"
+        :z-index="9999999"
       />
       <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />
       <TheMobileNavDrawer
