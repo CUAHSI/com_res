@@ -502,15 +502,6 @@ function createFlowlinesFeatureLayer(region) {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
-featureLayer.on('contextmenu', function (e) {
-      // Prevent the default context menu
-      L.DomEvent.stop(e.originalEvent)
-
-      // Get the feature
-      const feature = e.layer.feature
-
-      console.log('Feature right-clicked:', feature)
-    })
   })
 
   return featureLayer

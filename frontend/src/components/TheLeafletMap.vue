@@ -4,7 +4,7 @@
   <ContextMenu 
     v-if="contextMenu.show" 
     :context="contextMenu"
-    @close="contextMenu.value.show = false"
+    @close="contextMenu.show = false"
     @zoom-to-feature="contextZoomToFeature"
     @select-feature="contextSelectFeature"
     @show-feature-info="contextShowFeatureInfo" />
@@ -177,6 +177,10 @@ onMounted(() => {
   leaflet.value.on('zoomend moveend', function () {
     isZooming.value = false
   })
+
+  // Dismiss context menu on right click
+  leaflet.value.on('contextmenu', onMapRightClick);
+
   mapLoaded.value = true
 })
 
@@ -299,17 +303,31 @@ watch(activeFeatureLayer, (newLayer, oldLayer) => {
   }
 
   if (newLayer) {
-    newLayer.on('contextmenu', onFeatureRightClick);
+    newLayer.on('contextmenu', contextFeatureRightClick);
   }
 }, { immediate: true });
 
+// TODO: get a way to dismiss the context menu
 function onMapRightClick(event) {
-  // Hide context menu if clicking elsewhere on the map
-  contextMenu.value.show = false;
+  // Assume it's a map click unless we find a feature
+  let isFeatureClick = false;
+  
+  // Check all layers to see if the click was on a feature
+  leaflet.value.eachLayer(layer => {
+    if (layer instanceof L.Path && layer.getBounds && layer.getBounds().contains(event.latlng)) {
+      isFeatureClick = true;
+    }
+  });
+  
+  // Only hide context menu if it was a map click (not on a feature)
+  if (!isFeatureClick) {
+    contextMenu.value.show = false;
+  }
 }
 
 function contextFeatureRightClick(event) {
   // Prevent the default browser context menu
+  console.log('New Right-clicked on feature:', event);
   event.originalEvent.preventDefault();
 
   // Get the feature from the event
@@ -345,6 +363,33 @@ function contextZoomToFeature() {
     }
   }
   contextMenu.value.show = false;
+}
+
+function selectFeatureHelper(feature) {
+  // This function should handle styling the selected feature
+  // Implementation depends on your specific needs
+  console.log('Selecting feature:', feature);
+  
+  // Example implementation:
+  if (activeFeatureLayer.value) {
+    activeFeatureLayer.value.eachLayer(layer => {
+      if (layer.feature === feature) {
+        // Apply selected style
+        layer.setStyle({
+          color: '#ff0000',
+          weight: 3,
+          opacity: 1
+        });
+      } else {
+        // Reset to default style
+        layer.setStyle({
+          color: '#3388ff',
+          weight: 2,
+          opacity: 1
+        });
+      }
+    });
+  }
 }
 
 function contextSelectFeature() {
@@ -396,11 +441,12 @@ function contextShowFeatureInfo() {
 #mapContainer {
   width: 100%;
   height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
-/* Style for the context menu */
-.v-menu__content {
+/* Ensure the context menu appears above the map */
+:deep(.v-menu__content) {
   z-index: 10000;
-  /* Ensure it appears above map layers */
 }
 </style>

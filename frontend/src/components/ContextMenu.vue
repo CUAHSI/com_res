@@ -5,43 +5,29 @@
     :position-y="context.y"
     absolute
     offset-y
+    @update:model-value="$emit('close')"
   >
     <v-list density="compact">
-      <v-list-item @click="zoomToFeature">
+      <v-list-item @click="$emit('zoom-to-feature')">
         <v-list-item-title>Zoom to Feature</v-list-item-title>
+      </v-list-item>
+      <v-list-item @click="$emit('select-feature')">
+        <v-list-item-title>Select Feature</v-list-item-title>
+      </v-list-item>
+      <v-list-item @click="$emit('show-feature-info')">
+        <v-list-item-title>Show Feature Info</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-menu>
 </template>
 
 <script setup>
-const emit = defineEmits(['zoom-to-feature'])
-
 defineProps({
   context: {
     type: Object,
-    default: () => context.value
+    required: true
   }
 })
 
-function zoomToFeature() {
-  if (context.value.feature) {
-    emit('zoom-to-feature', context.value.feature)
-  }
-  context.value.show = false
-}
-
-// Expose method to open the menu
-function openMenu(event, feature) {
-  context.value = {
-    show: true,
-    x: event.clientX,
-    y: event.clientY,
-    feature: feature
-  }
-}
-
-defineExpose({
-  openMenu
-})
+defineEmits(['close', 'zoom-to-feature', 'select-feature', 'show-feature-info'])
 </script>
