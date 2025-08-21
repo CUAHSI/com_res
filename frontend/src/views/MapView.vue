@@ -49,22 +49,21 @@
     >
       <v-col style="padding: 0px; margin: 0px; position: relative;">
         <TheLeafletMap />
-        
-        <!-- Position the StageSlider inside the map container -->
-        <div class="stage-slider-container" v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0">
-          <TheStageSlider
-            v-model="mapHelpers.stageValue.value"
-            :min="activeFeatureFimCogData.stages_m[0]"
-            :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-            :stages="activeFeatureFimCogData.stages_m"
-            :flows="activeFeatureFimCogData.flows_cms"
-            width="50px"
-            height="400px"
-            @update:modelValue="handleStageChange"
-          />
-        </div>
       </v-col>
     </v-row>
+
+    <div :class="{ 'desktop-stage-slider-container': !mdAndDown, 'mobile-stage-slider-container': mdAndDown }" v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0">
+      <TheStageSlider
+        v-model="mapHelpers.stageValue.value"
+        :min="activeFeatureFimCogData.stages_m[0]"
+        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+        :stages="activeFeatureFimCogData.stages_m"
+        :flows="activeFeatureFimCogData.flows_cms"
+        :width="mdAndDown ? '40px' : '50px'"
+        :height="mdAndDown ? '100px' : '400px'"
+        @update:modelValue="handleStageChange"
+      />
+    </div>
 
     <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
       <HistoricalPlot
@@ -282,17 +281,26 @@ const handleStageChange = () => {
   width: 300px;
 }
 
-.stage-slider-container {
+.desktop-stage-slider-container {
   position: absolute;
-  right: -10px;
-  top: 470px;
+  right: 15px;
+  top: 475px;
+  transform: translateY(-50%);
+  z-index: 99999;
+  pointer-events: none;
+}
+.mobile-stage-slider-container {
+  position: absolute;
+  right: 15px;
+  top: 325px;
   transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
 }
 
 /* Ensure the slider itself has pointer events */
-.stage-slider-container >>> .thermometer-slider-container {
+.desktop-stage-slider-container >>> .thermometer-slider-container,
+.mobile-stage-slider-container >>> .thermometer-slider-container {
   pointer-events: auto;
 }
 </style>
