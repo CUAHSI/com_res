@@ -466,6 +466,28 @@ function createFlowlinesFeatureLayer(region) {
         .setLatLng(e.latlng)
         .setContent(content)
         .openOn(leaflet.value)
+
+        if (isNearTopEdge) {
+          setTimeout(() => {
+          const popupElement = hoverPopup?.getElement();
+            if (popupElement) {
+              // Adjust the tip to point upward
+              const tipElement = popupElement.querySelector('.leaflet-popup-tip');
+              if (tipElement) {
+                // Position tip at the top of the popup pointing upward
+                tipElement.style.top = '0';
+                tipElement.style.bottom = 'auto';
+                tipElement.style.transform = 'translateX(50%) rotate(180deg)';
+              }
+              
+              // Update the popup content container position
+              const contentContainer = popupElement.querySelector('.leaflet-popup-content-wrapper');
+              if (contentContainer) {
+                contentContainer.style.marginTop = '10px'; // Add space for the tip
+              }
+            }
+          }, 100);
+        }
     }, 100) // 100ms delay
   })
 
