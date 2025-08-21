@@ -65,7 +65,7 @@
       />
     </div>
 
-    <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
+    <div v-if="showHistorical || showForecast" :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
       <HistoricalPlot
         v-show="showHistorical"
         ref="historicalPlotRef"
