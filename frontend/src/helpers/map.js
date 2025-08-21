@@ -75,7 +75,7 @@ const selectFeature = async (feature) => {
           duration: 3
         })
         return
-      }else{
+      } else {
         saveCatalogDataToFeature(activeFeature, fimCogData)
       }
     }
@@ -404,6 +404,95 @@ function createFlowlinesFeatureLayer(region) {
   })
   featureLayer.name = region.name
 
+  // Variables to track hover state
+  let hoverPopup = null
+  let hoverTimeout = null
+
+  // Show popup on mouseover
+  featureLayer.on('mouseover', function (e) {
+    // Set a timeout to show the popup after a brief delay (prevents flickering)
+    const feature = e.layer.feature
+    const properties = feature.properties
+
+    const content = `
+      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
+      <ul>
+        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
+        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
+      </ul>
+    `
+
+    // Determine if we're near the top edge of the map
+    // const mapBounds = leaflet.value.getBounds();
+    const mapSize = leaflet.value.getSize()
+    const point = leaflet.value.latLngToContainerPoint(e.latlng)
+    const isNearTopEdge = point.y < mapSize.y * 0.25 // 25% from top
+    let belowLatLng = null
+
+    // For top-edge features, manually reposition the popup below the feature
+    if (isNearTopEdge) {
+      const popupHeight = 10 // Adjust this based on your popup height
+
+      // Position the popup below the feature (adjusting for popup height)
+      const belowPoint = L.point(point.x, point.y + popupHeight)
+
+      // Convert container point back to latlng
+      belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
+      console.log('Repositioning popup below feature at:', belowLatLng)
+    }
+
+    // Create and open popup
+    hoverPopup = L.popup({
+      closeOnClick: false,
+      autoClose: false,
+      closeButton: false,
+      className: 'hover-popup',
+      maxWidth: 300,
+      autoPan: false,
+      keepInView: false,
+      offset: belowLatLng ? L.point(0, belowLatLng.y) : L.point(0, 0)
+    })
+      .setLatLng(belowLatLng ? belowLatLng : e.latlng)
+      .setContent(content)
+      .openOn(leaflet.value)
+
+    if (isNearTopEdge) {
+      setTimeout(() => {
+      const popupElement = hoverPopup?.getElement();
+        if (popupElement) {
+          // Adjust the tip to point upward
+          const tipElement = popupElement.querySelector('.leaflet-popup-tip');
+          if (tipElement) {
+            // Remove the tip
+            // TODO figure out how to translate and rotate the tip
+            tipElement.remove();
+          }
+        }
+      }, 100);
+    }
+  })
+
+  // Hide popup on mouseout
+  featureLayer.on('mouseout', function (e) {
+    // Clear the timeout if it hasn't triggered yet
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout)
+      hoverTimeout = null
+    }
+
+    // Close the hover popup
+    if (hoverPopup) {
+      leaflet.value.closePopup(hoverPopup)
+      hoverPopup = null
+    }
+  })
+
+  // Keep click functionality for feature selection
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
     const properties = feature.properties
@@ -413,33 +502,8 @@ function createFlowlinesFeatureLayer(region) {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
-
-    const content = `
-      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-          <ul>
-        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-          </ul>
-      `
-    L.popup({
-      keepInView: true, // This ensures the popup stays visible when zooming
-      // autoPan: false,
-      autoClose: false, // Optional: keeps the popup open
-      maxWidth: 300 // Optional: sets maximum width
-    })
-      .setLatLng(e.latlng)
-      .setContent(content)
-      .openOn(leaflet.value)
-
-    // zoom to the feature bounds
-    // const bounds = L.geoJSON(feature).getBounds()
-    // leaflet.value.fitBounds(bounds)
   })
+
   return featureLayer
 }
 
