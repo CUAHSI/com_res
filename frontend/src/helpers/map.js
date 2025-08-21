@@ -75,7 +75,7 @@ const selectFeature = async (feature) => {
           duration: 3
         })
         return
-      }else{
+      } else {
         saveCatalogDataToFeature(activeFeature, fimCogData)
       }
     }
@@ -405,22 +405,22 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.name = region.name
 
   // Variables to track hover state
-  let hoverPopup = null;
-  let hoverTimeout = null;
+  let hoverPopup = null
+  let hoverTimeout = null
 
   // Show popup on mouseover
   featureLayer.on('mouseover', function (e) {
     // Clear any existing timeout
     if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      hoverTimeout = null;
+      clearTimeout(hoverTimeout)
+      hoverTimeout = null
     }
-    
+
     // Set a timeout to show the popup after a brief delay (prevents flickering)
     hoverTimeout = setTimeout(() => {
-      const feature = e.layer.feature;
-      const properties = feature.properties;
-      
+      const feature = e.layer.feature
+      const properties = feature.properties
+
       const content = `
         ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
         ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
@@ -432,52 +432,71 @@ function createFlowlinesFeatureLayer(region) {
           ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
           ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
         </ul>
-      `;
-      
-      // Create and open popup with keepInView enabled
+      `
+
+      // Determine if we're near the top edge of the map
+      // const mapBounds = leaflet.value.getBounds();
+      const mapSize = leaflet.value.getSize()
+      const point = leaflet.value.latLngToContainerPoint(e.latlng)
+      const isNearTopEdge = point.y < mapSize.y * 0.2 // 20% from top
+      let belowLatLng = null
+
+      // For top-edge features, manually reposition the popup below the feature
+      if (isNearTopEdge) {
+        const popupHeight = 100 // Adjust this based on your popup height
+
+        // Position the popup below the feature (adjusting for popup height)
+        const belowPoint = L.point(point.x, point.y + popupHeight)
+
+        // Convert container point back to latlng
+        belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
+      }
+
+      // Create and open popup
       hoverPopup = L.popup({
         closeOnClick: false,
         autoClose: false,
         closeButton: false,
         className: 'hover-popup',
         maxWidth: 300,
-        autoPan: false, // Disable auto-pan to prevent map jiggling
-        keepInView: true // This ensures the popup stays within the map viewport
+        autoPan: false,
+        keepInView: false,
+        offset: belowLatLng ? L.point(0, belowLatLng.y) : L.point(0, 0)
       })
         .setLatLng(e.latlng)
         .setContent(content)
-        .openOn(leaflet.value);
-    }, 100); // 100ms delay
-  });
+        .openOn(leaflet.value)
+    }, 100) // 100ms delay
+  })
 
   // Hide popup on mouseout
   featureLayer.on('mouseout', function (e) {
     // Clear the timeout if it hasn't triggered yet
     if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      hoverTimeout = null;
+      clearTimeout(hoverTimeout)
+      hoverTimeout = null
     }
-    
+
     // Close the hover popup
     if (hoverPopup) {
-      leaflet.value.closePopup(hoverPopup);
-      hoverPopup = null;
+      leaflet.value.closePopup(hoverPopup)
+      hoverPopup = null
     }
-  });
+  })
 
   // Keep click functionality for feature selection
   featureLayer.on('click', function (e) {
-    const feature = e.layer.feature;
-    const properties = feature.properties;
-    console.log('Feature clicked:', feature);
-    featureStore.clearSelectedFeatures();
+    const feature = e.layer.feature
+    const properties = feature.properties
+    console.log('Feature clicked:', feature)
+    featureStore.clearSelectedFeatures()
     if (!featureStore.checkFeatureSelected(feature)) {
       // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature);
+      featureStore.selectFeature(feature)
     }
-  });
+  })
 
-  return featureLayer;
+  return featureLayer
 }
 
 function createFeatureLayerProvider(region) {
