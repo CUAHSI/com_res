@@ -95,6 +95,7 @@ onMounted(() => {
     layers: 0,
     transparent: 'true',
     format: 'image/png',
+    attribution: 'Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
   })
 
   const stamenTerrain = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.jpg', {
