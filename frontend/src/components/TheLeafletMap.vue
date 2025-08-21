@@ -1,5 +1,5 @@
 <template>
-  <div v-show="$route.meta.showMap" id="mapContainer" @contextmenu="onMapRightClick"></div>
+  <div v-show="$route.meta.showMap" id="mapContainer" @click="onMapClick"></div>
   <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
   <ContextMenu 
     v-if="contextMenu.show" 
@@ -178,8 +178,8 @@ onMounted(() => {
     isZooming.value = false
   })
 
-  // Dismiss context menu on right click
-  leaflet.value.on('contextmenu', onMapRightClick);
+  // Dismiss context menu click
+  leaflet.value.on('click', onMapClick);
 
   mapLoaded.value = true
 })
@@ -307,20 +307,9 @@ watch(activeFeatureLayer, (newLayer, oldLayer) => {
   }
 }, { immediate: true });
 
-// TODO: get a way to dismiss the context menu
-function onMapRightClick(event) {
-  // Assume it's a map click unless we find a feature
-  let isFeatureClick = false;
-  
-  // Check all layers to see if the click was on a feature
-  leaflet.value.eachLayer(layer => {
-    if (layer instanceof L.Path && layer.getBounds && layer.getBounds().contains(event.latlng)) {
-      isFeatureClick = true;
-    }
-  });
-  
-  // Only hide context menu if it was a map click (not on a feature)
-  if (!isFeatureClick) {
+function onMapClick(event) {
+  // if the click was not a right-click, hide the context menu
+  if (event.originalEvent.button !== 2) {
     contextMenu.value.show = false;
   }
 }
@@ -373,7 +362,7 @@ function selectFeatureHelper(feature) {
   // This function should handle styling the selected feature
   // Implementation depends on your specific needs
   console.log('Selecting feature:', feature);
-  
+
   // Example implementation:
   if (activeFeatureLayer.value) {
     activeFeatureLayer.value.eachLayer(layer => {
