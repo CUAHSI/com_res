@@ -404,43 +404,78 @@ function createFlowlinesFeatureLayer(region) {
   })
   featureLayer.name = region.name
 
+  // Variables to track hover state
+  let hoverPopup = null;
+  let hoverTimeout = null;
+
+  // Show popup on mouseover
+  featureLayer.on('mouseover', function (e) {
+    // Clear any existing timeout
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = null;
+    }
+    
+    // Set a timeout to show the popup after a brief delay (prevents flickering)
+    hoverTimeout = setTimeout(() => {
+      const feature = e.layer.feature;
+      const properties = feature.properties;
+      
+      const content = `
+        ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+        ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
+        <ul>
+          ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+          ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+          ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
+          ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+          ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+          ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
+        </ul>
+      `;
+      
+      // Create and open popup
+      hoverPopup = L.popup({
+        closeOnClick: false,
+        autoClose: false,
+        closeButton: false,
+        className: 'hover-popup',
+        maxWidth: 300
+      })
+        .setLatLng(e.latlng)
+        .setContent(content)
+        .openOn(leaflet.value);
+    }, 100); // 100ms delay
+  });
+
+  // Hide popup on mouseout
+  featureLayer.on('mouseout', function (e) {
+    // Clear the timeout if it hasn't triggered yet
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = null;
+    }
+    
+    // Close the hover popup
+    if (hoverPopup) {
+      leaflet.value.closePopup(hoverPopup);
+      hoverPopup = null;
+    }
+  });
+
+  // Keep click functionality for feature selection
   featureLayer.on('click', function (e) {
-    const feature = e.layer.feature
-    const properties = feature.properties
-    console.log('Feature clicked:', feature)
-    featureStore.clearSelectedFeatures()
+    const feature = e.layer.feature;
+    const properties = feature.properties;
+    console.log('Feature clicked:', feature);
+    featureStore.clearSelectedFeatures();
     if (!featureStore.checkFeatureSelected(feature)) {
       // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature)
+      featureStore.selectFeature(feature);
     }
+  });
 
-    const content = `
-      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-          <ul>
-        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-          </ul>
-      `
-    L.popup({
-      keepInView: true, // This ensures the popup stays visible when zooming
-      // autoPan: false,
-      autoClose: false, // Optional: keeps the popup open
-      maxWidth: 300 // Optional: sets maximum width
-    })
-      .setLatLng(e.latlng)
-      .setContent(content)
-      .openOn(leaflet.value)
-
-    // zoom to the feature bounds
-    // const bounds = L.geoJSON(feature).getBounds()
-    // leaflet.value.fitBounds(bounds)
-  })
-  return featureLayer
+  return featureLayer;
 }
 
 function createFeatureLayerProvider(region) {
