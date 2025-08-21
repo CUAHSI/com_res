@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
@@ -143,6 +143,7 @@ const toggle = async (component_name) => {
   // based on which button was clicked.
   if (component_name === 'historical') {
     showHistorical.value = !showHistorical.value
+    await nextTick()
     await historicalPlotRef.value.getHistoricalData(
       reach_id.toString(),
       reach_name,
@@ -151,6 +152,7 @@ const toggle = async (component_name) => {
     )
   } else if (component_name === 'forecast') {
     showForecast.value = !showForecast.value
+    await nextTick()
     await forecastPlotRef.value.getForecastData(
       reach_id.toString(),
       reach_name,
