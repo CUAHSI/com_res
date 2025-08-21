@@ -72,7 +72,6 @@ const handleRegionChange = (regionName) => {
       region: regionName
     }
   })
-  
   regionsStore.setRegion(regionName)
 }
 </script>

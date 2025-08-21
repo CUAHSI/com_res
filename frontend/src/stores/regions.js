@@ -8,6 +8,7 @@ import TwoRiversOttauquechee from '@/assets/TwoRiversOttauquechee.png'
 import Windham from '@/assets/Windham.png'
 import * as mapHelpers from '@/helpers/map'
 import { nextTick } from 'vue'
+import { useFeaturesStore } from '@/stores/features'
 
 export const useRegionsStore = defineStore('regions', () => {
   const currentRegion = ref(null)
@@ -89,6 +90,7 @@ export const useRegionsStore = defineStore('regions', () => {
     }
   ])
   const setRegion = async (regionName) => {
+    const featureStore = useFeaturesStore()
     console.log('Setting region to:', regionName)
     const region = regions.value.find((region) => region.name === regionName)
     if (!region) {
@@ -96,6 +98,10 @@ export const useRegionsStore = defineStore('regions', () => {
       return
     }
     currentRegion.value = region
+
+    // clear the active feature if there is one selected
+    featureStore.clearSelectedFeatures()
+
     mapHelpers.toggleWMSLayers(region)
     await nextTick()
     try {
