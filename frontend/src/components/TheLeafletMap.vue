@@ -428,7 +428,7 @@ function contextShowFeatureInfo() {
   let feature = contextMenu?.value?.feature
   let latLng = contextMenu?.value?.latlng
   if (feature && latLng) {
-    showHoverPopup(feature, latLng)
+    showHoverPopup(feature, latLng, true)
   }
   contextMenu.value.show = false;
   contextMenuFeatureLatLng.value = null;
