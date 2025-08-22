@@ -356,27 +356,28 @@ async function addWMSLayers(region) {
   }
 }
 
-const toggleWMSLayers = (region) => {
+const toggleWMSLayers = async (region) => {
   // if the regionName is not in wmsLayers, create it
-  if (!wmsLayers.value[region.name]) {
-    createWMSLayers(region)
-      .then(() => {
-        addWMSLayers(region)
-      })
-      .catch((error) => {
-        console.error(`Error creating WMS layers for region ${region.name}:`, error)
-      })
-  }
-  // turn off wms layers that are not part of the current region
-  Object.keys(wmsLayers.value).forEach((regionName) => {
-    if (regionName !== region.name) {
-      console.log(`Removing WMS layers for region: ${regionName}`)
-      wmsLayers.value[regionName].forEach((wmsLayer) => {
-        wmsLayer.removeFrom(leaflet.value)
-        control.value.removeLayer(wmsLayer)
-      })
+  console.log('Toggling WMS layers for region:', region.name)
+  try {
+    if (!wmsLayers.value[region.name]) {
+      await createWMSLayers(region)
     }
-  })
+    addWMSLayers(region)
+
+    // turn off wms layers that are not part of the current region
+    Object.keys(wmsLayers.value).forEach((regionName) => {
+      if (regionName !== region.name) {
+        console.log(`Removing WMS layers for region: ${regionName}`)
+        wmsLayers.value[regionName].forEach((wmsLayer) => {
+          wmsLayer.removeFrom(leaflet.value)
+          control.value.removeLayer(wmsLayer)
+        })
+      }
+    })
+  } catch (error) {
+    console.error(`Error toggling WMS layers for region ${region.name}:`, error)
+  }
 }
 
 const showHoverPopup = (feature, latlng) => {
