@@ -52,7 +52,10 @@
       </v-col>
     </v-row>
 
-    <div :class="{ 'desktop-stage-slider-container': !mdAndDown, 'mobile-stage-slider-container': mdAndDown }" v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0">
+    <div 
+      v-if="showStageSlider"
+      :class="{ 'desktop-stage-slider-container': !mdAndDown, 'mobile-stage-slider-container': mdAndDown }"
+    >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
         :min="activeFeatureFimCogData.stages_m[0]"
@@ -204,6 +207,11 @@ const reachIdChanged = async (selected_reach) => {
 const activeFeatureFimCogData = computed(() => {
   if (!activeFeature.value || !activeFeature.value.properties) return null
   return activeFeature.value.properties.fimCogData || null
+})
+
+const showStageSlider = computed(() => {
+  const activeFeatureHasData = activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
+  return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value
 })
 
 const handleStageChange = () => {
