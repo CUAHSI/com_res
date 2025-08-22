@@ -98,10 +98,6 @@ onMounted(() => {
     attribution: 'Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
   })
 
-  const stamenTerrain = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.jpg', {
-    attribution: 'Map tiles by <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://stamen.com">Stamen Design</a>, Data by <a href="https://openstreetmap.org">OpenStreetMap</a>, under <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>'
-  })
-
   const openTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: © <a href="https://opentopomap.org">OpenTopoMap</a>'
   })
@@ -120,7 +116,6 @@ onMounted(() => {
   let overlays = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'USGS Shaded Relief': USGSShadedReliefOnly,
-    'Stamen Terrain': stamenTerrain,
     'OpenTopoMap': openTopo
   }
 
