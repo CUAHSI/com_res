@@ -380,7 +380,7 @@ const toggleWMSLayers = async (region) => {
   }
 }
 
-const showHoverPopup = (feature, latlng) => {
+const showHoverPopup = (feature, latlng, closeable=false) => {
   // Variables to track hover state
   feature.hoverPopup = null
   feature.hoverTimeout = null
@@ -421,7 +421,7 @@ const showHoverPopup = (feature, latlng) => {
   feature.hoverPopup = L.popup({
     closeOnClick: false,
     autoClose: false,
-    closeButton: false,
+    closeButton: closeable,
     className: 'hover-popup',
     maxWidth: 300,
     autoPan: false,
@@ -476,7 +476,7 @@ function createFlowlinesFeatureLayer(region) {
 
   // Show popup on mouseover
   featureLayer.on('mouseover', (e) => {
-    showHoverPopup(e.layer.feature, e.latlng)
+    showHoverPopup(e.layer.feature, e.latlng, false)
   })
 
   // Hide popup on mouseout
