@@ -4,7 +4,7 @@
     <div class="slider-header">
       <h3>Stage-Flow</h3>
       <InfoTooltip
-        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
+        text="This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels."
         size="x-small"
       />
     </div>
@@ -16,7 +16,7 @@
 
         <!-- Grabbable handle -->
         <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-          <div class="handle-label">{{ flowFromStage(modelValue) }} cfs</div>
+          <div class="handle-label">{{ flowFromStage(modelValue) }} cms</div>
         </div>
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
@@ -58,9 +58,9 @@
 
     <!-- Footer with additional info -->
     <div class="slider-footer">
-      <span>Stage (ft)</span>
+      <span>Stage (m)</span>
       <InfoTooltip
-        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs)."
+        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cms)."
       />
     </div>
   </v-card>

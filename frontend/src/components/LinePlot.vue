@@ -37,7 +37,7 @@ const props = defineProps({
 const chartData = computed(() => ({
   datasets: [
     {
-      label: 'Streamflow (cfs)',
+      label: 'Streamflow (cms)',
       data: props.timeseries,
       fill: true,
       backgroundColor: 'rgba(54, 162, 235, 0.2)',
@@ -68,7 +68,7 @@ const chartOptions = {
     y: {
       title: {
         display: true,
-        text: 'Streamflow (cfs)'
+        text: 'Streamflow (cms)'
       },
       ticks: {
         color: '#555'
