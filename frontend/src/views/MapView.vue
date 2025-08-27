@@ -87,6 +87,11 @@
       <ForecastPlot
         v-show="showForecast"
         ref="forecastPlotRef"
+        :reachid="reach_id"
+        :reachname="reach_name"
+        :forecast_datetime="forecastDateTime"
+        :forecast_mode="forecastMode"
+        :forecast_ensemble="forecastEnsemble"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showForecast"
       />
@@ -122,6 +127,9 @@ const { activeFeature, getFeatureName } = storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
+const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000)) // default: yesterday
+const forecastMode = ref('medium_range')
+const forecastEnsemble = ref('3')
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -175,9 +183,9 @@ const toggle = async (component_name) => {
     await forecastPlotRef.value.getForecastData(
       reach_id.value.toString(),
       reach_name,
-      new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
-      'medium_range',
-      '3'
+      forecastDateTime.value,
+      forecastMode.value,
+      forecastEnsemble.value
     )
   }
 }

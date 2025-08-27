@@ -77,7 +77,7 @@
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose } from 'vue'
+import { ref, defineExpose, watch, toRef } from 'vue'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import {
@@ -101,6 +101,45 @@ const isLoading = ref(false)
 const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
+
+const props = defineProps({
+  reachid: Number,
+  reachname: String,
+  forecast_datetime: {
+    type: Date,
+    default: () => new Date(Date.now() - 24 * 60 * 60 * 1000) // default = yesterday
+  },
+  forecast_mode: {
+    type: String,
+    default: 'medium_range'
+  },
+  forecast_ensemble: {
+    type: String,
+    default: '3'
+  },
+  show: {
+    type: Boolean,
+    required: true
+  }
+})
+
+const reach_id = toRef(props, 'reachid')
+const reach_name = toRef(props, 'reachname')
+const datetime = toRef(props, 'forecast_datetime')
+const forecast_mode = toRef(props, 'forecast_mode')
+const ensemble = toRef(props, 'forecast_ensemble')
+
+watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
+  if (reach_id.value && datetime.value) {
+    await getForecastData(
+      reach_id.value,
+      reach_name.value,
+      datetime.value,
+      forecast_mode.value,
+      ensemble.value
+    )
+  }
+})
 
 const clearPlot = () => {
   plot_timeseries.value = []
@@ -137,7 +176,7 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     isLoading.value = false
   }
 
-  plot_title.value = 'Forecasted Streamflow - ' + name
+  plot_title.value = 'Forecasted Streamflow - ' + reach_name.value
 }
 
 async function downloadBlob(blob, filename) {
@@ -181,13 +220,6 @@ const getFileName = (extension) => {
 defineExpose({
   getForecastData,
   clearPlot
-})
-
-defineProps({
-  show: {
-    type: Boolean,
-    required: true
-  }
 })
 </script>
 
