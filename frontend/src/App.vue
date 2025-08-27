@@ -85,13 +85,7 @@ watch(
         regionsStore.setRegion(region)
       }
       if (!newNeedDisclaimer && !currentRegion.value) {
-        alertStore.displayAlert({
-          title: 'No Region Selected',
-          text: 'You must select a region to view its data.',
-          type: 'error',
-          closable: true,
-          duration: 2
-        })
+        console.log('No Region Selected, you must select a region to view its data.')
       }
     }
   }
