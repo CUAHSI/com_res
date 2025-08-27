@@ -1,4 +1,5 @@
 <template>
+  <!--
   <v-sheet v-if="isLoading" class="mx-auto" elevation="2" style="height: calc(25vh); width: 100%">
     <v-skeleton-loader
       v-if="isLoading"
@@ -11,7 +12,8 @@
       <span class="ml-3">Loading historical data...</span>
     </v-row>
   </v-sheet>
-
+-->
+  <!--
   <v-sheet v-else class="mx-auto" elevation="2" rounded style="height: calc(25vh); width: 100%">
     <v-row align="center" justify="end" class="mb-2">
       <v-menu
@@ -103,6 +105,162 @@
       style="box-shadow: none !important; margin: 0; padding: 0"
     />
   </v-sheet>
+-->
+
+  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+    <v-skeleton-loader
+      v-if="isLoading"
+      type="heading, image "
+      :loading="isLoading"
+      class="mx-auto"
+    ></v-skeleton-loader>
+    <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
+      <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+      <span class="ml-3">Loading historical data...</span>
+    </v-row>
+    <LinePlot
+      v-if="!isLoading"
+      :timeseries="plot_timeseries"
+      :title="plot_title"
+      :style="plot_style"
+    />
+
+    <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+      <!-- CSV Download Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            color="primary"
+            :disabled="downloading.csv"
+            :loading="downloading.csv"
+            @click="downCSV"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="mdiFileDelimited"></v-icon>
+            <v-progress-circular
+              v-if="downloading.csv"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>Download CSV</span>
+      </v-tooltip>
+
+      <!-- JSON Download Button (existing) -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            color="primary"
+            :disabled="downloading.json"
+            :loading="downloading.json"
+            @click="downJson"
+            icon
+            size="small"
+          >
+            <v-icon :icon="mdiCodeJson"></v-icon>
+            <v-progress-circular
+              v-if="downloading.json"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>Download JSON</span>
+      </v-tooltip>
+
+      <!-- Date Adjustment Button -->
+      <v-menu
+        v-model="timeSelectionMenu"
+        location="top left"
+        :offset="[-50, -60]"
+        content-class="menu-content"
+        attach="body"
+        :close-on-content-click="false"
+        :persistent="true"
+        :retain-focus="false"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-tooltip text="Adjust Start and End Dates" location="right">
+            <template #activator="{ props: tooltipProps }">
+              <v-btn v-bind="{ ...menuProps, ...tooltipProps }" icon>
+                <v-icon color="primary">{{ mdiCalendarExpandHorizontal }}</v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
+        </template>
+
+        <v-sheet style="margin-left: 16px; min-width: 300px">
+          <v-list>
+            <v-list-item>
+              <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedStartDate"
+                    label="Start Date"
+                    readonly
+                    density="compact"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="tempStartDate"
+                  :min="'2016-01-01'"
+                  :max="
+                    tempEndDate
+                      ? new Date(new Date(tempEndDate).setDate(new Date(tempEndDate).getDate() - 1))
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (startMenu = false)"
+                ></v-date-picker>
+              </v-menu>
+            </v-list-item>
+
+            <v-list-item>
+              <v-menu v-model="endMenu" :close-on-content-click="false" offset-y min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedEndDate"
+                    label="End Date"
+                    readonly
+                    density="compact"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="tempEndDate"
+                  :min="
+                    tempStartDate
+                      ? new Date(
+                          new Date(tempStartDate).setDate(new Date(tempStartDate).getDate() + 1)
+                        )
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (endMenu = false)"
+                ></v-date-picker>
+              </v-menu>
+            </v-list-item>
+
+            <v-list-item class="d-flex justify-end">
+              <v-btn class="mt-2" color="primary" @click="onTimeSelectionClose">Apply</v-btn>
+            </v-list-item>
+          </v-list>
+        </v-sheet>
+      </v-menu>
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script setup>
@@ -111,6 +269,7 @@ import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
 import { mdiCalendarExpandHorizontal } from '@mdi/js'
 import { API_BASE } from '@/constants'
+import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import {
   Chart as ChartJS,
   Title,
@@ -128,7 +287,11 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale,
 // define properties that can be passed to this component
 const props = defineProps({
   reachid: Number,
-  reachname: String
+  reachname: String,
+  show: {
+    type: Boolean,
+    required: true
+  }
 })
 const reach_id = toRef(props, 'reachid') // make this property reactive to it triggers watch()
 const reach_name = toRef(props, 'reachname') // make this property reactive to it triggers watch()
@@ -137,6 +300,7 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
+const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
 // objects to hold the date values
@@ -257,6 +421,43 @@ watch(timeSelectionMenu, (isOpen) => {
     tempEndDate.value = endDate.value
   }
 })
+async function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const downJson = async () => {
+  downloading.value.json = true
+  const jsonData = JSON.stringify(plot_timeseries.value, null, 2)
+  const blob = new Blob([jsonData], { type: 'application/json' })
+  let filename = getFileName('json')
+  await downloadBlob(blob, filename)
+  downloading.value.json = false
+}
+
+const downCSV = async () => {
+  downloading.value.csv = true
+
+  // Convert timeseries data to CSV format
+  const headers = 'Date,Streamflow\n'
+  const csvRows = plot_timeseries.value.map((item) => `"${item.x}","${item.y}"`).join('\n')
+
+  const csvData = headers + csvRows
+  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
+  let filename = getFileName('csv')
+  await downloadBlob(blob, filename)
+  downloading.value.csv = false
+}
+
+const getFileName = (extension) => {
+  const date = new Date().toISOString().split('T')[0]
+  let filename = `${plot_title.value}${date}`
+  return `${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`
+}
 
 defineExpose({
   getHistoricalData,
@@ -269,8 +470,16 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
 .menu-content {
   z-index: 5000 !important;
+}
+.chart-tooltip {
+  z-index: 99999 !important;
+}
+
+.chart-tooltip span {
+  white-space: normal;
+  word-break: normal;
 }
 </style>

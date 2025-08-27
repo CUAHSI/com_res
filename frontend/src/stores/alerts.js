@@ -21,9 +21,10 @@ export const useAlertStore = defineStore(
   },
   {
     persist: {
-      // only persist the need_disclaimer
+      // We have intentionally chosen NOT to persist the disclaimer, so that it must be re-accepted every time.
+      // https://cuahsi.atlassian.net/browse/CAM-810
       // https://prazdevs.github.io/pinia-plugin-persistedstate/guide/config.html#pick
-      pick: ['need_disclaimer']
+      // pick: ['need_disclaimer']
     }
   }
 )

@@ -3,7 +3,10 @@
     <v-progress-circular indeterminate :size="128"></v-progress-circular>
   </v-overlay>
 
-  <v-container fluid>
+  <v-container fluid class="map-view-container">
+    <div class="region-selector-container">
+      <TheRegionSelector :z-index="999999" />
+    </div>
     <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
@@ -44,44 +47,55 @@
       fill-height
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
-      <v-col style="padding: 0px; margin: 0px">
+      <v-col style="padding: 0px; margin: 0px; position: relative">
         <TheLeafletMap />
       </v-col>
     </v-row>
 
-    <TheStageSlider
-      v-if="activeFeatureFimCogData && activeFeatureFimCogData.stages_m.length > 0"
-      v-model="mapHelpers.stageValue.value"
-      :min="activeFeatureFimCogData.stages_m[0]"
-      :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-      :stages="activeFeatureFimCogData.stages_m"
-      :flows="activeFeatureFimCogData.flows_cms"
-      width="50px"
-      height="400px"
-      @update:modelValue="handleStageChange"
-      style="z-index: 99999"
-    />
+    <div
+      v-if="showStageSlider"
+      :class="{
+        'desktop-stage-slider-container': !mdAndDown,
+        'mobile-stage-slider-container': mdAndDown
+      }"
+    >
+      <TheStageSlider
+        v-model="mapHelpers.stageValue.value"
+        :min="activeFeatureFimCogData.stages_m[0]"
+        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+        :stages="activeFeatureFimCogData.stages_m"
+        :flows="activeFeatureFimCogData.flows_cms"
+        :width="mdAndDown ? '40px' : '50px'"
+        :height="mdAndDown ? '100px' : '400px'"
+        @update:modelValue="handleStageChange"
+      />
+    </div>
 
-    <div :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
+    <div
+      v-if="showHistorical || showForecast"
+      :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }"
+    >
       <HistoricalPlot
         v-show="showHistorical"
         ref="historicalPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
+        :show="showHistorical"
       />
 
       <ForecastPlot
         v-show="showForecast"
         ref="forecastPlotRef"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
+        :show="showForecast"
       />
     </div>
   </v-container>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
@@ -92,6 +106,7 @@ import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
 import InfoIcon from '../components/InfoTooltip.vue'
 import * as mapHelpers from '@/helpers/map'
+import TheRegionSelector from '../components/TheRegionSelector.vue'
 
 const { mdAndDown } = useDisplay()
 
@@ -147,14 +162,16 @@ const toggle = async (component_name) => {
   // based on which button was clicked.
   if (component_name === 'historical') {
     showHistorical.value = !showHistorical.value
-    //    await historicalPlotRef.value.getHistoricalData(
-    //      reach_id.toString(),
-    //      reach_name,
-    //      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-    //      new Date(Date.now())
-    //    )
+    await nextTick()
+    await historicalPlotRef.value.getHistoricalData(
+      reach_id.value.toString(),
+      reach_name,
+      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+      new Date(Date.now())
+    )
   } else if (component_name === 'forecast') {
     showForecast.value = !showForecast.value
+    await nextTick()
     await forecastPlotRef.value.getForecastData(
       reach_id.value.toString(),
       reach_name,
@@ -170,6 +187,12 @@ const activeFeatureFimCogData = computed(() => {
   return activeFeature.value.properties.fimCogData || null
 })
 
+const showStageSlider = computed(() => {
+  const activeFeatureHasData =
+    activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
+  return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value
+})
+
 const handleStageChange = () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
   // enable "snapping to nearest stage" functionality
@@ -177,7 +200,10 @@ const handleStageChange = () => {
   if (!activeFeatureFimCogData.value.stages_m.includes(mapHelpers.stageValue.value)) {
     // find the nearest stage value
     const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
-      return Math.abs(curr - mapHelpers.stageValue.value) < Math.abs(prev - mapHelpers.stageValue.value) ? curr : prev
+      return Math.abs(curr - mapHelpers.stageValue.value) <
+        Math.abs(prev - mapHelpers.stageValue.value)
+        ? curr
+        : prev
     })
     mapHelpers.stageValue.value = nearestStage
     console.log('Snapped to nearest stage:', nearestStage)
@@ -201,32 +227,72 @@ const handleStageChange = () => {
 }
 </script>
 <style scoped>
+.map-view-container {
+  position: relative;
+  height: 100%;
+}
+
 .desktop-map-container {
   height: calc(100vh - 165px);
+  position: relative;
 }
+
 .desktop-plot-container {
   width: 500px;
   height: calc(100vh - 310px);
   position: fixed;
-  top: 225px;
+  top: 250px;
   z-index: 99999;
 }
+
 .desktop-plot-buttons-container {
   width: 400px;
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(45px, 0px);
+  transform: translate(0px, 60px);
 }
 
 .mobile-map-container {
   height: calc(100vh - 500px);
   min-height: 40vh;
+  position: relative;
 }
+
 .mobile-plot-container {
   width: 102%;
-  height: 100%;
   position: static;
   margin: 20px -10px;
+}
+
+.region-selector-container {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  z-index: 999999; /* Match this with the prop value */
+  width: 300px;
+}
+
+.desktop-stage-slider-container {
+  position: absolute;
+  right: 15px;
+  top: 475px;
+  transform: translateY(-50%);
+  z-index: 99999;
+  pointer-events: none;
+}
+.mobile-stage-slider-container {
+  position: absolute;
+  right: 15px;
+  top: 325px;
+  transform: translateY(-50%);
+  z-index: 99999;
+  pointer-events: none;
+}
+
+/* Ensure the slider itself has pointer events */
+.desktop-stage-slider-container >>> .thermometer-slider-container,
+.mobile-stage-slider-container >>> .thermometer-slider-container {
+  pointer-events: auto;
 }
 </style>

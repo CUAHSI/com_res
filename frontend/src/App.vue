@@ -1,11 +1,11 @@
 <template>
   <v-app>
     <v-main>
-      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '999999' }"></AlertPopup>
+      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '1000000' }"></AlertPopup>
       <DisclaimerDialog
         v-if="!alertStore.disclaimer_accepted"
         @accept="alertStore.acceptDisclaimer"
-        :style="{ 'z-index': '999999' }"
+        :z-index="9999999"
       />
       <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />
       <TheMobileNavDrawer
@@ -39,10 +39,14 @@ import { ref, watch } from 'vue'
 import { useAlertStore } from './stores/alerts'
 import { useRegionsStore } from './stores/regions'
 import DisclaimerDialog from './components/DisclaimerDialog.vue'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const alertStore = useAlertStore()
 const regionsStore = useRegionsStore()
+
+const { need_disclaimer } = storeToRefs(alertStore)
+const { currentRegion } = storeToRefs(regionsStore)
 
 let showMobileNavigation = ref(false)
 const paths = [
@@ -73,12 +77,21 @@ function toggleMobileNav() {
 }
 
 watch(
-  () => router.currentRoute.value.path,
-  async (path) => {
+  [() => need_disclaimer.value, () => router.currentRoute.value.path],
+  async ([newNeedDisclaimer, path]) => {
     if (path === '/maps') {
       const { region } = router.currentRoute.value.query
       if (region) {
         regionsStore.setRegion(region)
+      }
+      if (!newNeedDisclaimer && !currentRegion.value) {
+        alertStore.displayAlert({
+          title: 'No Region Selected',
+          text: 'You must select a region to view its data.',
+          type: 'error',
+          closable: true,
+          duration: 2
+        })
       }
     }
   }

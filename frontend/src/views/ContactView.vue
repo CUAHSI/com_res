@@ -1,8 +1,8 @@
 <template>
-  <h2 class="ma-2 text-center">Contact</h2>
   <v-container class="about">
-    <v-sheet class="pa-6 mx-auto" max-width="1200" rounded>
-      <p>
+    <v-sheet class="px-6 pt-6 pb-0 mx-auto" max-width="1200" rounded>
+      <h3 class="mt-2 mb-2">Contact Information</h3>
+      <p class="mt-0 mb-0">
         This project is a collaboration between the
         <a href="https://globalresilience.northeastern.edu/"
           >Global Resilience Institute at Northeastern University</a
@@ -19,8 +19,8 @@
       </p>
     </v-sheet>
 
-    <v-sheet class="pa-6 mx-auto" max-width="1200" rounded>
-      <h2 class="ma-2 text-center">Our Team</h2>
+    <v-sheet class="px-6 pt-2 pb-6 mx-auto" max-width="1200" rounded>
+      <h3 class="mt-0 mb-2">Our Team</h3>
       <v-row align="center" justify="center">
         <v-col
           v-for="member in members"
@@ -129,7 +129,7 @@ const members = [
   {
     name: 'Emma Hibbert',
     image: emmaImg,
-    position: 'Research Associate',
+    position: 'Senior Research Associate',
     org: 'Global Resilience Institute',
     email: 'e.hibbert@northeastern.edu'
   },

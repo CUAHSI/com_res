@@ -9,7 +9,6 @@ export const useFeaturesStore = defineStore(
     const activeFeature = ref(null)
     const querying = ref({ hydrocron: false, nodes: false })
 
-
     function selectFeature(feature) {
       console.log('Selecting feature', feature)
       mapHelpers.selectFeature(feature)
@@ -77,7 +76,7 @@ export const useFeaturesStore = defineStore(
   },
   {
     // persist: {
-    //   // only persist the timeRange
+    //   // persist the timeRange
     //   // https://prazdevs.github.io/pinia-plugin-persistedstate/guide/config.html#pick
     //   pick: ['timeRange'],
     // }
