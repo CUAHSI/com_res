@@ -71,7 +71,7 @@
 import { ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import imgUrl from '@/assets/floodsavvy_icon.jpg'
+import imgUrl from '@/assets/floodsavvy_icon.png'
 defineProps(['paths'])
 defineEmits(['toggleMobileNav'])
 import { mdiGithub } from '@mdi/js'
@@ -95,11 +95,16 @@ const toggleGithubDialog = () => {
 
 <style lang="scss" scoped>
 .logo {
-  height: 100%;
+  height: 100%;   
+  display: flex; 
+  align-items: center; 
   cursor: pointer;
 
   img {
-    height: 100%;
+    height: 100%;   
+    width: auto;    
+    object-fit: contain; 
+    display: block;
   }
 }
 
