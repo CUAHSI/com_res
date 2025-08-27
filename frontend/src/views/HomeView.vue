@@ -132,15 +132,15 @@
 
     <v-sheet class="pa-4 mx-auto ma-2" max-width="1200" rounded>
       <p class="mt-0">
-        For more information on how to use the FloodSavvy interface as well as NOAA’s current
-        products including the National Water Prediction Service (NWPS) and the NWM, please visit
-        the <router-link to="/resources">RESOURCES</router-link> page. The tutorial-style resources
-        for the NWPS and NWM are intended to assist all users in navigating, extracting and
-        assessing flood risk insights. To find out more about the project and how the FloodSavvy
-        resource was co-developed with the six communities, please visit the
-        <router-link to="/about">ABOUT</router-link> page. If you have any questions, or would like
-        to report any issues while using the FloodSavvy website, please visit the
-        <router-link to="/contact">CONTACT</router-link> page.
+        For more information on how to use the FloodSavvy interface as well as NOAA’s 
+        current products, including the National Water Prediction Service (NWPS) and 
+        the NWM, please visit the <router-link to="/resources">RESOURCES</router-link> page. The tutorial-style resources 
+        for the NWPS and the NWM are intended to assist all users in navigating, extracting, 
+        and assessing flood risk insights.
+        To find out more about the project and how the FloodSavvy resource was co-developed 
+        with the six communities, please visit the <router-link to="/about">ABOUT</router-link> page. 
+        If you have any questions or would like to report any issues while using the FloodSavvy 
+        website, please visit the <router-link to="/contact">CONTACT</router-link> page.  
       </p>
     </v-sheet>
   </v-container>

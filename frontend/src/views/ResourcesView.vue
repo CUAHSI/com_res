@@ -9,7 +9,7 @@
        instructions whilst using the FloodSavvy resource.  
       </p>
 
-      <h4 class="ma-2" style="color: gray; font-style: italic;">Scenario 1: Using historical forecasts data to evaluate past flood events</h4>
+      <h4 class="ma-2" style="color: gray; font-style: italic;">Scenario 1: Using historical forecast data to evaluate past flood events</h4>
       <v-sheet
         class="mt-2 mb-4 pa-4"
         style="background-color: #f0f0f0; border-left: 4px solid #9e9e9e"
@@ -51,7 +51,7 @@
             time (by default up to 90 days in the past). 
           </li>
           <li>To display historical streamflow data for a specific event in the location of interest, click 
-            on the date selector icon on top right of the graph. Select the desired date range. 
+            on the date selector icon on the top right of the graph. Select the desired date range. 
             <ul class="ma-2" style="padding-left: 4rem; border-radius: 12px; margin: 0; font-size: 0.875rem;">
               <em> <strong style="color: gray;">Note</strong>: Historical near-real-time streamflow data has 
                 been available since 2016, the year the National Water Model (NWM) became operational.
@@ -118,8 +118,7 @@
       </v-sheet>
 
       <p style="padding: 12px 16px 12px 24px; padding: 12px 16px">
-      If you still have questions about the FloodSavvy resource please reach out to one of our 
-      team members on the
+      If you still have questions about FloodSavvy, please reach out to one of our team members on the 
       <router-link to="/contact">CONTACT US</router-link> page.   
       </p>
 
@@ -138,7 +137,7 @@
       to the information you might need. 
       </p>
 
-      <p>Comming Soon!</p>
+      <p> Coming Soon!</p>
 
       <h3 class="ma-2">Where can I learn more about the NWM or other NOAA resources?</h3>
       <p style="padding: 12px 16px 12px 24px; padding: 12px 16px">

@@ -59,8 +59,8 @@ import { useAlertStore } from '@/stores/alerts'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
-import CIROH from '@/assets/CIROH.png'
-import CUAHSI from '@/assets/CUAHSI.png'
+import CIROH from '@/assets/CIROH_black.png'
+import CUAHSI from '@/assets/logo.png'
 import GRI from '@/assets/GRI_RGB_Monogram_Red+B.png' // Example logo, replace with actual path
 
 const alertStore = useAlertStore()
