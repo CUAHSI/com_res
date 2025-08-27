@@ -16,16 +16,16 @@ const flowlinesFeatureLayers = shallowRef([])
 const featureLayerProviders = shallowRef([])
 const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
-const pendingLayerChanges = ref([])
+const layerControlIsExpanded = ref(false)
 const featureOptions = ref({
-  selectedColor: 'red',
+  selectedColor: '#00FFFF', // Cyan color for selected features
   defaultColor: 'blue',
   defaultWeight: 2,
   selectedWeight: 5,
   opacity: 0.7
 })
 const mapLoaded = ref(false)
-const isZooming = ref(false) // Track if the map is currently zooming
+const isMapMoving = ref(false) // Track if the map is currently moving
 const stageValue = ref(5) // Default stage value for the slider
 
 const MIN_WMS_ZOOM = 9
@@ -39,13 +39,17 @@ const deselectFeature = (feature) => {
       color: featureOptions.value.defaultColor,
       weight: featureOptions.value.defaultWeight
     })
+    // dismiss leaflet popups
+    leaflet.value.closePopup()
+
+    // clear the cogs from the map
+    clearCogsFromMap()
   } catch (error) {
     console.warn('Attempted to deselect feature:', error)
   }
 }
 
 const selectFeature = async (feature) => {
-  const alertStore = useAlertStore()
   const featureStore = useFeaturesStore()
   const { activeFeature } = storeToRefs(featureStore)
   try {
@@ -62,19 +66,22 @@ const selectFeature = async (feature) => {
       console.log('Feature does not have FIM COG data, fetching...')
       // query FastAPI to get relevant geotiffs for the reach
       fimCogData = await fetchCogCatalogData(feature)
-      saveCatalogDataToFeature(activeFeature, fimCogData)
+      if (!fimCogData) {
+        console.log(
+          `No FIM COG data found for reach: ${feature.properties?.reach_id || feature.properties?.COMID}.`
+        )
+        return
+      } else {
+        saveCatalogDataToFeature(activeFeature, fimCogData)
+      }
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
     const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
     if (cogUrls.length === 0) {
-      alertStore.displayAlert({
-        title: 'Stage Selection',
-        text: `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}m.`,
-        type: 'warning',
-        closable: true,
-        duration: 3
-      })
+      console.log(
+        `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}m.`
+      )
       return
     }
     addCogsToMap(cogUrls)
@@ -321,11 +328,11 @@ async function createWMSLayers(region) {
       //      })
 
       console.log(wmsLayer)
-      wmsLayer.name = `${layer.name} - ${region.name}`
+      wmsLayer.name = `${layer.name}`
       wmsLayer.id = layer.id
       wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
       wmsLayers.value[region.name].push(wmsLayer)
-      console.log(`Added WMS layer: ${wmsLayer.name} for region: ${region.name}`)
+      console.log(`Created WMS layer: ${wmsLayer.name} for region: ${region.name}`)
     })
   } else {
     console.error(`No layers found for ${region.name}`)
@@ -334,37 +341,102 @@ async function createWMSLayers(region) {
 
 async function addWMSLayers(region) {
   for (let layer of wmsLayers.value[region.name] || []) {
-    // only add layers that are part of the current region
-    if (!layer.name.includes(region.name)) {
-      console.warn(`Skipping layer ${layer.name} for region ${region.name}`)
-      continue
-    }
     layer.addTo(leaflet.value)
+    console.log(`Adding WMS layer: ${layer.name} to map for region: ${region.name}`)
     control.value.addOverlay(layer, layer.name)
   }
 }
 
-const toggleWMSLayers = (region) => {
+const toggleWMSLayers = async (region) => {
   // if the regionName is not in wmsLayers, create it
-  if (!wmsLayers.value[region.name]) {
-    createWMSLayers(region)
-      .then(() => {
-        addWMSLayers(region)
-      })
-      .catch((error) => {
-        console.error(`Error creating WMS layers for region ${region.name}:`, error)
-      })
-  }
-  // turn off wms layers that are not part of the current region
-  Object.keys(wmsLayers.value).forEach((regionName) => {
-    if (regionName !== region.name) {
-      console.log(`Removing WMS layers for region: ${regionName}`)
-      wmsLayers.value[regionName].forEach((wmsLayer) => {
-        wmsLayer.removeFrom(leaflet.value)
-        control.value.removeLayer(wmsLayer)
-      })
+  console.log('Toggling WMS layers for region:', region.name)
+  try {
+    if (!wmsLayers.value[region.name]) {
+      await createWMSLayers(region)
     }
+    addWMSLayers(region)
+
+    // turn off wms layers that are not part of the current region
+    Object.keys(wmsLayers.value).forEach((regionName) => {
+      if (regionName !== region.name) {
+        console.log(`Removing WMS layers for region: ${regionName}`)
+        wmsLayers.value[regionName].forEach((wmsLayer) => {
+          wmsLayer.removeFrom(leaflet.value)
+          control.value.removeLayer(wmsLayer)
+        })
+      }
+    })
+  } catch (error) {
+    console.error(`Error toggling WMS layers for region ${region.name}:`, error)
+  }
+}
+
+const showHoverPopup = (feature, latlng, closeable = false) => {
+  // Variables to track hover state
+  feature.hoverPopup = null
+  feature.hoverTimeout = null
+  const properties = feature.properties
+
+  const content = `
+      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
+      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
+      <ul>
+        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
+        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
+        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
+        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
+        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
+        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
+      </ul>
+    `
+
+  // Determine if we're near the top edge of the map
+  // const mapBounds = leaflet.value.getBounds();
+  const mapSize = leaflet.value.getSize()
+  const point = leaflet.value.latLngToContainerPoint(latlng)
+  const isNearTopEdge = point.y < mapSize.y * 0.25 // 25% from top
+  let belowLatLng = null
+
+  // For top-edge features, manually reposition the popup below the feature
+  if (isNearTopEdge) {
+    const popupHeight = 10 // Adjust this based on your popup height
+
+    // Position the popup below the feature (adjusting for popup height)
+    const belowPoint = L.point(point.x, point.y + popupHeight)
+
+    // Convert container point back to latlng
+    belowLatLng = leaflet.value.containerPointToLatLng(belowPoint)
+  }
+
+  // Create and open popup
+  feature.hoverPopup = L.popup({
+    closeOnClick: false,
+    autoClose: false,
+    closeButton: closeable,
+    className: 'hover-popup',
+    maxWidth: 300,
+    autoPan: false,
+    keepInView: false,
+    offset: belowLatLng ? L.point(0, belowLatLng.y) : L.point(0, 0)
   })
+    .setLatLng(belowLatLng ? belowLatLng : latlng)
+    .setContent(content)
+    .openOn(leaflet.value)
+
+  if (isNearTopEdge) {
+    setTimeout(() => {
+      const popupElement = feature.hoverPopup?.getElement()
+      if (popupElement) {
+        // Adjust the tip to point upward
+        const tipElement = popupElement.querySelector('.leaflet-popup-tip')
+        if (tipElement) {
+          // Remove the tip
+          // TODO figure out how to translate and rotate the tip
+          tipElement.remove()
+        }
+      }
+    }, 100)
+  }
 }
 
 function createFlowlinesFeatureLayer(region) {
@@ -393,43 +465,38 @@ function createFlowlinesFeatureLayer(region) {
   })
   featureLayer.name = region.name
 
+  // Show popup on mouseover
+  featureLayer.on('mouseover', (e) => {
+    showHoverPopup(e.layer.feature, e.latlng, false)
+  })
+
+  // Hide popup on mouseout
+  featureLayer.on('mouseout', function (e) {
+    let feature = e.layer.feature
+    // Clear the timeout if it hasn't triggered yet
+    if (feature.hoverTimeout) {
+      clearTimeout(feature.hoverTimeout)
+      feature.hoverTimeout = null
+    }
+
+    // Close the hover popup
+    if (feature.hoverPopup) {
+      leaflet.value.closePopup(feature.hoverPopup)
+      feature.hoverPopup = null
+    }
+  })
+
+  // Keep click functionality for feature selection
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
-    const properties = feature.properties
     console.log('Feature clicked:', feature)
     featureStore.clearSelectedFeatures()
     if (!featureStore.checkFeatureSelected(feature)) {
       // Only allow one feature to be selected at a time
       featureStore.selectFeature(feature)
     }
-
-    const content = `
-      ${properties.PopupTitle ? `<h3>${properties.PopupTitle}</h3>` : ''}
-      ${properties.PopupSubti ? `<h4>${properties.PopupSubti}</h4>` : ''}
-      <p>
-          <ul>
-        ${properties.REACHCODE ? `<li>Reach Code: ${properties.REACHCODE}</li>` : ''}
-        ${properties.COMID ? `<li>COMID: ${properties.COMID}</li>` : ''}
-        ${properties.Hydroseq ? `<li>Hydroseq: ${properties.Hydroseq}</li>` : ''}
-        ${properties.SLOPE ? `<li>Slope: ${properties.SLOPE.toFixed(4)}</li>` : ''}
-        ${properties.LENGTHKM ? `<li>Length: ${properties.LENGTHKM.toFixed(4)} km</li>` : ''}
-        ${properties.GNIS_ID ? `<li>GNIS ID: ${properties.GNIS_ID}</li>` : ''}
-          </ul>
-      </p>
-      `
-    L.popup({
-      keepInView: true, // This ensures the popup stays visible when zooming
-      autoClose: false, // Optional: keeps the popup open
-      maxWidth: 300 // Optional: sets maximum width
-    })
-      .setLatLng(e.latlng)
-      .setContent(content)
-      .openOn(leaflet.value)
-
-    // zoom to the feature bounds
-    const bounds = L.geoJSON(feature).getBounds()
-    leaflet.value.fitBounds(bounds)
   })
+
   return featureLayer
 }
 
@@ -474,7 +541,7 @@ const toggleFeatureLayer = async (region) => {
 export {
   mapObject,
   mapLoaded,
-  isZooming,
+  isMapMoving,
   deselectFeature,
   selectFeature,
   clearAllFeatures,
@@ -492,5 +559,6 @@ export {
   determineCogsForStage,
   addCogsToMap,
   clearCogsFromMap,
-  pendingLayerChanges
+  showHoverPopup,
+  layerControlIsExpanded
 }

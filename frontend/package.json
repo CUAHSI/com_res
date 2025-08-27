@@ -35,7 +35,6 @@
     "leaflet-easybutton": "^2.4.0",
     "lorem-ipsum": "^2.0.8",
     "pinia": "^3.0.3",
-    "pinia-plugin-persistedstate": "^4.4.1",
     "proj4": "^2.19.5",
     "proj4-fully-loaded": "^0.2.0",
     "swagger-ui": "^5.9.0",

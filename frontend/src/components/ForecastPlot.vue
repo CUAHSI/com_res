@@ -30,8 +30,24 @@
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading forecasted data...</span>
     </v-row>
-    <LinePlot v-if="!isLoading" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
+    <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
+      <span class="ml-3">No forecasted data available.</span>
+    </v-row>
+    <LinePlot v-if="!isLoading && hasData" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
     <v-card-actions class="position-relative">
+      <!-- CSV Download Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
+            :disabled="downloading.csv" :loading="downloading.csv" @click="downCSV" icon size="small" class="mr-1">
+            <v-icon :icon="mdiFileDelimited"></v-icon>
+            <v-progress-circular v-if="downloading.csv" indeterminate color="white" size="20"></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>Download CSV</span>
+      </v-tooltip>
+      
+      <!-- JSON Download Button (existing) -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
@@ -51,7 +67,7 @@ import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose } from 'vue'
 import { API_BASE } from '@/constants'
-import { mdiCodeJson } from '@mdi/js'
+import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoIcon from '@/components/InfoTooltip.vue'
 import {
   Chart as ChartJS,
@@ -71,7 +87,8 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
-const downloading = ref({ json: false })
+const hasData = ref(false)
+const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
 const clearPlot = () => {
@@ -99,7 +116,9 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     }
 
     const data = await response.json()
-    plot_timeseries.value = Object.entries(data).map(([x, y]) => ({ x, y }))
+    let formattedData = Object.entries(data).map(([x, y]) => ({ x, y }))
+    hasData.value = formattedData.length > 0
+    plot_timeseries.value = formattedData
   } catch (err) {
     error.value = `Failed to load data: ${err.message}`
     console.error('API error:', err)
@@ -123,15 +142,31 @@ const downJson = async () => {
   downloading.value.json = true
   const jsonData = JSON.stringify(plot_timeseries.value, null, 2)
   const blob = new Blob([jsonData], { type: 'application/json' })
-  let filename = getFileName()
+  let filename = getFileName('json')
   await downloadBlob(blob, filename)
   downloading.value.json = false
 }
 
-const getFileName = () => {
+const downCSV = async () => {
+  downloading.value.csv = true
+  
+  // Convert timeseries data to CSV format
+  const headers = 'Date,Streamflow\n'
+  const csvRows = plot_timeseries.value.map(item => 
+    `"${item.x}","${item.y}"`
+  ).join('\n')
+  
+  const csvData = headers + csvRows
+  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
+  let filename = getFileName('csv')
+  await downloadBlob(blob, filename)
+  downloading.value.csv = false
+}
+
+const getFileName = (extension) => {
   const date = new Date().toISOString().split('T')[0]
   let filename = `${plot_title.value}${date}`
-  return filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+  return `${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`
 }
 
 defineExpose({
@@ -156,5 +191,4 @@ defineProps({
   white-space: normal;
   word-break: normal;
 }
-
 </style>

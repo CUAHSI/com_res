@@ -1,54 +1,57 @@
 <template>
-  <div class="thermometer-slider-container" :style="containerStyle">
-    <div class="thermometer">
-      <!-- Mercury fill -->
-      <div class="mercury" :style="mercuryStyle"></div>
+  <v-card class="slider-wrapper">
+    <!-- Header with title and info tooltip -->
+    <div class="slider-header">
+      <h3>Stage-Flow</h3>
+      <InfoTooltip
+        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
+        size="x-small"
+      />
+    </div>
 
-      <!-- Grabbable handle -->
-      <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-        <div class="handle-label">{{ flowFromStage(modelValue) }} cfs</div>
-      </div>
+    <div class="thermometer-slider-container" :style="containerStyle">
+      <div class="thermometer">
+        <!-- Mercury fill -->
+        <div class="mercury" :style="mercuryStyle"></div>
 
-      <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
-      <v-slider
-        v-model="modelValue"
-        vertical
-        :max="max"
-        :min="min"
-        :step="step"
-        hide-details
-        class="slider-input"
-        @update:modelValue="$emit('update:modelValue', modelValue)"
-      ></v-slider>
+        <!-- Grabbable handle -->
+        <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
+          <div class="handle-label">{{ flowFromStage(modelValue) }} cfs</div>
+        </div>
 
-      <!-- Tick marks -->
-      <div class="ticks">
-        <div
-          v-for="(_, index) in ticks"
-          :key="index"
-          class="tick"
-          :class="{ 'major-tick': index % majorTickInterval === 0 }"
-          :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
-        ></div>
-      </div>
+        <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
+        <v-slider v-model="modelValue" vertical :max="max" :min="min" :step="step" hide-details class="slider-input"
+          @update:modelValue="$emit('update:modelValue', modelValue)"></v-slider>
 
-      <!-- Labels inside thermometer -->
-      <div class="labels-inside">
-        <div
-          v-for="(stage, index) in visibleStages"
-          :key="index"
-          class="label-inside"
-          :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
-        >
-          {{ stage }}
+        <!-- Tick marks -->
+        <div class="ticks">
+          <div v-for="(_, index) in ticks" :key="index" class="tick"
+            :class="{ 'major-tick': index % majorTickInterval === 0 }"
+            :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"></div>
+        </div>
+
+        <!-- Labels inside thermometer -->
+        <div class="labels-inside">
+          <div v-for="(stage, index) in visibleStages" :key="index" class="label-inside"
+            :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }">
+            {{ stage }}
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Footer with additional info -->
+    <div class="slider-footer">
+      <span>Stage (ft)</span>
+      <InfoTooltip
+        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs)." />
+    </div>
+  </v-card>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
+import InfoTooltip from './InfoTooltip.vue' // Make sure to import the InfoTooltip
 
 const props = defineProps({
   modelValue: {
@@ -127,11 +130,7 @@ const visibleStages = computed(() => {
 
 const containerStyle = computed(() => ({
   width: props.width,
-  height: props.height,
-  right: '20px',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  padding: '20px 0' // Add vertical padding
+  height: props.height
 }))
 
 const mercuryStyle = computed(() => ({
@@ -179,7 +178,7 @@ const handleDrag = (e) => {
   e.preventDefault()
 
   const clientY = e.clientY || e.touches[0].clientY
-  const container = document.querySelector('.thermometer-slider-container')
+  const container = document.querySelector('.thermometer')
   const rect = container.getBoundingClientRect()
 
   let position = 1 - (clientY - rect.top) / rect.height
@@ -199,33 +198,93 @@ const stopDrag = () => {
 </script>
 
 <style scoped>
+.slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 12px 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
 .thermometer-slider-container {
-  position: absolute;
-  z-index: 10;
   display: flex;
   justify-content: center;
   pointer-events: none;
   box-sizing: border-box;
+  width: 100%;
+  margin: 5px 0;
+}
+
+/* Header styles */
+.slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  width: 100%;
+  position: relative;
+  z-index: 1001;
+  pointer-events: auto;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.slider-header h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap;
+  text-align: center;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+/* Footer styles */
+.slider-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  width: 100%;
+  font-size: 12px;
+  color: #666;
+  position: relative;
+  z-index: 1001;
+  pointer-events: auto;
+  gap: 4px;
+}
+
+/* Ensure tooltips have high z-index */
+.slider-header>>>.v-overlay__content,
+.slider-footer>>>.v-overlay__content {
+  z-index: 1002 !important;
+  max-width: 200px;
+  white-space: normal;
 }
 
 .thermometer {
   position: relative;
   width: 100%;
-  height: calc(100% - 40px); /* Account for padding */
+  height: 100%;
   background-color: #f5f5f5;
   border-radius: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   border: 2px solid #ddd;
   overflow: visible;
   pointer-events: auto;
-  margin: 20px 0; /* Add vertical padding */
-  padding-right: 30px; /* Make room for labels */
+  padding-right: 30px;
+  /* Make room for labels */
 }
 
 .mercury {
   position: absolute;
   bottom: 0;
-  width: calc(100% - 20px); /* Account for horizontal padding */
+  width: calc(100% - 20px);
+  /* Account for horizontal padding */
   transition: height 0.2s ease;
   border-radius: 0 0 18px 18px;
   margin: 0 10px;

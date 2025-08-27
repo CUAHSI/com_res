@@ -32,3 +32,9 @@ defineEmits(['toggleMobileNav'])
 
 const { mdAndDown } = useDisplay()
 </script>
+
+<style scoped>
+.mobile-nav-items {
+  z-index: 999999 !important;
+}
+</style>

@@ -17,7 +17,7 @@
         <v-img :width="70" cover :src="imgUrl" alt="home"></v-img>
       </router-link>
     </template>
-    <v-app-bar-title class="text-h4">FloodWise</v-app-bar-title>
+    <v-app-bar-title class="text-h4">FloodSavvy</v-app-bar-title>
 
     <v-tabs v-if="!mdAndDown" v-model="path" align-tabs="title">
       <v-tab
@@ -36,13 +36,14 @@
         </v-btn>
       </template>
     </v-tooltip>
+    <v-app-bar-nav-icon @click="$emit('toggleMobileNav')" v-if="mdAndDown" />
   </v-app-bar>
   <v-dialog v-model="showGithubDialog" max-width="500">
     <v-card>
       <v-card-title>Create an Issue</v-card-title>
       <v-card-text class="d-flex flex-wrap justify-center">
         <p class="text-body-1">
-          Please report any issues you find with FloodWise to our GitHub repository.
+          Please report any issues you find with FloodSavvy to our GitHub repository.
         </p>
         <v-btn
           variant="outlined"
@@ -70,7 +71,7 @@
 import { ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import imgUrl from '@/assets/floodwise_icon.jpg'
+import imgUrl from '@/assets/floodsavvy_icon.png'
 defineProps(['paths'])
 defineEmits(['toggleMobileNav'])
 import { mdiGithub } from '@mdi/js'
@@ -94,11 +95,16 @@ const toggleGithubDialog = () => {
 
 <style lang="scss" scoped>
 .logo {
-  height: 100%;
+  height: 100%;   
+  display: flex; 
+  align-items: center; 
   cursor: pointer;
 
   img {
-    height: 100%;
+    height: 100%;   
+    width: auto;    
+    object-fit: contain; 
+    display: block;
   }
 }
 

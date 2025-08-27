@@ -8,6 +8,7 @@ import TwoRiversOttauquechee from '@/assets/TwoRiversOttauquechee.png'
 import Windham from '@/assets/Windham.png'
 import * as mapHelpers from '@/helpers/map'
 import { nextTick } from 'vue'
+import { useFeaturesStore } from '@/stores/features'
 
 export const useRegionsStore = defineStore('regions', () => {
   const currentRegion = ref(null)
@@ -17,8 +18,8 @@ export const useRegionsStore = defineStore('regions', () => {
       title: 'Roaring River State Park',
       name: 'RoaringRiver',
       text: `A popular outdoor destination nestled within the rugged terrain of the
-             Ozark Plateau’s karst landscape, Roaring River State Park is located
-             located eight miles south of Cassville in Barry County, Missouri, 
+             Ozark Plateau’s karst landscape, Roaring River State Park is located 
+             eight miles south of Cassville in Barry County, Missouri, 
              spanning 4,294 acres.`,
       flex: 1,
       flowlinesLayerNumber: 13,
@@ -53,10 +54,9 @@ export const useRegionsStore = defineStore('regions', () => {
       image: MountAscutney,
       title: 'Mount Ascutney',
       name: 'MountAscutney',
-      text: `This region in southeast‑central Vermont spans ten towns
-             and its topography transitions from the
-             steep, forested slopes of in the west down through rolling foothills to the
-             broad Connecticut River on the east.`,
+      text: `The region in southeast-central Vermont covers ten towns, with terrain that shifts 
+            from steep, forested slopes in the west to rolling foothills and the broad Connecticut 
+            River valley in the east.`,
       flex: 1,
       flowlinesLayerNumber: 0,
       eraseLayerNumber: 1,
@@ -78,7 +78,7 @@ export const useRegionsStore = defineStore('regions', () => {
       image: Windham,
       title: 'Windham',
       name: 'Windham',
-      text: `The Windham region is located in southeastern Vermont and includes 27 towns
+      text: `The Windham region is located in southeastern Vermont and includes 27 towns.
              The area features a mix of
              rural villages, forested landscapes, and small urban centers that are primarily covered by
              forests, including spruce, fir, and white pine.`,
@@ -89,6 +89,7 @@ export const useRegionsStore = defineStore('regions', () => {
     }
   ])
   const setRegion = async (regionName) => {
+    const featureStore = useFeaturesStore()
     console.log('Setting region to:', regionName)
     const region = regions.value.find((region) => region.name === regionName)
     if (!region) {
@@ -96,6 +97,10 @@ export const useRegionsStore = defineStore('regions', () => {
       return
     }
     currentRegion.value = region
+
+    // clear the active feature if there is one selected
+    featureStore.clearSelectedFeatures()
+
     mapHelpers.toggleWMSLayers(region)
     await nextTick()
     try {
