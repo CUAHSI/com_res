@@ -5,10 +5,11 @@
       class="position-absolute" 
       style="top: 6px; right: 8px; z-index: 2;"
     >
-      <InfoIcon
+      <InfoTooltip
         content-class="plot-info-tooltip"
         :z-index="200000" 
         :max-width="420"
+        iconSize="small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) forecasted over the
         next 10 days.  
@@ -68,7 +69,7 @@ import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose } from 'vue'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
-import InfoIcon from '@/components/InfoTooltip.vue'
+import InfoTooltip from '@/components/InfoTooltip.vue'
 import {
   Chart as ChartJS,
   Title,
@@ -80,6 +81,7 @@ import {
   TimeScale,
   Filler
 } from 'chart.js'
+import { icon } from 'leaflet'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 

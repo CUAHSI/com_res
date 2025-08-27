@@ -11,6 +11,7 @@
         :icon="mdiInformationOutline"
         color="info"
         class="cursor-pointer ml-2"
+        :size="iconSize"
       />
     </template>
 
@@ -26,7 +27,8 @@ const { text, contentClass, zIndex, location, maxWidth } = defineProps({
   contentClass: { type: String, default: '' }, // lets us target the teleported overlay
   zIndex: { type: [Number, String], default: 200000 }, // render above plot container (99999)
   location: { type: String, default: 'bottom' },
-  maxWidth: { type: [Number, String], default: 200 }
+  maxWidth: { type: [Number, String], default: 200 },
+  iconSize: { type: String, default: 'small' }
 })
 </script>
 
