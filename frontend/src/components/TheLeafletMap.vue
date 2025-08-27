@@ -1,5 +1,6 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
+  <v-progress-linear v-if="isZooming" indeterminate color="primary"></v-progress-linear>
 </template>
 <script setup>
 import 'leaflet/dist/leaflet.css'
@@ -10,13 +11,10 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useMapStore } from '@/stores/map'
+import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isZooming } from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 
-const mapStore = useMapStore()
-const { mapObject, featureLayerProviders, control, leaflet } = storeToRefs(mapStore)
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
 
@@ -25,16 +23,16 @@ const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
 
 onMounted(() => {
-  leaflet.value = L.map('mapContainer').setView([38.2, -96], 5)
+  // https://leafletjs.com/reference.html#map-zoomsnap
+  // https://leafletjs.com/reference.html#map-wheeldebouncetime
+  // https://leafletjs.com/reference.html#map-zoomdelta
+  leaflet.value = L.map('mapContainer', {zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false}).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
   mapObject.value.huclayers = []
   mapObject.value.reaches = {}
   mapObject.value.bbox = [99999999, 99999999, -99999999, -99999999]
-
-  //Remove the common zoom control and add it back later later
-  leaflet.value.zoomControl.remove()
 
   let Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
     url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
@@ -91,10 +89,10 @@ onMounted(() => {
     format: 'image/png',
     minZoom: 8,
     maxZoom: MIN_REACH_SELECTION_ZOOM,
-    updateWhenIdle: true
+    // updateWhenIdle: true
   })
 
-  USGS_Imagery.addTo(leaflet.value)
+  CartoDB_PositronNoLabels.addTo(leaflet.value)
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
   // layer toggling
@@ -151,9 +149,15 @@ onMounted(() => {
     'clear selected features'
   ).addTo(leaflet.value)
 
+  leaflet.value.on('zoomstart movestart', function () {
+    isZooming.value = true
+  })
+
   // on zoom event, log the current bounds and zoom level
-  leaflet.value.on('zoomend moveend', function () {})
-  mapStore.mapLoaded = true
+  leaflet.value.on('zoomend moveend', function () {
+    isZooming.value = false
+  })
+  mapLoaded.value = true
 })
 
 /*
