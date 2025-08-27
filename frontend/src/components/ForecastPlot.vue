@@ -19,7 +19,7 @@
       :title="plot_title"
       :style="plot_style"
     />
-    <v-card-actions class="position-relative">
+    <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
       <!-- CSV Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
