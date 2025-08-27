@@ -1,7 +1,7 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
   <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
-  <ContextMenu 
+  <ContextMenu
     v-if="contextMenu.show"
     :context="contextMenu"
     @close="contextMenu.show = false"
@@ -20,7 +20,17 @@ import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref, watch, nextTick } from 'vue'
-import { mapObject, featureLayerProviders, control, leaflet, mapLoaded, isMapMoving, activeFeatureLayer, showHoverPopup, layerControlIsExpanded } from '@/helpers/map'
+import {
+  mapObject,
+  featureLayerProviders,
+  control,
+  leaflet,
+  mapLoaded,
+  isMapMoving,
+  activeFeatureLayer,
+  showHoverPopup,
+  layerControlIsExpanded
+} from '@/helpers/map'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
@@ -38,7 +48,7 @@ const contextMenu = ref({
   pending: false
 })
 
-const contextMenuFeatureLatLng = ref(null);
+const contextMenuFeatureLatLng = ref(null)
 const layerControlExpanded = ref(false)
 
 const ACCESS_TOKEN =
@@ -48,7 +58,12 @@ onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
   // https://leafletjs.com/reference.html#map-wheeldebouncetime
   // https://leafletjs.com/reference.html#map-zoomdelta
-  leaflet.value = L.map('mapContainer', { zoomSnap: 1, wheelDebounceTime: 100, zoomDelta: 1, zoomControl: false }).setView([38.2, -96], 5)
+  leaflet.value = L.map('mapContainer', {
+    zoomSnap: 1,
+    wheelDebounceTime: 100,
+    zoomDelta: 1,
+    zoomControl: false
+  }).setView([38.2, -96], 5)
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -62,7 +77,7 @@ onMounted(() => {
       noWrap: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
+      subdomains: 'abcd'
     }
   )
 
@@ -71,14 +86,14 @@ onMounted(() => {
   let Esri_WorldImagery = L.tileLayer(url, {
     noWrap: true,
     variant: 'World_Imagery',
-    attribution: 'Esri',
+    attribution: 'Esri'
   })
 
   let USGS_Imagery = L.tileLayer(
     'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
     {
       attribution: 'USGS',
-      noWrap: true,
+      noWrap: true
     }
   )
 
@@ -95,20 +110,25 @@ onMounted(() => {
     layers: 0,
     transparent: 'true',
     format: 'image/png',
-    attribution: 'Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+    attribution:
+      'Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
   })
 
   const openTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: © <a href="https://opentopomap.org">OpenTopoMap</a>'
+    attribution:
+      'Map data: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: © <a href="https://opentopomap.org">OpenTopoMap</a>'
   })
 
-  const USGSShadedReliefOnly = L.tileLayer.wms('https://basemap.nationalmap.gov/arcgis/services/USGSShadedReliefOnly/MapServer/WMSServer?', {
-    layers: '0', // The layer index for contours
-    format: 'image/png',
-    transparent: true,
-    opacity: 0.7,
-    attribution: 'Shaded Relief © <a href="https://www.usgs.gov/">USGS</a>'
-  })
+  const USGSShadedReliefOnly = L.tileLayer.wms(
+    'https://basemap.nationalmap.gov/arcgis/services/USGSShadedReliefOnly/MapServer/WMSServer?',
+    {
+      layers: '0', // The layer index for contours
+      format: 'image/png',
+      transparent: true,
+      opacity: 0.7,
+      attribution: 'Shaded Relief © <a href="https://www.usgs.gov/">USGS</a>'
+    }
+  )
 
   Esri_Hydro_Reference_Overlay.addTo(leaflet.value)
 
@@ -116,7 +136,7 @@ onMounted(() => {
   let overlays = {
     'ESRI Hydro Reference Overlay': Esri_Hydro_Reference_Overlay,
     'USGS Shaded Relief': USGSShadedReliefOnly,
-    'OpenTopoMap': openTopo
+    OpenTopoMap: openTopo
   }
 
   const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
@@ -156,18 +176,18 @@ onMounted(() => {
     .addTo(leaflet.value)
 
   // Erase
-  L.easyButton(
-    {
-      states: [{
+  L.easyButton({
+    states: [
+      {
         icon: 'fa-eraser',
         onClick: function () {
           clearSelection()
         },
         title: 'Clear Selected Features'
-      }],
-      position: 'topright'
-    }
-  ).addTo(leaflet.value)
+      }
+    ],
+    position: 'topright'
+  }).addTo(leaflet.value)
 
   // Layer Control
   control.value = L.control.layers(baselayers, overlays).addTo(leaflet.value)
@@ -177,31 +197,31 @@ onMounted(() => {
   })
 
   leaflet.value.on('dragstart', () => {
-    contextMenu.value.pending = true;
-    isMapMoving.value = true;
-  });
+    contextMenu.value.pending = true
+    isMapMoving.value = true
+  })
 
   leaflet.value.on('dragend', () => {
-    updateContextMenuPosition();
-  });
+    updateContextMenuPosition()
+  })
 
   leaflet.value.on('movestart', () => {
-    contextMenu.value.pending = true;
-    isMapMoving.value = true;
-  });
+    contextMenu.value.pending = true
+    isMapMoving.value = true
+  })
 
   leaflet.value.on('moveend', () => {
-    updateContextMenuPosition();
-  });
+    updateContextMenuPosition()
+  })
 
   leaflet.value.on('zoomstart', () => {
-    contextMenu.value.pending = true;
-    isMapMoving.value = true;
-  });
+    contextMenu.value.pending = true
+    isMapMoving.value = true
+  })
 
   leaflet.value.on('zoomend', () => {
-    updateContextMenuPosition();
-  });
+    updateContextMenuPosition()
+  })
 
   // TODO: update when the layer control is expanded/collapsed
   // update layerControlIsExpanded.value
@@ -220,16 +240,6 @@ function clearSelection() {
 
   // update the map
   updateMapBBox()
-
-  // clear and update the HUC textbox
-  // document.querySelector('.mdl-textfield').MaterialTextfield.change('');
-  alertStore.displayAlert({
-    title: 'Cleared',
-    text: 'Your map selection was cleared',
-    type: 'info',
-    closable: true,
-    duration: 1
-  })
 }
 
 function updateMapBBox() {
@@ -321,30 +331,34 @@ function drawBbox() {
 }
 
 // Watch for activeFeatureLayer changes and add contextmenu event
-watch(activeFeatureLayer, (newLayer, oldLayer) => {
-  console.log("swapping contextmenu listener")
-  if (oldLayer) {
-    oldLayer.off('contextmenu');
-  }
+watch(
+  activeFeatureLayer,
+  (newLayer, oldLayer) => {
+    console.log('swapping contextmenu listener')
+    if (oldLayer) {
+      oldLayer.off('contextmenu')
+    }
 
-  if (newLayer) {
-    newLayer.on('contextmenu', contextFeatureRightClick);
-  }
-}, { immediate: true });
+    if (newLayer) {
+      newLayer.on('contextmenu', contextFeatureRightClick)
+    }
+  },
+  { immediate: true }
+)
 
 function contextFeatureRightClick(event) {
   // Prevent the default browser context menu
-  event.originalEvent.preventDefault();
+  event.originalEvent.preventDefault()
 
   // Get the feature from the event
-  const feature = event.layer?.feature;
-  if (!feature) return;
+  const feature = event.layer?.feature
+  if (!feature) return
 
   // Store the feature's geographic position
-  contextMenuFeatureLatLng.value = event.latlng;
+  contextMenuFeatureLatLng.value = event.latlng
 
   // Update the context menu position
-  updateContextMenuPosition();
+  updateContextMenuPosition()
 
   // Show the context menu at the click position
   contextMenu.value = {
@@ -353,50 +367,50 @@ function contextFeatureRightClick(event) {
     y: event.originalEvent.clientY,
     feature: feature,
     latlng: event.latlng
-  };
+  }
 }
 
 function updateContextMenuPosition() {
   if (contextMenu.value.show && contextMenuFeatureLatLng.value) {
     // Convert the feature's geographic position to screen coordinates
-    const containerPoint = leaflet.value.latLngToContainerPoint(contextMenuFeatureLatLng.value);
+    const containerPoint = leaflet.value.latLngToContainerPoint(contextMenuFeatureLatLng.value)
 
     // Get the map container's position relative to the viewport
-    const mapRect = leaflet.value.getContainer().getBoundingClientRect();
+    const mapRect = leaflet.value.getContainer().getBoundingClientRect()
 
     // Update the context menu position
-    contextMenu.value.x = mapRect.left + containerPoint.x;
-    contextMenu.value.y = mapRect.top + containerPoint.y;
+    contextMenu.value.x = mapRect.left + containerPoint.x
+    contextMenu.value.y = mapRect.top + containerPoint.y
   }
-  contextMenu.value.pending = false;
-  isMapMoving.value = false;
+  contextMenu.value.pending = false
+  isMapMoving.value = false
 }
 
-function dismissContextMenu(event) {
-  contextMenu.value.show = false;
-  contextMenuFeatureLatLng.value = null;
+function dismissContextMenu() {
+  contextMenu.value.show = false
+  contextMenuFeatureLatLng.value = null
 }
 
 function contextZoomToFeature() {
   if (contextMenu.value.feature) {
     try {
       // Get the bounds of the feature and zoom to it
-      const layer = L.geoJSON(contextMenu.value.feature);
-      const bounds = layer.getBounds();
-      leaflet.value.fitBounds(bounds, { padding: [50, 50] });
+      const layer = L.geoJSON(contextMenu.value.feature)
+      const bounds = layer.getBounds()
+      leaflet.value.fitBounds(bounds, { padding: [50, 50] })
     } catch (error) {
-      console.error('Error zooming to feature:', error);
+      console.error('Error zooming to feature:', error)
       alertStore.displayAlert({
         title: 'Zoom Error',
         text: 'Could not zoom to the selected feature',
         type: 'error',
         closable: true,
         duration: 3
-      });
+      })
     }
   }
-  contextMenu.value.show = false;
-  contextMenuFeatureLatLng.value = null;
+  contextMenu.value.show = false
+  contextMenuFeatureLatLng.value = null
 }
 
 function selectFeatureHelper(feature) {
@@ -410,18 +424,18 @@ function selectFeatureHelper(feature) {
 function contextSelectFeature() {
   if (contextMenu.value.feature) {
     // Clear any currently selected features
-    featureStore.clearSelectedFeatures();
+    featureStore.clearSelectedFeatures()
 
     // Select the right-clicked feature
-    featureStore.selectFeature(contextMenu.value.feature);
+    featureStore.selectFeature(contextMenu.value.feature)
 
     // Use the helper function to style the selected feature
     if (activeFeatureLayer.value) {
-      selectFeatureHelper(contextMenu.value.feature);
+      selectFeatureHelper(contextMenu.value.feature)
     }
   }
-  contextMenu.value.show = false;
-  contextMenuFeatureLatLng.value = null;
+  contextMenu.value.show = false
+  contextMenuFeatureLatLng.value = null
 }
 
 function contextShowFeatureInfo() {
@@ -430,8 +444,8 @@ function contextShowFeatureInfo() {
   if (feature && latLng) {
     showHoverPopup(feature, latLng, true)
   }
-  contextMenu.value.show = false;
-  contextMenuFeatureLatLng.value = null;
+  contextMenu.value.show = false
+  contextMenuFeatureLatLng.value = null
 }
 
 function setupLayerControlObserver() {
@@ -441,7 +455,7 @@ function setupLayerControlObserver() {
     console.warn('Layer control element not found')
     return
   }
-  
+
   // Create a MutationObserver to watch for class changes
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -452,18 +466,20 @@ function setupLayerControlObserver() {
       }
     })
   })
-  
+
   // Start observing the layer control element
   observer.observe(layerControlElement, {
     attributes: true,
     attributeFilter: ['class']
   })
-  
+
   // Store the observer for cleanup
   mapObject.value.layerControlObserver = observer
-  
+
   // Set initial state
-  const isInitiallyExpanded = layerControlElement.classList.contains('leaflet-control-layers-expanded')
+  const isInitiallyExpanded = layerControlElement.classList.contains(
+    'leaflet-control-layers-expanded'
+  )
   layerControlExpanded.value = isInitiallyExpanded
   layerControlIsExpanded.value = isInitiallyExpanded
 }
@@ -472,7 +488,7 @@ onUnmounted(() => {
   if (leaflet.value) {
     leaflet.value.off('moveend', updateContextMenuPosition)
   }
-  
+
   // Disconnect the observer when component is unmounted
   if (mapObject.value.layerControlObserver) {
     mapObject.value.layerControlObserver.disconnect()
