@@ -5,7 +5,7 @@
       <h3>Stage-Flow</h3>
       <InfoTooltip
         text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
-        size="x-small"
+        iconSize="x-small"
       />
     </div>
 

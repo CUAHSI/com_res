@@ -24,8 +24,9 @@
           :color="showHistorical ? 'blue' : 'white'"
         >
           Historical
-          <InfoIcon
-            text="Plot historical streamflow data for the selected river reach."
+          <InfoTooltip
+            text="Display historical streamflow data for the selected river as a graph, 
+            showing hourly values in cubic feet per second (cfs)."
             style="margin-left: 5px"
           />
         </v-btn>
@@ -35,8 +36,9 @@
           :color="showForecast ? 'blue' : 'white'"
         >
           Forecast
-          <InfoIcon
-            text="Plot forecasted streamflow data for the selected river reach."
+          <InfoTooltip
+            text="Display forecasted streamflow data for selected river or stream in a graph,
+            showing hourly values in cubic feet per second (cfs)."
             style="margin-left: 5px"
           />
         </v-btn>
@@ -96,7 +98,7 @@ import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import TheLeafletMap from '@/components/TheLeafletMap.vue'
 import { storeToRefs } from 'pinia'
-import InfoIcon from '../components/InfoTooltip.vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import * as mapHelpers from '@/helpers/map'
 import TheRegionSelector from '../components/TheRegionSelector.vue'
 
