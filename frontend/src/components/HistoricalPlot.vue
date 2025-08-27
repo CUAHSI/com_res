@@ -191,7 +191,11 @@
         <template #activator="{ props: menuProps }">
           <v-tooltip text="Adjust Start and End Dates" location="right">
             <template #activator="{ props: tooltipProps }">
-              <v-btn v-bind="{ ...menuProps, ...tooltipProps }" icon>
+              <v-btn
+                v-if="plot_timeseries.length > 0 && !isLoading"
+                v-bind="{ ...menuProps, ...tooltipProps }"
+                icon
+              >
                 <v-icon color="primary">{{ mdiCalendarExpandHorizontal }}</v-icon>
               </v-btn>
             </template>
