@@ -50,7 +50,6 @@ const deselectFeature = (feature) => {
 }
 
 const selectFeature = async (feature) => {
-  const alertStore = useAlertStore()
   const featureStore = useFeaturesStore()
   const { activeFeature } = storeToRefs(featureStore)
   try {
@@ -68,13 +67,9 @@ const selectFeature = async (feature) => {
       // query FastAPI to get relevant geotiffs for the reach
       fimCogData = await fetchCogCatalogData(feature)
       if (!fimCogData) {
-        alertStore.displayAlert({
-          title: 'FIM COG Data',
-          text: `No FIM COG data found for reach: ${feature.properties?.reach_id || feature.properties?.COMID}.`,
-          type: 'warning',
-          closable: true,
-          duration: 3
-        })
+        console.log(
+          `No FIM COG data found for reach: ${feature.properties?.reach_id || feature.properties?.COMID}.`
+        )
         return
       } else {
         saveCatalogDataToFeature(activeFeature, fimCogData)
@@ -84,13 +79,9 @@ const selectFeature = async (feature) => {
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
     const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
     if (cogUrls.length === 0) {
-      alertStore.displayAlert({
-        title: 'Stage Selection',
-        text: `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}m.`,
-        type: 'warning',
-        closable: true,
-        duration: 3
-      })
+      console.log(
+        `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}m.`
+      )
       return
     }
     addCogsToMap(cogUrls)
@@ -380,7 +371,7 @@ const toggleWMSLayers = async (region) => {
   }
 }
 
-const showHoverPopup = (feature, latlng, closeable=false) => {
+const showHoverPopup = (feature, latlng, closeable = false) => {
   // Variables to track hover state
   feature.hoverPopup = null
   feature.hoverTimeout = null
