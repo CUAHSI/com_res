@@ -49,14 +49,17 @@
       fill-height
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
-      <v-col style="padding: 0px; margin: 0px; position: relative;">
+      <v-col style="padding: 0px; margin: 0px; position: relative">
         <TheLeafletMap />
       </v-col>
     </v-row>
 
-    <div 
+    <div
       v-if="showStageSlider"
-      :class="{ 'desktop-stage-slider-container': !mdAndDown, 'mobile-stage-slider-container': mdAndDown }"
+      :class="{
+        'desktop-stage-slider-container': !mdAndDown,
+        'mobile-stage-slider-container': mdAndDown
+      }"
     >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
@@ -70,10 +73,15 @@
       />
     </div>
 
-    <div v-if="showHistorical || showForecast" :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }">
+    <div
+      v-if="showHistorical || showForecast"
+      :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }"
+    >
       <HistoricalPlot
         v-show="showHistorical"
         ref="historicalPlotRef"
+        :reachid="reach_id"
+        :reachname="reach_name"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showHistorical"
       />
@@ -81,6 +89,11 @@
       <ForecastPlot
         v-show="showForecast"
         ref="forecastPlotRef"
+        :reachid="reach_id"
+        :reachname="reach_name"
+        :forecast_datetime="forecastDateTime"
+        :forecast_mode="forecastMode"
+        :forecast_ensemble="forecastEnsemble"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showForecast"
       />
@@ -114,24 +127,38 @@ const forecastPlotRef = ref(null)
 
 const { activeFeature } = storeToRefs(featureStore)
 
+const reach_name = ref(null)
+const reach_id = ref(null)
+const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000)) // default: yesterday
+const forecastMode = ref('medium_range')
+const forecastEnsemble = ref('3')
+
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
 // components.
 watch(
   () => activeFeature.value?.properties?.COMID,
-  (newVal, oldVal) => {
+  async (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      reachIdChanged(newVal)
+      // wait until reactivity has completed so that all
+      // variables in the store are available before proceeding.
+      //      await nextTick()
+
+      reach_id.value = newVal
+      reach_name.value = featureStore.activeFeatureName
+
+      console.log('Active feature COMID changed, setting reach_id to: ', reach_id.value)
+      console.log('Active feature Name: ' + reach_name.value)
     }
   }
 )
 
 const toggle = async (component_name) => {
-  console.log(component_name)
+  console.log('Toggling: ' + component_name)
 
   // get the feature id from the active feature
-  let reach_id = activeFeature.value?.properties?.COMID ?? null
-  if (reach_id === undefined || reach_id === null) {
+  reach_id.value = activeFeature.value?.properties?.COMID ?? null
+  if (reach_id.value === undefined || reach_id.value === null) {
     // if no feature is selected show a popup dialog
     alertStore.displayAlert({
       title: 'No River Reach Selected',
@@ -142,7 +169,6 @@ const toggle = async (component_name) => {
     })
     return
   }
-  let reach_name = activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
 
   // toggle plot visualizations
   // based on which button was clicked.
@@ -150,8 +176,8 @@ const toggle = async (component_name) => {
     showHistorical.value = !showHistorical.value
     await nextTick()
     await historicalPlotRef.value.getHistoricalData(
-      reach_id.toString(),
-      reach_name,
+      reach_id.value.toString(),
+      reach_name.value,
       new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
       new Date(Date.now())
     )
@@ -159,49 +185,11 @@ const toggle = async (component_name) => {
     showForecast.value = !showForecast.value
     await nextTick()
     await forecastPlotRef.value.getForecastData(
-      reach_id.toString(),
-      reach_name,
-      new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
-      'medium_range',
-      '3'
-    )
-  }
-}
-
-const reachIdChanged = async (selected_reach) => {
-  // if no reach is selected, clear the plot data.
-  if (selected_reach === undefined || selected_reach === null) {
-    await historicalPlotRef.value.clearPlot()
-    await forecastPlotRef.value.clearPlot()
-    showHistorical.value = false
-    showForecast.value = false
-    return
-  }
-
-  // get the active reach name, this is necessary to update
-  // the data displayed in the historical and forecast components
-  let reach_name = activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
-
-  // update the historical plot when the selected reach changes
-  // only if the historical component is visible
-  if (showHistorical.value) {
-    historicalPlotRef.value.getHistoricalData(
-      selected_reach.toString(),
-      reach_name,
-      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-      new Date(Date.now())
-    )
-  }
-
-  // update the forecast plot when the selected reach changes
-  // only if the forecast component is visible
-  if (showForecast.value) {
-    forecastPlotRef.value.getForecastData(
-      selected_reach.toString(),
-      reach_name,
-      new Date(Date.now() - 24 * 60 * 60 * 1000), // yesterday
-      'medium_range',
-      '3'
+      reach_id.value.toString(),
+      reach_name.value,
+      forecastDateTime.value,
+      forecastMode.value,
+      forecastEnsemble.value
     )
   }
 }
@@ -212,7 +200,8 @@ const activeFeatureFimCogData = computed(() => {
 })
 
 const showStageSlider = computed(() => {
-  const activeFeatureHasData = activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
+  const activeFeatureHasData =
+    activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
   return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value
 })
 
@@ -223,7 +212,10 @@ const handleStageChange = () => {
   if (!activeFeatureFimCogData.value.stages_m.includes(mapHelpers.stageValue.value)) {
     // find the nearest stage value
     const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
-      return Math.abs(curr - mapHelpers.stageValue.value) < Math.abs(prev - mapHelpers.stageValue.value) ? curr : prev
+      return Math.abs(curr - mapHelpers.stageValue.value) <
+        Math.abs(prev - mapHelpers.stageValue.value)
+        ? curr
+        : prev
     })
     mapHelpers.stageValue.value = nearestStage
     console.log('Snapped to nearest stage:', nearestStage)

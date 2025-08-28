@@ -1,18 +1,12 @@
 <template>
-  <div 
-    v-if="context.show" 
+  <div
+    v-if="context.show"
     class="context-menu-container"
     :style="{ left: context.x + 'px', top: context.y + 'px' }"
   >
     <v-card elevation="4" :disabled="context.pending">
       <div class="d-flex justify-end">
-        <v-btn
-          icon
-          size="x-small"
-          variant="text"
-          @click="$emit('dismiss')"
-          class="close-button"
-        >
+        <v-btn icon size="x-small" variant="text" @click="$emit('dismiss')" class="close-button">
           <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
       </div>

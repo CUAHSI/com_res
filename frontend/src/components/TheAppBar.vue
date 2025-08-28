@@ -95,15 +95,15 @@ const toggleGithubDialog = () => {
 
 <style lang="scss" scoped>
 .logo {
-  height: 100%;   
-  display: flex; 
-  align-items: center; 
+  height: 100%;
+  display: flex;
+  align-items: center;
   cursor: pointer;
 
   img {
-    height: 100%;   
-    width: auto;    
-    object-fit: contain; 
+    height: 100%;
+    width: auto;
+    object-fit: contain;
     display: block;
   }
 }
