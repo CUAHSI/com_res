@@ -33,7 +33,13 @@ const { text, contentClass, zIndex, location, maxWidth } = defineProps({
 </script>
 
 <style scoped>
-.whitespace-normal { white-space: normal; }
-.ml-2 { margin-left: 10px; }
-.cursor-pointer { cursor: pointer; }
+.whitespace-normal {
+  white-space: normal;
+}
+.ml-2 {
+  margin-left: 10px;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
 </style>

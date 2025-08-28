@@ -43,9 +43,7 @@ const selectedRegion = ref(null)
 
 // Compute menu z-index to be slightly higher than the container
 const menuZIndex = computed(() => {
-  const baseZIndex = typeof props.zIndex === 'string' 
-    ? parseInt(props.zIndex, 10) 
-    : props.zIndex
+  const baseZIndex = typeof props.zIndex === 'string' ? parseInt(props.zIndex, 10) : props.zIndex
   return baseZIndex + 1
 })
 

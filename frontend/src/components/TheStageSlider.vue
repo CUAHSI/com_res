@@ -4,8 +4,8 @@
     <div class="slider-header">
       <h3>Stage-Flow</h3>
       <InfoTooltip
-        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
         iconSize="x-small"
+        text="This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels."
       />
     </div>
 
@@ -16,24 +16,40 @@
 
         <!-- Grabbable handle -->
         <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-          <div class="handle-label">{{ flowFromStage(modelValue) }} cfs</div>
+          <div class="handle-label">{{ flowFromStage(modelValue) }} cms</div>
         </div>
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
-        <v-slider v-model="modelValue" vertical :max="max" :min="min" :step="step" hide-details class="slider-input"
-          @update:modelValue="$emit('update:modelValue', modelValue)"></v-slider>
+        <v-slider
+          v-model="modelValue"
+          vertical
+          :max="max"
+          :min="min"
+          :step="step"
+          hide-details
+          class="slider-input"
+          @update:modelValue="$emit('update:modelValue', modelValue)"
+        ></v-slider>
 
         <!-- Tick marks -->
         <div class="ticks">
-          <div v-for="(_, index) in ticks" :key="index" class="tick"
+          <div
+            v-for="(_, index) in ticks"
+            :key="index"
+            class="tick"
             :class="{ 'major-tick': index % majorTickInterval === 0 }"
-            :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"></div>
+            :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
+          ></div>
         </div>
 
         <!-- Labels inside thermometer -->
         <div class="labels-inside">
-          <div v-for="(stage, index) in visibleStages" :key="index" class="label-inside"
-            :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }">
+          <div
+            v-for="(stage, index) in visibleStages"
+            :key="index"
+            class="label-inside"
+            :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
+          >
             {{ stage }}
           </div>
         </div>
@@ -42,9 +58,10 @@
 
     <!-- Footer with additional info -->
     <div class="slider-footer">
-      <span>Stage (ft)</span>
+      <span>Stage (m)</span>
       <InfoTooltip
-        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs)." />
+        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cms)."
+      />
     </div>
   </v-card>
 </template>
@@ -259,8 +276,8 @@ const stopDrag = () => {
 }
 
 /* Ensure tooltips have high z-index */
-.slider-header>>>.v-overlay__content,
-.slider-footer>>>.v-overlay__content {
+.slider-header >>> .v-overlay__content,
+.slider-footer >>> .v-overlay__content {
   z-index: 1002 !important;
   max-width: 200px;
   white-space: normal;

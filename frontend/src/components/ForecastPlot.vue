@@ -1,15 +1,17 @@
 <template>
   <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
-    <div 
-      v-if="!isLoading"
-      class="position-absolute" 
-      style="top: 6px; right: 8px; z-index: 2;"
-    >
+    <v-skeleton-loader
+      v-if="isLoading"
+      type="heading, image "
+      :loading="isLoading"
+      class="mx-auto"
+    ></v-skeleton-loader>
+    <div v-if="!isLoading" class="position-absolute" style="top: 6px; right: 8px; z-index: 2">
       <InfoTooltip
         content-class="plot-info-tooltip"
-        :z-index="200000" 
+        :z-index="200000"
         :max-width="420"
-        iconSize="small"
+        iconSize="x-small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) forecasted over the
         next 10 days.  
@@ -26,7 +28,6 @@
         https://www.sciencedirect.com/science/article/pii/S1364815224001841"
       />
     </div>
-    <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading forecasted data...</span>
@@ -34,27 +35,59 @@
     <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
       <span class="ml-3">No forecasted data available.</span>
     </v-row>
-    <LinePlot v-if="!isLoading && hasData" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
-    <v-card-actions class="position-relative">
+    <LinePlot
+      v-if="!isLoading && hasData"
+      :timeseries="plot_timeseries"
+      :title="plot_title"
+      :style="plot_style"
+    />
+    <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
       <!-- CSV Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
-          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
-            :disabled="downloading.csv" :loading="downloading.csv" @click="downCSV" icon size="small" class="mr-1">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            color="primary"
+            :disabled="downloading.csv"
+            :loading="downloading.csv"
+            @click="downCSV"
+            icon
+            size="small"
+            class="mr-1"
+          >
             <v-icon :icon="mdiFileDelimited"></v-icon>
-            <v-progress-circular v-if="downloading.csv" indeterminate color="white" size="20"></v-progress-circular>
+            <v-progress-circular
+              v-if="downloading.csv"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
           </v-btn>
         </template>
         <span>Download CSV</span>
       </v-tooltip>
-      
+
       <!-- JSON Download Button (existing) -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
-          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
-            :disabled="downloading.json" :loading="downloading.json" @click="downJson" icon size="small">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            color="primary"
+            :disabled="downloading.json"
+            :loading="downloading.json"
+            @click="downJson"
+            icon
+            size="small"
+          >
             <v-icon :icon="mdiCodeJson"></v-icon>
-            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20"></v-progress-circular>
+            <v-progress-circular
+              v-if="downloading.json"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
           </v-btn>
         </template>
         <span>Download JSON</span>
@@ -66,7 +99,7 @@
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose } from 'vue'
+import { ref, defineExpose, watch, toRef } from 'vue'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '@/components/InfoTooltip.vue'
@@ -81,7 +114,6 @@ import {
   TimeScale,
   Filler
 } from 'chart.js'
-import { icon } from 'leaflet'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -92,6 +124,52 @@ const isLoading = ref(false)
 const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
+
+const props = defineProps({
+  reachid: Number,
+  reachname: String,
+  forecast_datetime: {
+    type: Date,
+    default: () => new Date(Date.now() - 24 * 60 * 60 * 1000) // default = yesterday
+  },
+  forecast_mode: {
+    type: String,
+    default: 'medium_range'
+  },
+  forecast_ensemble: {
+    type: String,
+    default: '3'
+  },
+  show: {
+    type: Boolean,
+    required: true
+  }
+})
+
+const reach_id = toRef(props, 'reachid')
+const reach_name = toRef(props, 'reachname')
+const datetime = toRef(props, 'forecast_datetime')
+const forecast_mode = toRef(props, 'forecast_mode')
+const ensemble = toRef(props, 'forecast_ensemble')
+
+watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
+  console.log('Current props:', {
+    reach_id: reach_id.value,
+    reach_name: reach_name.value,
+    datetime: datetime.value,
+    forecast_mode: forecast_mode.value,
+    ensemble: ensemble.value
+  })
+  if (reach_id.value && datetime.value) {
+    await getForecastData(
+      reach_id.value,
+      reach_name.value,
+      datetime.value,
+      forecast_mode.value,
+      ensemble.value
+    )
+  }
+})
 
 const clearPlot = () => {
   plot_timeseries.value = []
@@ -128,7 +206,7 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     isLoading.value = false
   }
 
-  plot_title.value = 'Forecasted Streamflow - ' + name
+  plot_title.value = 'Forecasted Streamflow - ' + reach_name.value
 }
 
 async function downloadBlob(blob, filename) {
@@ -151,13 +229,11 @@ const downJson = async () => {
 
 const downCSV = async () => {
   downloading.value.csv = true
-  
+
   // Convert timeseries data to CSV format
   const headers = 'Date,Streamflow\n'
-  const csvRows = plot_timeseries.value.map(item => 
-    `"${item.x}","${item.y}"`
-  ).join('\n')
-  
+  const csvRows = plot_timeseries.value.map((item) => `"${item.x}","${item.y}"`).join('\n')
+
   const csvData = headers + csvRows
   const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
   let filename = getFileName('csv')
@@ -174,13 +250,6 @@ const getFileName = (extension) => {
 defineExpose({
   getForecastData,
   clearPlot
-})
-
-defineProps({
-  show: {
-    type: Boolean,
-    required: true
-  }
 })
 </script>
 

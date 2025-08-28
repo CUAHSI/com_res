@@ -1,6 +1,13 @@
 <template>
-  <v-dialog v-model="need_disclaimer" max-width="800" persistent scrollable transition="dialog-bottom-transition"
-    class="pa-4" :style="{ zIndex: zIndex }">
+  <v-dialog
+    v-model="need_disclaimer"
+    max-width="800"
+    persistent
+    scrollable
+    transition="dialog-bottom-transition"
+    class="pa-4"
+    :style="{ zIndex: zIndex }"
+  >
     <v-card :prepend-icon="mdiAlertCircle" title="Disclaimer">
       <v-card-text>
         <p>
@@ -20,15 +27,27 @@
         <!-- Logo row -->
         <v-row class="mt-4" justify="space-around" align="center">
           <v-col v-for="(logo, index) in logos" :key="index" cols="12" sm="4" md="3">
-            <v-img :src="logo.image" :alt="logo.alt" :lazy-src="logo.image" contain height="100" class="mx-auto"
-              :cover="logo.shouldCover !== false"></v-img>
+            <v-img
+              :src="logo.image"
+              :alt="logo.alt"
+              :lazy-src="logo.image"
+              contain
+              height="100"
+              class="mx-auto"
+              :cover="logo.shouldCover !== false"
+            ></v-img>
           </v-col>
         </v-row>
       </v-card-text>
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text="Acknowledge" variant="tonal" @click="dismiss_disclaimer"></v-btn>
+        <v-btn
+          color="primary"
+          text="Acknowledge"
+          variant="tonal"
+          @click="dismiss_disclaimer"
+        ></v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -56,9 +75,7 @@ const props = defineProps({
 
 // Compute content z-index to be slightly higher than the container
 const contentZIndex = computed(() => {
-  const baseZIndex = typeof props.zIndex === 'string'
-    ? parseInt(props.zIndex, 10)
-    : props.zIndex
+  const baseZIndex = typeof props.zIndex === 'string' ? parseInt(props.zIndex, 10) : props.zIndex
   return baseZIndex + 1
 })
 

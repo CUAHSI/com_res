@@ -3,7 +3,9 @@
     <!-- === Banner section === -->
     <v-sheet class="banner d-flex flex-column align-center justify-center pa-6" rounded>
       <h2 class="mb-2 banner-title">FloodSavvy</h2>
-      <p class="banner-text">Turning NOAA’s National Water Model data into clear, local flood risk insights.</p>
+      <p class="banner-text">
+        Turning NOAA’s National Water Model data into clear, local flood risk insights.
+      </p>
     </v-sheet>
     <!-- ===================== -->
 
@@ -11,26 +13,28 @@
       <v-col>
         <v-sheet class="section section--tight-below mx-auto" max-width="1200" rounded>
           <p class="mt-0 mb-0">
-            <strong>FloodSavvy</strong> is a resource that pilots new ways to access and visualize information
-            available from <a href="https://water.noaa.gov" target="_blank" rel="noopener noreferrer">NOAA’s National Water Model</a>. 
-            The web-based interface offers the ability to assess local water-related risks, monitor streamflow conditions, 
-            and visualise potential flood inundation extents.
-            It was developed in partnership with selected communities in <strong>Vermont</strong> and 
-            <strong>Missouri</strong> to help strengthen community resilience planning and water-related 
-            decision-making. In Missouri, the study engaged with three distinct communities: 
-            City of Springfield-Greene County, 
-            City of De Soto, and 
-            Roaring River State Park. In Vermont, the research focused on 
-            three Regional Planning Commissions and the member towns they support: 
-            Two Rivers-Ottauquechee, 
-            Mt. Ascutney, and 
-            Windham.
+            <strong>FloodSavvy</strong> is a resource that pilots new ways to access and visualize
+            information available from
+            <a href="https://water.noaa.gov" target="_blank" rel="noopener noreferrer"
+              >NOAA’s National Water Model</a
+            >. The web-based interface offers the ability to assess local water-related risks,
+            monitor streamflow conditions, and visualise potential flood inundation extents. It was
+            developed in partnership with selected communities in <strong>Vermont</strong> and
+            <strong>Missouri</strong> to help strengthen community resilience planning and
+            water-related decision-making. In Missouri, the study engaged with three distinct
+            communities: City of Springfield-Greene County, City of De Soto, and Roaring River State
+            Park. In Vermont, the research focused on three Regional Planning Commissions and the
+            member towns they support: Two Rivers-Ottauquechee, Mt. Ascutney, and Windham.
           </p>
         </v-sheet>
       </v-col>
     </v-row>
 
-    <v-sheet class="section section--tight-above section--loose-below mx-auto" max-width="1200" rounded>
+    <v-sheet
+      class="section section--tight-above section--loose-below mx-auto"
+      max-width="1200"
+      rounded
+    >
       <h3 class="section-title section-title--more-below">What can I do with FloodSavvy?</h3>
       <v-row class="mt-0" align="center" justify="center">
         <v-col
@@ -54,13 +58,17 @@
       </v-row>
     </v-sheet>
 
-    <v-sheet class="section section--tight-above section--tight-below mx-auto" max-width="1200" rounded>
+    <v-sheet
+      class="section section--tight-above section--tight-below mx-auto"
+      max-width="1200"
+      rounded
+    >
       <h3 class="section-title section-title--more-below">How do I get started?</h3>
       <p class="mb-0">
-        To use the FloodSavvy capabilities described above, please select your local region below or 
-        visit the MAPS page and select your region from the dropdown. This is intended to be used by 
-        the individuals and organizations affiliated with the six regions in our project, who are 
-        interested in accessing National Water Model (NWM) information. 
+        To use the FloodSavvy capabilities described above, please select your local region below or
+        visit the MAPS page and select your region from the dropdown. This is intended to be used by
+        the individuals and organizations affiliated with the six regions in our project, who are
+        interested in accessing National Water Model (NWM) information.
       </p>
     </v-sheet>
 
@@ -160,13 +168,31 @@ const handleCardClick = (region) => {
 }
 
 const features = [
-  { title: 'Easy Site Selection', text: 'Quickly navigate between six study areas with site-specific maps and info.' },
-  { title: 'Tailored Map Interface', text: 'Focused maps highlight only the active watershed and hydrology features.' },
-  { title: 'Monitor Streamflow with Interactive Graphs', text: 'View historical and 10-day forecast streamflow on simple charts.' },
-  { title: 'Visualize and Explore Flood Scenarios', text: 'See pre-computed flood maps under different streamflow conditions.' },
-  { title: 'Explore Water Data Trends', text: 'Investigate long-term hydrologic patterns across your region.' },
-  { title: 'Download and Share Insights', text: 'Export maps, graphs, and data to support local decision-making.' },
-  ]
+  {
+    title: 'Easy Site Selection',
+    text: 'Quickly navigate between six study areas with site-specific maps and info.'
+  },
+  {
+    title: 'Tailored Map Interface',
+    text: 'Focused maps highlight only the active watershed and hydrology features.'
+  },
+  {
+    title: 'Monitor Streamflow with Interactive Graphs',
+    text: 'View historical and 10-day forecast streamflow on simple charts.'
+  },
+  {
+    title: 'Visualize and Explore Flood Scenarios',
+    text: 'See pre-computed flood maps under different streamflow conditions.'
+  },
+  {
+    title: 'Explore Water Data Trends',
+    text: 'Investigate long-term hydrologic patterns across your region.'
+  },
+  {
+    title: 'Download and Share Insights',
+    text: 'Export maps, graphs, and data to support local decision-making.'
+  }
+]
 </script>
 
 <style scoped>
@@ -184,13 +210,13 @@ const features = [
 }
 .banner {
   --banner-bg: rgba(36, 40, 40, 0.75);
-  --banner-fg: #ffffff;          
-  --banner-title: #ffffff;  
+  --banner-fg: #ffffff;
+  --banner-title: #ffffff;
 
   background-color: var(--banner-bg);
   color: var(--banner-fg);
 }
-.banner .banner-title { 
+.banner .banner-title {
   color: var(--banner-title);
   font-weight: 600;
   font-size: 2rem;
@@ -217,26 +243,40 @@ const features = [
   color: #333;
 }
 .section {
-  padding: 16px 24px;              
+  padding: 16px 24px;
 }
-.section--tight-above { padding-top: 8px !important; }   
-.section--loose-below { padding-bottom: 20px !important; } 
-.section--tight-below { padding-bottom: 0 !important; }  
-.section--no-top      { padding-top: 0 !important; }    
+.section--tight-above {
+  padding-top: 8px !important;
+}
+.section--loose-below {
+  padding-bottom: 20px !important;
+}
+.section--tight-below {
+  padding-bottom: 0 !important;
+}
+.section--no-top {
+  padding-top: 0 !important;
+}
 .section-title {
-  margin: 4px 0 12px 0;            
+  margin: 4px 0 12px 0;
   text-align: center;
   color: rgba(44, 136, 151, 0.936);
 }
 .section-title--more-below {
-  margin-bottom: 16px;           
+  margin-bottom: 16px;
 }
 .regions-title {
   text-align: center;
-  margin: 0 0 6px 0;               
+  margin: 0 0 6px 0;
   font-weight: 600;
 }
-p { margin-top: 0; }               
-.v-row { margin-top: 0 !important; }
-.v-col { padding-top: 4px !important; }  
+p {
+  margin-top: 0;
+}
+.v-row {
+  margin-top: 0 !important;
+}
+.v-col {
+  padding-top: 4px !important;
+}
 </style>
