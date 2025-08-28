@@ -134,10 +134,15 @@
       The National Water Prediction Service (NWPS) hosts the National Water Model (NWM) 
       and offers valuable information for all U.S. communities. We have created the 
       following tutorial to help orient you to the NWPS landing page and navigate 
-      to the information you might need. 
+      to the information you might need:
+        <a
+          :href="NWM_TUTORIAL"
+          target="_blank"
+          rel="noopener"
+        >
+          National Water Model Tutorial
+        </a>
       </p>
-
-      <p> Coming Soon!</p>
 
       <h3 class="ma-2">Where can I learn more about the NWM or other NOAA resources?</h3>
       <p style="padding: 12px 16px 12px 24px; padding: 12px 16px">
@@ -222,4 +227,7 @@
     </v-sheet>
   </v-container>
 </template>
-<script setup></script>
+<script setup>
+
+import NWM_TUTORIAL from '@/assets/NWM_Tutorial_v2.pdf'
+</script>
