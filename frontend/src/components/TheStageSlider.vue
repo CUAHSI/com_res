@@ -4,8 +4,8 @@
     <div class="slider-header">
       <h3>Stage-Flow</h3>
       <InfoTooltip
+        iconSize="x-small"
         text="This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels."
-        size="x-small"
       />
     </div>
 

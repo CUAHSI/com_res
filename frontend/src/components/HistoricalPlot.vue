@@ -11,7 +11,7 @@
         content-class="plot-info-tooltip"
         :z-index="200000"
         :max-width="420"
-        iconSize="small"
+        iconSize="x-small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) for the past 90 days. 
         You can explore a different timeframe by clicking the button in the bottom-right 

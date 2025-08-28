@@ -11,7 +11,7 @@
         content-class="plot-info-tooltip"
         :z-index="200000"
         :max-width="420"
-        iconSize="small"
+        iconSize="x-small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) forecasted over the
         next 10 days.  
