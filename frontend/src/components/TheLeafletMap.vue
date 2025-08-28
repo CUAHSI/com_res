@@ -240,16 +240,6 @@ function clearSelection() {
 
   // update the map
   updateMapBBox()
-
-  // clear and update the HUC textbox
-  // document.querySelector('.mdl-textfield').MaterialTextfield.change('');
-  alertStore.displayAlert({
-    title: 'Cleared',
-    text: 'Your map selection was cleared',
-    type: 'info',
-    closable: true,
-    duration: 1
-  })
 }
 
 function updateMapBBox() {

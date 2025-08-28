@@ -6,6 +6,23 @@
       :loading="isLoading"
       class="mx-auto"
     ></v-skeleton-loader>
+    <div v-if="!isLoading" class="position-absolute" style="top: 6px; right: 8px; z-index: 2">
+      <InfoTooltip
+        content-class="plot-info-tooltip"
+        :z-index="200000"
+        :max-width="420"
+        iconSize="small"
+        style="margin-left: 4px"
+        text="This graph shows streamflow (in cubic feet per second) for the past 90 days. 
+        You can explore a different timeframe by clicking the button in the bottom-right 
+        corner and adjusting the start and end dates. This data is sourced from the analysis
+        and assimilation simulation of the National Water Model, which combines observed data 
+        with model simulations to generate the most accurate estimates of current conditions. 
+        To learn more about how this information is modeled or how to access and retrieve the data, 
+        please visit: 
+        https://www.sciencedirect.com/science/article/pii/S1364815224001841"
+      />
+    </div>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading historical data...</span>
@@ -166,6 +183,7 @@ import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
 import { mdiCalendarExpandHorizontal } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import {
   Chart as ChartJS,
   Title,
