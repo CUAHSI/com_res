@@ -130,6 +130,13 @@ const forecast_mode = toRef(props, 'forecast_mode')
 const ensemble = toRef(props, 'forecast_ensemble')
 
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
+  console.log('Current props:', {
+    reach_id: reach_id.value,
+    reach_name: reach_name.value,
+    datetime: datetime.value,
+    forecast_mode: forecast_mode.value,
+    ensemble: ensemble.value
+  })
   if (reach_id.value && datetime.value) {
     await getForecastData(
       reach_id.value,

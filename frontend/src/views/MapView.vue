@@ -123,7 +123,7 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-const { activeFeature, getFeatureName } = storeToRefs(featureStore)
+const { activeFeature } = storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -136,13 +136,17 @@ const forecastEnsemble = ref('3')
 // components.
 watch(
   () => activeFeature.value?.properties?.COMID,
-  (newVal, oldVal) => {
+  async (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      reach_id.value = newVal
-      console.log('Active feature COMID changed, setting reach_id to: ', reach_id.value)
+      // wait until reactivity has completed so that all
+      // variables in the store are available before proceeding.
+      //      await nextTick()
 
-      // when the COMID changes, so does the reach name
-      console.log('Feature Name: ' + getFeatureName)
+      reach_id.value = newVal
+      reach_name.value = featureStore.activeFeatureName
+
+      console.log('Active feature COMID changed, setting reach_id to: ', reach_id.value)
+      console.log('Active feature Name: ' + reach_name.value)
     }
   }
 )
@@ -163,8 +167,6 @@ const toggle = async (component_name) => {
     })
     return
   }
-  reach_name.value =
-    activeFeature.value?.properties.PopupTitle || activeFeature.properties.REACHCODE
 
   // toggle plot visualizations
   // based on which button was clicked.
@@ -173,7 +175,7 @@ const toggle = async (component_name) => {
     await nextTick()
     await historicalPlotRef.value.getHistoricalData(
       reach_id.value.toString(),
-      reach_name,
+      reach_name.value,
       new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
       new Date(Date.now())
     )
@@ -182,7 +184,7 @@ const toggle = async (component_name) => {
     await nextTick()
     await forecastPlotRef.value.getForecastData(
       reach_id.value.toString(),
-      reach_name,
+      reach_name.value,
       forecastDateTime.value,
       forecastMode.value,
       forecastEnsemble.value

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import * as mapHelpers from '@/helpers/map'
 
 export const useFeaturesStore = defineStore(
@@ -8,6 +8,20 @@ export const useFeaturesStore = defineStore(
     const selectedFeatures = ref([])
     const activeFeature = ref(null)
     const querying = ref({ hydrocron: false, nodes: false })
+
+    // define activeFeatureName as a computer property so that
+    // it updates automatically when activeFeature changes
+    const activeFeatureName = computed(() => {
+      if (!activeFeature.value) return ''
+
+      const river_name = activeFeature.value.properties.PopupTitle
+      if (river_name === 'NODATA') {
+        return 'UNNAMED RIVER'
+      }
+      console.log('Computing activeFeatureName:', river_name)
+      console.log(activeFeature.value.properties)
+      return river_name
+    })
 
     function selectFeature(feature) {
       console.log('Selecting feature', feature)
@@ -50,27 +64,15 @@ export const useFeaturesStore = defineStore(
       return selectedFeatures.value.some((f) => f.id === feature.id)
     }
 
-    const getFeatureName = (feature = null) => {
-      if (feature == null) {
-        feature = activeFeature.value
-      }
-      if (!feature) return ''
-      const river_name = feature.properties.river_name
-      if (river_name === 'NODATA') {
-        return 'UNNAMED RIVER'
-      }
-      return river_name
-    }
-
     return {
       selectedFeatures,
       selectFeature,
       activeFeature,
+      activeFeatureName,
       clearSelectedFeatures,
       deselectFeature,
       checkFeatureSelected,
       mergeFeature,
-      getFeatureName,
       querying
     }
   },
