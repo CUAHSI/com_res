@@ -283,5 +283,5 @@
   </v-container>
 </template>
 <script setup>
-import NWM_TUTORIAL from '@/assets/NWM_Tutorial_v2.pdf'
+import NWM_TUTORIAL from '@/assets/NWM_Tutorial_v3.pdf'
 </script>
