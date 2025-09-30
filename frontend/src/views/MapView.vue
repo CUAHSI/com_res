@@ -63,10 +63,10 @@
     >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="activeFeatureFimCogData.stages_m[0]"
-        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-        :stages="activeFeatureFimCogData.stages_m"
-        :flows="activeFeatureFimCogData.flows_cms"
+        :min="activeFeatureFimCogData.stages_ft[0]"
+        :max="activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]"
+        :stages="activeFeatureFimCogData.stages_ft"
+        :flows="activeFeatureFimCogData.flows_cfs"
         :width="mdAndDown ? '40px' : '50px'"
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"
@@ -201,7 +201,7 @@ const activeFeatureFimCogData = computed(() => {
 
 const showStageSlider = computed(() => {
   const activeFeatureHasData =
-    activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
+    activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_ft.length > 0
   return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value
 })
 
@@ -209,9 +209,9 @@ const handleStageChange = () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
   // enable "snapping to nearest stage" functionality
   // if the stage value is not in the list of stages
-  if (!activeFeatureFimCogData.value.stages_m.includes(mapHelpers.stageValue.value)) {
+  if (!activeFeatureFimCogData.value.stages_ft.includes(mapHelpers.stageValue.value)) {
     // find the nearest stage value
-    const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
+    const nearestStage = activeFeatureFimCogData.value.stages_ft.reduce((prev, curr) => {
       return Math.abs(curr - mapHelpers.stageValue.value) <
         Math.abs(prev - mapHelpers.stageValue.value)
         ? curr
@@ -222,7 +222,7 @@ const handleStageChange = () => {
   }
   const cogUrls = mapHelpers.determineCogsForStage(
     activeFeatureFimCogData.value.files,
-    activeFeatureFimCogData.value.stages_m
+    activeFeatureFimCogData.value.stages_ft
   )
   if (cogUrls.length === 0) {
     alertStore.displayAlert({

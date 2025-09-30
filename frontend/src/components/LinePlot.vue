@@ -37,6 +37,7 @@ const props = defineProps({
 const chartData = computed(() => ({
   datasets: [
     {
+      // TODO: convert this to CFS?
       label: 'Streamflow (cms)',
       data: props.timeseries,
       fill: true,
@@ -68,6 +69,7 @@ const chartOptions = {
     y: {
       title: {
         display: true,
+        // TODO: convert to CFS?
         text: 'Streamflow (cms)'
       },
       ticks: {
