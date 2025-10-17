@@ -46,7 +46,6 @@
     </div>
 
     <v-row
-      fill-height
       :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
     >
       <v-col style="padding: 0px; margin: 0px; position: relative">
@@ -245,7 +244,7 @@ const handleStageChange = () => {
 }
 
 .desktop-map-container {
-  height: calc(100vh - 165px);
+  height: calc(100vh - 120px);
   position: relative;
 }
 
