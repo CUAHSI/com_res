@@ -72,13 +72,15 @@ const selectFeature = async (feature) => {
         )
         return
       } else {
+        // this will trigger the stageSlider to show
+        // TODO: CAM882 -- don't enable the slider until all the cogs are loaded...
         saveCatalogDataToFeature(activeFeature, fimCogData)
       }
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
-    // add all of the cogs to the map initially
-    await addCogsToMap(fimCogData.files)
+
+    // attempt to add the relevant COGs to the map based on the current stage value first
     const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
     if (cogUrls.length === 0) {
       console.log(
@@ -86,7 +88,13 @@ const selectFeature = async (feature) => {
       )
       return
     }
+    await addCogsToMap(cogUrls)
     updateCogsOnMap(cogUrls)
+
+    // remove the cogUrls that matched and load all the other cogs in the background
+    const remainingCogs = fimCogData.files.filter((cog) => !cogUrls.includes(cog))
+    console.log('Loading remaining COGs in background:', remainingCogs)
+    addCogsToMap(remainingCogs)
   } catch (error) {
     console.warn('Attempted to select feature:', error)
   }
