@@ -233,8 +233,7 @@ const handleStageChange = () => {
     })
     return
   }
-  mapHelpers.clearCogsFromMap()
-  mapHelpers.addCogsToMap(cogUrls)
+  mapHelpers.updateCogsOnMap(cogUrls)
 }
 </script>
 <style scoped>

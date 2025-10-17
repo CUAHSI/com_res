@@ -72,11 +72,15 @@ const selectFeature = async (feature) => {
         )
         return
       } else {
+        // this will trigger the stageSlider to show
+        // TODO: CAM882 -- don't enable the slider until all the cogs are loaded...
         saveCatalogDataToFeature(activeFeature, fimCogData)
       }
     }
     console.log('FIM COG DATA:', fimCogData)
     // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
+
+    // attempt to add the relevant COGs to the map based on the current stage value first
     const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
     if (cogUrls.length === 0) {
       console.log(
@@ -84,7 +88,13 @@ const selectFeature = async (feature) => {
       )
       return
     }
-    addCogsToMap(cogUrls)
+    await addCogsToMap(cogUrls)
+    updateCogsOnMap(cogUrls)
+
+    // remove the cogUrls that matched and load all the other cogs in the background
+    const remainingCogs = fimCogData.files.filter((cog) => !cogUrls.includes(cog))
+    console.log('Loading remaining COGs in background:', remainingCogs)
+    addCogsToMap(remainingCogs)
   } catch (error) {
     console.warn('Attempted to select feature:', error)
   }
@@ -184,43 +194,41 @@ const determineCogsForStage = (cogs, stage) => {
  *
  * @returns {void}
  */
-const addCogsToMap = (cogs) => {
+const addCogsToMap = async (cogs) => {
   const alertStore = useAlertStore()
   console.log('Adding COGs to map:', cogs)
   try {
     for (let cog of cogs) {
-      fetch(cog)
+      await fetch(cog)
         .then((res) => res.arrayBuffer())
         .then((arrayBuffer) => {
           parseGeoraster(arrayBuffer).then((georaster) => {
-            /*
-            GeoRasterLayer is an extension of GridLayer,
-            which means we can use GridLayer options like opacity.
-            http://leafletjs.com/reference-1.2.0.html#gridlayer
-          */
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
               resolution: 256,
-              opacity: 0.8,
-              zIndex: 1000, // Ensure it's above other layers
+              opacity: 0.0, // Start with 0 opacity
+              zIndex: 1000,
               pixelValuesToColorFn: (pixelValues) => {
-                // Assuming pixelValues is an array of values, map them to colors
                 return pixelValues.map((value) => {
-                  // Example: Map value to a color based on some condition
                   if (value > 0) {
-                    return 'blue' // Color for inundated areas
+                    return 'blue'
                   } else {
-                    return 'transparent' // Color for non-inundated areas
+                    return 'transparent'
                   }
                 })
               },
-              bandIndex: 0, // Assuming the raster has a single band
-              noDataValue: 0 // Assuming 0 is the no-data value
+              bandIndex: 0,
+              noDataValue: 0
             })
+            
+            // Store the original URL on the layer for later reference
+            raster._cogUrl = cog
+            
             raster.addTo(leaflet.value)
             // leaflet.value.fitBounds(raster.getBounds())
             console.log(`Added GeoRasterLayer for ${cog}`)
+            return raster
           })
         })
         .catch((error) => {
@@ -244,6 +252,38 @@ const addCogsToMap = (cogs) => {
       duration: 5
     })
   }
+}
+
+const updateCogsOnMap = (cogs) => {
+  console.log('Updating COGs on map for new stage value:', stageValue.value)
+  console.log('COGs to show:', cogs)
+
+  // Track found layers for debugging
+  let foundLayers = 0
+  let updatedLayers = 0
+
+  leaflet.value.eachLayer((layer) => {
+    if (layer instanceof GeoRasterLayer) {
+      foundLayers++
+      
+      // Create a unique identifier for this layer that we can compare
+      // Since we can't easily get the original URL, we'll use a different approach
+      
+      // Option 1: Store the URL when creating the layer (recommended approach)
+      if (layer._cogUrl && cogs.includes(layer._cogUrl)) {
+        layer.setOpacity(0.7) // Set visible opacity
+        updatedLayers++
+        console.log(`Set opacity to 0.7 for COG: ${layer._cogUrl}`)
+      } 
+      // Option 2: If you don't have the URL stored, you'll need to modify how you add layers
+      else {
+        layer.setOpacity(0.0)
+        console.log(`Set opacity to 0.0 for a COG layer`)
+      }
+    }
+  })
+
+  console.log(`Found ${foundLayers} raster layers, updated ${updatedLayers} to be visible`)
 }
 
 const clearCogsFromMap = () => {
@@ -558,6 +598,7 @@ export {
   stageValue,
   determineCogsForStage,
   addCogsToMap,
+  updateCogsOnMap,
   clearCogsFromMap,
   showHoverPopup,
   layerControlIsExpanded
