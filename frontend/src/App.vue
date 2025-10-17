@@ -23,7 +23,7 @@
         rel="stylesheet"
       />
       <SnackBar />
-      <TheFooter />
+      <TheFooter v-if="!isMapsRoute" />
     </v-main>
   </v-app>
 </template>
@@ -35,7 +35,7 @@ import TheMobileNavDrawer from '@/components/TheMobileNavDrawer.vue'
 import AlertPopup from './components/AlertPopup.vue'
 import SnackBar from './components/SnackBar.vue'
 import TheFooter from './components/TheFooter.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useAlertStore } from './stores/alerts'
 import { useRegionsStore } from './stores/regions'
 import DisclaimerDialog from './components/DisclaimerDialog.vue'
@@ -71,6 +71,11 @@ const paths = [
     label: 'Contact'
   }
 ]
+
+// Computed property to check if current route is /maps
+const isMapsRoute = computed(() => {
+  return router.currentRoute.value.path === '/maps'
+})
 
 function toggleMobileNav() {
   showMobileNavigation.value = !showMobileNavigation.value
