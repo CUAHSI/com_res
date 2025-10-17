@@ -1,26 +1,30 @@
 <template>
-  <v-footer v-if="!$route.meta.hideNavigation" color="navbar" class="d-flex flex-column">
-    <div class="d-flex w-100 align-center">
-      <v-spacer></v-spacer>
-      <v-card
-        href="https://cuahsi.org"
-        class="mx-auto"
-        rel="noopener"
-        target="_blank"
-        subtitle="Powered by"
-        min-width="
-        16rem"
-      >
-        <template v-slot:append>
-          <v-img :src="imgUrl" cover width="8rem"></v-img>
-        </template>
-      </v-card>
-    </div>
+  <v-footer v-if="!$route.meta.hideNavigation" color="navbar">
+    <v-row justify="space-around" align="center">
+      <v-col v-for="(logo, index) in logos" :key="index" cols="12" sm="4" md="3">
+        <v-img
+          :src="logo.image"
+          :alt="logo.alt"
+          :lazy-src="logo.image"
+          contain
+          height="80"
+          class="mx-auto"
+          :cover="logo.shouldCover !== false"
+        ></v-img>
+      </v-col>
+    </v-row>
   </v-footer>
 </template>
 
 <script setup>
-import imgUrl from '@/assets/logo.png'
+import CIROH from '@/assets/CIROH_black.png'
+import CUAHSI from '@/assets/logo.png'
+import GRI from '@/assets/GRI_RGB_Monogram_Red+B.png' // Example logo, replace with actual path
+const logos = [
+  { image: CIROH, alt: 'CIROH', shouldCover: false },
+  { image: CUAHSI, alt: 'CUAHSI', shouldCover: false },
+  { image: GRI, alt: 'Global Resilience Institute', shouldCover: true }
+]
 </script>
 
 <style lang="scss" scoped>
