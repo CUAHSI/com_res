@@ -124,7 +124,7 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-const { activeFeature } = storeToRefs(featureStore)
+const { activeFeature, selectedFeatures } = storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -206,24 +206,38 @@ const showStageSlider = computed(() => {
 
 const handleStageChange = () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
-  // enable "snapping to nearest stage" functionality
-  // if the stage value is not in the list of stages
-  if (!activeFeatureFimCogData.value.stages_m.includes(mapHelpers.stageValue.value)) {
-    // find the nearest stage value
-    const nearestStage = activeFeatureFimCogData.value.stages_m.reduce((prev, curr) => {
-      return Math.abs(curr - mapHelpers.stageValue.value) <
-        Math.abs(prev - mapHelpers.stageValue.value)
-        ? curr
-        : prev
-    })
-    mapHelpers.stageValue.value = nearestStage
-    console.log('Snapped to nearest stage:', nearestStage)
+  mapHelpers.clearCogsFromMap()
+  let addedCogs = false
+  console.log ('Selected features:', selectedFeatures.value)
+  for (const feature of selectedFeatures.value) {
+    console.log('Processing feature for COGs:', feature)
+    const fimCogData = feature.properties.fimCogData
+    console.log('FIM COG Data:', fimCogData)
+    if (fimCogData) {
+      // enable "snapping to nearest stage" functionality
+      // if the stage value is not in the list of stages
+      if (!fimCogData.stages_m.includes(mapHelpers.stageValue.value)) {
+        // find the nearest stage value
+        const nearestStage = fimCogData.stages_m.reduce((prev, curr) => {
+          return Math.abs(curr - mapHelpers.stageValue.value) <
+            Math.abs(prev - mapHelpers.stageValue.value)
+            ? curr
+            : prev
+        })
+        mapHelpers.stageValue.value = nearestStage
+        console.log('Snapped to nearest stage:', nearestStage)
+      }
+      const cogUrls = mapHelpers.determineCogsForStage(
+        fimCogData.files,
+        fimCogData.stages_m
+      )
+      if (cogUrls.length > 0) {
+        addedCogs = true
+        mapHelpers.addCogsToMap(cogUrls)
+      }
+    }
   }
-  const cogUrls = mapHelpers.determineCogsForStage(
-    activeFeatureFimCogData.value.files,
-    activeFeatureFimCogData.value.stages_m
-  )
-  if (cogUrls.length === 0) {
+  if (!addedCogs) {
     alertStore.displayAlert({
       title: 'No Data Available',
       text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}m.`,
@@ -233,8 +247,6 @@ const handleStageChange = () => {
     })
     return
   }
-  mapHelpers.clearCogsFromMap()
-  mapHelpers.addCogsToMap(cogUrls)
 }
 </script>
 <style scoped>

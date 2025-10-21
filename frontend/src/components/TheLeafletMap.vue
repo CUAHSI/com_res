@@ -7,6 +7,7 @@
     @close="contextMenu.show = false"
     @zoom-to-feature="contextZoomToFeature"
     @select-feature="contextSelectFeature"
+    @select-additional-feature="contextSelectAdditionalFeature"
     @show-feature-info="contextShowFeatureInfo"
     @dismiss="dismissContextMenu"
   />
@@ -413,14 +414,6 @@ function contextZoomToFeature() {
   contextMenuFeatureLatLng.value = null
 }
 
-function selectFeatureHelper(feature) {
-  featureStore.clearSelectedFeatures()
-  if (!featureStore.checkFeatureSelected(feature)) {
-    // Only allow one feature to be selected at a time
-    featureStore.selectFeature(feature)
-  }
-}
-
 function contextSelectFeature() {
   if (contextMenu.value.feature) {
     // Clear any currently selected features
@@ -428,11 +421,15 @@ function contextSelectFeature() {
 
     // Select the right-clicked feature
     featureStore.selectFeature(contextMenu.value.feature)
+  }
+  contextMenu.value.show = false
+  contextMenuFeatureLatLng.value = null
+}
 
-    // Use the helper function to style the selected feature
-    if (activeFeatureLayer.value) {
-      selectFeatureHelper(contextMenu.value.feature)
-    }
+function contextSelectAdditionalFeature() {
+  if (contextMenu.value.feature) {
+    // Select the right-clicked feature without clearing existing selections
+    featureStore.mergeFeature(contextMenu.value.feature)
   }
   contextMenu.value.show = false
   contextMenuFeatureLatLng.value = null
