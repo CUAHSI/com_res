@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import ResourcesView from '../views/ResourcesView.vue'
+import FloodSavvyView from '../views/FloodSavvyView.vue'
+import NWPSView from '../views/NWPSView.vue'
 import ContactView from '../views/ContactView.vue'
 import MapView from '../views/MapView.vue'
 import ApiView from '../views/ApiView.vue'
@@ -35,9 +36,14 @@ const router = createRouter({
       component: ApiView
     },
     {
-      path: '/resources',
-      name: 'resources',
-      component: ResourcesView
+      path: '/floodsavvy',
+      name: 'floodsavvy',
+      component: FloodSavvyView
+    },
+    {
+      path: '/nwps',
+      name: 'nwps',
+      component: NWPSView
     },
     {
       path: '/contact',

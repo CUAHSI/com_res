@@ -59,8 +59,12 @@ const paths = [
     label: 'Maps'
   },
   {
-    attrs: { to: '/resources' },
-    label: 'Resources'
+    attrs: { to: '/floodsavvy' },
+    label: 'FloodSavvy Resources'
+  },
+  {
+    attrs: { to: '/nwps' },
+    label: 'NWPS Resources'
   },
   {
     attrs: { to: '/about' },
