@@ -168,6 +168,7 @@ def __clean_fim_geotiff(
             raise RuntimeError(f"Numpy: {e}, i.e. no flooding event found")
 
     # crop the data and set a new bounding box
+    print(f"Cropping FIM Results for {geotiff_path}...")
     cropped_data, cropped_profile = __crop_data(cleaned_data, profile)
 
     # set datya type to float32 to account for nan values, -9999.0
@@ -178,9 +179,9 @@ def __clean_fim_geotiff(
 
 
 def __compute_fim_scenario(i, huc_id, reach_id, flow_rate_filepath, label):
-    print(f"Computing FIM for {huc_id}:{reach_id} - {flow_rate_filepath} \t [{i+1}]")
+    print(f"Computing FIM for {huc_id}:{reach_id} - input:{flow_rate_filepath}  - label: {label} \t [{i+1}]")
     __generate_fim(huc_id, flow_rate_filepath, label)
-
+    
 
 def __clean_fims(
     directory: Annotated[
@@ -192,8 +193,7 @@ def __clean_fims(
     ],
 ) -> None:
     """
-    Cleans FIM maps by eliminating all negative values. This searches for all geotiff files that
-    exist in subdirectories of the input directory and places the cleaned files in the "input directory"
+    Cleans all FIMs in the input directory by eliminating all negative values. This searches for all geotiff files that exist in subdirectories of the input directory and places the cleaned files in the "input directory"
 
     Arguments:
     ==========
@@ -213,39 +213,39 @@ def __clean_fims(
     dirs_to_remove = []
     for fpath in Path(directory).glob("**/*.tif"):
         try:
-            print(f"Cleaning FIM Results for {fpath.name}...", end="")
+            print(f"Cleaning FIM Results for {fpath.name}...")
             __clean_fim_geotiff(fpath)
-            print("done")
 
-            output_messages.append(f"{fpath.name} processing SUCCESS.")
-            shutil.move(fpath, directory / fpath.name)
+            # output_messages.append(f"{fpath.name} processing SUCCESS.")
+            # print(f'Moving: {fpath} -> {directory/fpath.name}')
+            # shutil.move(fpath, directory / fpath.name)
 
         except Exception as e:
             output_messages.append(f"{fpath.name} processing FAIL. -> {e}")
             print(f"Error cleaning FIM results for {fpath.name}.\n{e}")
 
-        finally:
-            dirs_to_remove.append(fpath.parent)
+        # finally:
+        #     dirs_to_remove.append(fpath.parent)
 
-    # remove old artifacts
-    for parent_dir in dirs_to_remove:
-        # only remove directories that are not the input directory
-        if parent_dir != directory:
+    # # remove old artifacts
+    # for parent_dir in dirs_to_remove:
+    #     # only remove directories that are not the input directory
+    #     if parent_dir != directory:
+    #         print(f'Removing: {parent_dir}')
+    #         shutil.rmtree(parent_dir, ignore_errors=True)
 
-            shutil.rmtree(parent_dir, ignore_errors=True)
-
-    # save log messages for future reference
-    with open(directory / "logs.txt", "a") as log_file:
-        for output_message in output_messages:
-            log_file.write(f"{output_message}\n")
-
-
+    # # save log messages for future reference
+    # with open(directory / "logs.txt", "a") as log_file:
+    #     for output_message in output_messages:
+    #         log_file.write(f"{output_message}\n")
+    
+    
 def __convert_to_cog(root_dir: Path) -> None:
 
     failed_conversions = []
     for input_tif in Path(root_dir).glob("**/*.tif"):
         output_cog = input_tif.with_suffix(".cog")
-
+        print(f'Convert to COG: {input_tif} -> {output_cog}')
         try:
             cmd = [
                 "gdal_translate",
@@ -267,9 +267,6 @@ def __convert_to_cog(root_dir: Path) -> None:
                 stderr=subprocess.PIPE,
                 text=True,
             )
-
-        # os.remove(input_tif)
-        # print(f"Converted to COG and deleted original: {input_tif}")
 
         except subprocess.CalledProcessError as e:
             msg = f"Error converting {input_tif} to COG: {e}. STDOUT: {e.stdout}. STDERR: {e.stderr}"
@@ -448,6 +445,20 @@ def generate_reach_fim(
             help="A comma separated list of flow rates corresponding to the reach_ids to use for FIM generation, in cubic meters per second.",
         ),
     ] = "200.23",
+    max_procs: Annotated[
+        int,
+        typer.Argument(
+            ...,
+            help="The number of concurrent processes that we execute",
+        ),
+    ] = 1,
+    output_labels: Annotated[
+        str,
+        typer.Argument(
+            ...,
+            help="A comma separated list of labels to use when saving the fim outputs.",
+        ),
+    ] = None,
     subdir: Annotated[
         Union[str, None],
         typer.Argument(
@@ -466,6 +477,9 @@ def generate_reach_fim(
         huc_id - str: The HUC-8 identifier for the watershed.
         reach_ids - str: A comma separated list of NWM reach identifier for the reaches of interest.
         flow_rates - str: A comma replace list of flow rates corresponding to the reach_ids to use for FIM generation, in cubic meters per second.
+        max_procs - 
+        output_labels -
+        subdir - 
 
     Returns:
     ========
@@ -473,51 +487,125 @@ def generate_reach_fim(
 
     """
 
+    # TODO: make sure that we have the same number of input args
+
+    print(f'Max number of Processes: {max_procs}')
+
     # parse reach_ids and flow_rates
     r_ids = reach_ids.split(",")
+    print(f'Found the following reach ids: {r_ids}')
+    
     f_rates = [float(x) for x in flow_rates.split(",")]
+    print(f'Found the following flow rates: {f_rates}')
 
     # TODO: This is hardcoded for now, but should be an important parameter in the future.
     fim_data_dir = f"/home/output/flood_{huc_id}/{huc_id}"
+    print(f'FIM data directory: {fim_data_dir}')
 
     # download HUC data if it doesn't exist
     __download_huc_fim(huc_id, Path(fim_data_dir))
 
     # generate output file names if not provided
-    output_labels = []
-    for i in range(0, len(r_ids)):
-        # round stage to 1 decimal place and replace '.' with '_' for clarity
-        rounded_stage = round(cr.get_stage(huc_id, r_ids[i], f_rates[i]), 1)
-        stage_label = str(rounded_stage).replace(".", "_")
-
-        # round flow to 0 devimal places and replace '.' with '_' for clarity
-        flow_label = str(int(f_rates[i]))
-        output_labels.append(f"{r_ids[i]}__{stage_label}_m__{flow_label}_cms")
-
+    if output_labels is None: 
+        output_labels = []
+        for i in range(0, len(r_ids)):
+            # round stage to 1 decimal place and replace '.' with '_' for clarity
+            rounded_stage = round(cr.get_stage(huc_id, r_ids[i], f_rates[i]), 1)
+            stage_label = str(rounded_stage).replace(".", "_")
+    
+            # round flow to 0 devimal places and replace '.' with '_' for clarity
+            flow_label = str(int(f_rates[i]))
+            output_labels.append(f"{r_ids[i]}__{stage_label}_m__{flow_label}_cms")
+    else:
+        output_labels = output_labels.split(',')
+    
+    print('Using the following output labels:')
+    for output_label in output_labels:
+        print(f'  - {output_label}')
+              
     # write the input files that will be used to generate the FIM
     flow_rate_filepaths = []
     for i in range(0, len(r_ids)):
         flow_rate_filepaths.append(
             __write_flow_input_file([r_ids[i]], [f_rates[i]], output_labels[i])
         )
+        
+    with ProcessPoolExecutor(max_workers=max_procs) as executor:
 
-    for i in range(0, len(flow_rate_filepaths)):
+        futures = []
+        for i in range(0, len(flow_rate_filepaths)):
+            # compute FIM using the mosaic approach established
+            # by NOAA OWP.
+            futures.append(
+                executor.submit(
+                    __compute_fim_scenario,
+                    i,
+                    huc_id,
+                    r_ids[i],
+                    flow_rate_filepaths[i],
+                    output_labels[i],
+                )
+            )
 
-        # compute FIM using the moasic approach established
-        # by NOAA OWP.
-        #
-        # clean the generated fim maps to remove negative values. The
-        # output will be geotiffs containing 0's where no inundation
-        # exists and 1's where inundation exists.
-        p = f"/home/output/flood_{huc_id}/{huc_id}_inundation"
-        if subdir is not None:
-            p = f"/home/output/flood_{huc_id}/{huc_id}_inundation/{subdir}"
-            __generate_fim(huc_id, flow_rate_filepaths[i], p)
-        else:
-            __generate_fim(huc_id, flow_rate_filepaths[i])
+    # save the root path where the final FIM maps will be saved.
+    root_path = Path(f"/home/output/flood_{huc_id}/{huc_id}_inundation")
 
-        __clean_fims(Path(p))
-        __convert_to_cog(Path(p))
+    log_contents = []
+    # loop through each reach and move all tiff files into a
+    # subdirectory named after the reach. Concat all log files 
+    # in the process.
+
+    print('----------------------------------')
+    print('COMPLETED GENERATING FIM SCENARIOS')
+    print('----------------------------------')
+    
+    for r_id in list(set(r_ids)):
+        
+        print(f'--- POST PROCESSING REACH {r_id} ---')
+        
+        target_path = root_path/r_id
+        
+        # create output dir for this reach
+        print(f'Making dir: {target_path}')
+        target_path.mkdir(parents=True, exist_ok=True)
+
+        for item in root_path.iterdir():
+            if item.is_dir():
+                if item.name.split('__')[0] == r_id:
+                    for file in item.glob('*'):
+                        if file.suffix.lower() == '.tif':
+                            
+                            dest = target_path/file.name
+                            print(f"  - Moving {file} -> {dest}")
+                            shutil.move(str(file), str(dest))
+                        
+    # clean the generated fim maps to remove negative values. The
+    # output will be geotiffs containing 0's where no inundation
+    # exists and 1's where inundation exists.
+    print('--- CLEANING FIMs ---')
+    __clean_fims(target_path)
+
+    print('-- CREATING COGs ---')
+    # convert the output into COG format
+    __convert_to_cog(target_path)
+
+    # Cleaning temporary directories
+    print('--- CLEANING TEMPORARY DIRECTORIES ---')
+    for label in output_labels:
+        temp_dir = root_path / label
+        try:
+            shutil.rmtree(temp_dir)
+            print(f"Directory and its contents removed successfully: {temp_dir}")
+        except OSError as e:
+            print(f"Failed to remove directory: {temp_dir} : {e.strerror}")
+        
+        
+    # # Write combined log.txt in root_path
+    # if log_contents:
+    #     with open(f'{target_path}/log.txt', "w") as out_log:
+    #         out_log.write("\n".join(log_contents))
+    
+
 
 
 @app.command(name="clean")
