@@ -42,7 +42,7 @@
           <!-- PDF Tutorial -->
           <v-card class="overflow-hidden mb-8">
             <iframe
-              :src="pdfUrl + '#page=1'"
+              :src="pdfUrl "
               title="Tutorial PDF"
               style="width: 100%; height: 500px; border: none; border-radius: 6px;"
             ></iframe>
