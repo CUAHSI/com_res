@@ -51,7 +51,7 @@ const deselectFeature = (feature) => {
 
 const selectFeature = async (feature) => {
   const featureStore = useFeaturesStore()
-  const { activeFeature, selectedFeatures } = storeToRefs(featureStore)
+  const { activeFeature, selectedFeatures, toggledStageSlider } = storeToRefs(featureStore)
   try {
     activeFeatureLayer.value.setFeatureStyle(feature.id, {
       color: featureOptions.value.selectedColor,
@@ -99,7 +99,10 @@ const selectFeature = async (feature) => {
       )
       return
     }
-    addCogsToMap(cogUrls)
+    // if flood maps are enabled, add the cogs to the map
+    if (toggledStageSlider.value) {
+      addCogsToMap(cogUrls)
+    }
   } catch (error) {
     console.warn('Attempted to select feature:', error)
   }

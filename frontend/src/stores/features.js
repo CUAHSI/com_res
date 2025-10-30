@@ -8,6 +8,7 @@ export const useFeaturesStore = defineStore(
     const selectedFeatures = ref([])
     const activeFeature = ref(null)
     const querying = ref({ hydrocron: false, nodes: false })
+    const toggledStageSlider = ref(false)
 
     // define activeFeatureName as a computer property so that
     // it updates automatically when activeFeature changes
@@ -75,7 +76,8 @@ export const useFeaturesStore = defineStore(
       deselectFeature,
       checkFeatureSelected,
       mergeFeature,
-      querying
+      querying,
+      toggledStageSlider,
     }
   },
   {

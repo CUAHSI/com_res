@@ -42,6 +42,18 @@
             style="margin-left: 5px"
           />
         </v-btn>
+        <v-btn
+          id="btn-show-stage-slider"
+          style="margin-top: 7px"
+          @click="toggle('stage')"
+          :color="toggledStageSlider ? 'blue' : 'white'"
+        >
+          Flood Map
+          <InfoTooltip
+            text="Toggle flood map visualization for the selected river reach based on stage values."
+            style="margin-left: 5px"
+          />
+        </v-btn>
       </v-card>
     </div>
 
@@ -124,7 +136,7 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-const { activeFeature, selectedFeatures } = storeToRefs(featureStore)
+const { activeFeature, selectedFeatures, toggledStageSlider } = storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -190,6 +202,15 @@ const toggle = async (component_name) => {
       forecastMode.value,
       forecastEnsemble.value
     )
+  } else if (component_name === 'stage') {
+    // stage slider toggle
+    if (toggledStageSlider.value) {
+      toggledStageSlider.value = false
+      mapHelpers.clearCogsFromMap()
+    } else {
+      toggledStageSlider.value = true
+      handleStageChange()
+    }
   }
 }
 
@@ -201,7 +222,7 @@ const activeFeatureFimCogData = computed(() => {
 const showStageSlider = computed(() => {
   const activeFeatureHasData =
     activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
-  return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value
+  return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
 })
 
 const handleStageChange = () => {
@@ -274,6 +295,7 @@ const handleStageChange = () => {
   position: absolute;
   z-index: 99999;
   transform: translate(0px, 60px);
+  margin-top: 10px;
 }
 
 .mobile-map-container {
