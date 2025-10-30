@@ -51,7 +51,7 @@ const deselectFeature = (feature) => {
 
 const selectFeature = async (feature) => {
   const featureStore = useFeaturesStore()
-  const { activeFeature } = storeToRefs(featureStore)
+  const { activeFeature, selectedFeatures } = storeToRefs(featureStore)
   try {
     activeFeatureLayer.value.setFeatureStyle(feature.id, {
       color: featureOptions.value.selectedColor,
@@ -73,6 +73,21 @@ const selectFeature = async (feature) => {
         return
       } else {
         saveCatalogDataToFeature(activeFeature, fimCogData)
+        // also save the data to the original feature object
+        feature = {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            fimCogData: fimCogData
+          }
+        }
+        // save the data into selectedFeatures as well
+        for (let i = 0; i < selectedFeatures.value.length; i++) {
+          if (selectedFeatures.value[i].id === feature.id) {
+            selectedFeatures.value[i] = feature
+            break
+          }
+        }
       }
     }
     console.log('FIM COG DATA:', fimCogData)
