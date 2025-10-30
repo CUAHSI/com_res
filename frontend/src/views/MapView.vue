@@ -41,7 +41,7 @@
                   <template v-slot:label>
                     <span>Multi-reach</span>
                     <InfoTooltip
-                      text="Enable to select multiple river reaches for flood scenario analysis."
+                      text="Enable to select multiple river reaches at a time. Use Ctrl (Cmd on Mac) + Click to select additional reaches on the map. Or use the context menu option 'Select Additional Feature'."
                       style="margin-left: 5px"
                       z-index="999999"
                       class="tooltip-icon"
@@ -186,10 +186,7 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-// Add multi-reach mode state
-const multiReachMode = ref(false)
-
-const { activeFeature, selectedFeatures, toggledStageSlider } = storeToRefs(featureStore)
+const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } = storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -220,18 +217,13 @@ watch(
 // Watch multi-reach mode changes
 watch(multiReachMode, (newValue) => {
   console.log('Multi-reach mode changed to:', newValue)
-  
-  // You can add logic here to handle the mode change
-  // For example, clear selections when switching modes
   if (!newValue && selectedFeatures.value.length > 1) {
     // If switching back to single mode with multiple selections,
-    // you might want to keep only the last selected feature
+    // keep only the last selected feature
     const lastFeature = selectedFeatures.value[selectedFeatures.value.length - 1]
-    featureStore.setSelectedFeatures([lastFeature])
+    featureStore.clearSelectedFeatures()
+    featureStore.selectFeature(lastFeature)
   }
-  
-  // You might also want to update map interaction behavior
-  // This would require corresponding changes in your map component
 })
 
 const toggle = async (component_name) => {

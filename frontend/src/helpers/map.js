@@ -459,6 +459,7 @@ const showHoverPopup = (feature, latlng, closeable = false) => {
 
 function createFlowlinesFeatureLayer(region) {
   const featureStore = useFeaturesStore()
+  const { multiReachMode } = storeToRefs(featureStore)
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayer = esriLeaflet.featureLayer({
     url: url,
@@ -509,7 +510,7 @@ function createFlowlinesFeatureLayer(region) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
     const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
-    if (isCtrlOrCmdClick) {
+    if (isCtrlOrCmdClick && multiReachMode.value) {
       console.log('Multi-select enabled via Ctrl/Cmd key.')
       featureStore.mergeFeature(feature)
     } else {

@@ -11,7 +11,7 @@
         </v-btn>
       </div>
       <v-list density="compact">
-        <v-list-item @click="$emit('select-additional-feature')">
+        <v-list-item v-if="multiReachMode" @click="$emit('select-additional-feature')">
           <v-list-item-title>Select Additional Feature</v-list-item-title>
         </v-list-item>
         <v-list-item @click="$emit('zoom-to-feature')">
@@ -40,6 +40,11 @@ defineProps({
 defineEmits(['close', 'zoom-to-feature', 'select-feature', 'select-additional-feature', 'show-feature-info', 'dismiss'])
 
 import { mdiClose } from '@mdi/js'
+import { useFeaturesStore } from '@/stores/features'
+import { storeToRefs } from 'pinia'
+
+const featureStore = useFeaturesStore()
+const { multiReachMode } = storeToRefs(featureStore)
 </script>
 
 <style scoped>

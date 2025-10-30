@@ -9,6 +9,7 @@ export const useFeaturesStore = defineStore(
     const activeFeature = ref(null)
     const querying = ref({ hydrocron: false, nodes: false })
     const toggledStageSlider = ref(false)
+    const multiReachMode = ref(false)
 
     // define activeFeatureName as a computer property so that
     // it updates automatically when activeFeature changes
@@ -78,6 +79,7 @@ export const useFeaturesStore = defineStore(
       mergeFeature,
       querying,
       toggledStageSlider,
+      multiReachMode
     }
   },
   {
