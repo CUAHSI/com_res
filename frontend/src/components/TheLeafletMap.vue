@@ -1,17 +1,11 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
   <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
-  
-  <!-- Multi-select Indicator -->
-  <div v-if="ctrlActive" class="multi-select-indicator">
-    <template v-if="canSelectMoreFeatures">
-      🖱️ Multi-select Mode Active - Click features to select multiple
-    </template>
-    <template v-else>
-      ⚠️ Maximum features selected
-    </template>
-  </div>
-  
+
+  <TheMultiSelectIndicator
+    v-if="ctrlActive && multiReachMode"
+  />
+
   <ContextMenu
     v-if="contextMenu.show"
     :context="contextMenu"
@@ -46,6 +40,7 @@ import {
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
+import TheMultiSelectIndicator from '@/components/TheMultiSelectIndicator.vue'
 import { storeToRefs } from 'pinia'
 
 const featureStore = useFeaturesStore()
@@ -64,7 +59,7 @@ const contextMenuFeatureLatLng = ref(null)
 const layerControlExpanded = ref(false)
 const ctrlActive = ref(false)
 
-const { multiReachMode, canSelectMoreFeatures } = storeToRefs(featureStore)
+const { multiReachMode } = storeToRefs(featureStore)
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
@@ -542,29 +537,6 @@ onUnmounted(() => {
   height: 100%;
   position: relative;
   z-index: 1;
-}
-
-.multi-select-indicator {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 123, 255, 0.9);
-  color: white;
-  padding: 12px 18px;
-  border-radius: 25px;
-  font-size: 14px;
-  font-weight: bold;
-  z-index: 10000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 2px solid white;
-  animation: pulse 2s infinite;
-  pointer-events: none;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
 }
 
 /* Override cursor behavior for Leaflet features */
