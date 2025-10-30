@@ -43,6 +43,8 @@
                     <InfoTooltip
                       text="Enable to select multiple river reaches for flood scenario analysis."
                       style="margin-left: 5px"
+                      z-index="999999"
+                      class="tooltip-icon"
                     />
                   </template>
                 </v-radio>
@@ -68,6 +70,8 @@
                 Flood Map
                 <InfoTooltip
                   text="Toggle flood map visualization for the selected river reach based on stage values."
+                  z-index="999999"
+                  class="tooltip-icon"
                 />
               </v-btn>
               <v-btn
@@ -82,6 +86,8 @@
                   text="Display historical streamflow data for the selected river as a graph, 
                   showing hourly values in cubic feet per second (cfs)."
                   style="margin-left: 5px"
+                  z-index="999999"
+                  class="tooltip-icon"
                 />
               </v-btn>
               <v-btn
@@ -95,6 +101,8 @@
                   text="Display forecasted streamflow data for selected river or stream in a graph,
                   showing hourly values in cubic feet per second (cfs)."
                   style="margin-left: 5px"
+                  z-index="999999"
+                  class="tooltip-icon"
                 />
               </v-btn>
             </v-card>
@@ -452,5 +460,23 @@ const handleStageChange = () => {
 /* Ensure the slider itself has pointer events */
 .desktop-stage-slider-container >>> .thermometer-slider-container {
   pointer-events: auto;
+}
+
+/* Action buttons with right-aligned tooltips */
+.action-button {
+  width: 100%;
+  justify-content: space-between !important; /* This pushes text left and icon right */
+  padding: 0 12px !important;
+  position: relative;
+}
+
+.button-text {
+  flex: 1;
+  text-align: left;
+}
+
+.tooltip-icon {
+  margin-left: auto; /* Push tooltip to the right */
+  flex-shrink: 0; /* Prevent tooltip from shrinking */
 }
 </style>
