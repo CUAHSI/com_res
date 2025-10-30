@@ -7,6 +7,7 @@
     <div class="region-selector-container">
       <TheRegionSelector :z-index="999999" />
     </div>
+
     <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
       <v-card
         location="left"
@@ -18,6 +19,7 @@
         max-height="145"
       >
         <v-btn
+          v-if="!multiReachMode"
           id="btn-show-historical"
           style="margin-right: 10px"
           @click="toggle('historical')"
@@ -31,6 +33,7 @@
           />
         </v-btn>
         <v-btn
+          v-if="!multiReachMode"
           style="margin-right: 10px"
           @click="toggle('forecast')"
           :color="showForecast ? 'blue' : 'white'"
@@ -78,14 +81,45 @@
         :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
         :stages="activeFeatureFimCogData.stages_m"
         :flows="activeFeatureFimCogData.flows_cms"
-        :width="mdAndDown ? '40px' : '50px'"
+        :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"
       />
+      <v-card
+        v-if="showStageSlider"
+        variant="flat"
+        class="multi-reach-toggle-card"
+      >
+      <v-card-title style="font-size: medium">Selection Mode</v-card-title>
+        <v-radio-group
+          v-model="multiReachMode"
+          density="compact"
+          hide-details
+        >
+          <v-radio
+            label="Single Reach"
+            :value="false"
+            color="primary"
+          ></v-radio>
+          <v-radio
+            label="Multi-reach Mode"
+            :value="true"
+            color="primary"
+          >
+            <template v-slot:label>
+              <span>Multi-reach</span>
+              <InfoTooltip
+                text="Enable to select multiple river reaches for flood scenario analysis."
+                style="margin-left: 5px"
+              />
+            </template>
+          </v-radio>
+        </v-radio-group>
+      </v-card>
     </div>
 
     <div
-      v-if="showHistorical || showForecast"
+      v-if="(showHistorical || showForecast) && !multiReachMode"
       :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }"
     >
       <HistoricalPlot
@@ -136,6 +170,9 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
+// Add multi-reach mode state
+const multiReachMode = ref(false)
+
 const { activeFeature, selectedFeatures, toggledStageSlider } = storeToRefs(featureStore)
 
 const reach_name = ref(null)
@@ -163,6 +200,23 @@ watch(
     }
   }
 )
+
+// Watch multi-reach mode changes
+watch(multiReachMode, (newValue) => {
+  console.log('Multi-reach mode changed to:', newValue)
+  
+  // You can add logic here to handle the mode change
+  // For example, clear selections when switching modes
+  if (!newValue && selectedFeatures.value.length > 1) {
+    // If switching back to single mode with multiple selections,
+    // you might want to keep only the last selected feature
+    const lastFeature = selectedFeatures.value[selectedFeatures.value.length - 1]
+    featureStore.setSelectedFeatures([lastFeature])
+  }
+  
+  // You might also want to update map interaction behavior
+  // This would require corresponding changes in your map component
+})
 
 const toggle = async (component_name) => {
   console.log('Toggling: ' + component_name)
@@ -298,6 +352,18 @@ const handleStageChange = () => {
   margin-top: 10px;
 }
 
+/* Multi-reach toggle container */
+.multi-reach-toggle-container {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  z-index: 999999;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .mobile-map-container {
   height: calc(100vh - 500px);
   min-height: 40vh;
@@ -321,11 +387,12 @@ const handleStageChange = () => {
 .desktop-stage-slider-container {
   position: absolute;
   right: 15px;
-  top: 475px;
+  top: 540px;
   transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
 }
+
 .mobile-stage-slider-container {
   position: absolute;
   right: 15px;
@@ -333,6 +400,46 @@ const handleStageChange = () => {
   transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
+}
+
+/* Multi-reach toggle container - positioned below stage slider */
+.desktop-multi-reach-container {
+  position: absolute;
+  right: 15px;
+  top: 750px; /* Positioned below the stage slider */
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.mobile-multi-reach-container {
+  position: absolute;
+  right: 15px;
+  top: 350px; /* Positioned below the stage slider on mobile */
+  z-index: 99999;
+  pointer-events: none;
+}
+
+/* Multi-reach toggle card with compact width */
+.multi-reach-toggle-card {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 4px;
+  padding: 2px 3px;
+  margin: 5px 0px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: fit-content;
+  min-width: auto;
+  pointer-events: auto;
+  height: auto;
+  max-height: 150px;
+}
+
+/* Ensure the radio group is compact */
+.multi-reach-toggle-card :deep(.v-radio-group) {
+  width: fit-content;
+}
+
+.multi-reach-toggle-card :deep(.v-radio-group .v-input__control) {
+  width: fit-content;
 }
 
 /* Ensure the slider itself has pointer events */
