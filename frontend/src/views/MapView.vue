@@ -4,87 +4,97 @@
   </v-overlay>
 
   <v-container fluid class="map-view-container">
-    <div class="region-selector-container">
-      <TheRegionSelector :z-index="999999" />
-      <v-card
-        variant="flat"
-        class="multi-reach-toggle-card"
-        :style="{ width: mdAndDown ? '200px' : '300px' }"
-      >
-      <v-spacer></v-spacer>
-      <v-card-title style="font-size: medium">Selection Mode</v-card-title>
-        <v-radio-group
-          v-model="multiReachMode"
-          density="compact"
-          hide-details
-          inline
-        >
-          <v-radio
-            label="Single Reach"
-            :value="false"
-            color="primary"
-          ></v-radio>
-          <v-radio
-            label="Multi-reach Mode"
-            :value="true"
-            color="primary"
+    <!-- Combined Controls Container -->
+    <div :class="mdAndDown ? 'mobile-controls-container' : 'desktop-controls-container'">
+      <div class="controls-content">
+        <!-- Region Selector -->
+        <div class="control-section">
+          <TheRegionSelector :z-index="999999" />
+        </div>
+
+        <!-- Multi-reach Mode Toggle -->
+        <div class="control-section">
+          <v-card
+            variant="flat"
+            class="multi-reach-toggle-card"
           >
-            <template v-slot:label>
-              <span>Multi-reach</span>
+            <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px;">Selection Mode</v-card-title>
+            <v-radio-group
+              v-model="multiReachMode"
+              density="compact"
+              hide-details
+              inline
+              style="padding: 0px 12px 8px 12px;"
+            >
+              <v-radio
+                label="Single Reach"
+                :value="false"
+                color="primary"
+              ></v-radio>
+              <v-radio
+                label="Multi-reach Mode"
+                :value="true"
+                color="primary"
+              >
+                <template v-slot:label>
+                  <span>Multi-reach</span>
+                  <InfoTooltip
+                    text="Enable to select multiple river reaches for flood scenario analysis."
+                    style="margin-left: 5px"
+                  />
+                </template>
+              </v-radio>
+            </v-radio-group>
+          </v-card>
+        </div>
+
+        <!-- Action Buttons -->
+        <div v-if="activeFeature" class="control-section">
+          <v-card
+            variant="flat"
+            class="action-buttons-card"
+          >
+            <v-btn
+              id="btn-show-stage-slider"
+              @click="toggle('stage')"
+              :color="toggledStageSlider ? 'primary' : 'white'"
+              class="action-button"
+            >
+              Flood Map
               <InfoTooltip
-                text="Enable to select multiple river reaches for flood scenario analysis."
+                text="Toggle flood map visualization for the selected river reach based on stage values."
+              />
+            </v-btn>
+            <v-btn
+              v-if="!multiReachMode"
+              id="btn-show-historical"
+              @click="toggle('historical')"
+              :color="showHistorical ? 'primary' : 'white'"
+              class="action-button"
+            >
+              Historical
+              <InfoTooltip
+                text="Display historical streamflow data for the selected river as a graph, 
+                showing hourly values in cubic feet per second (cfs)."
                 style="margin-left: 5px"
               />
-            </template>
-          </v-radio>
-        </v-radio-group>
-      </v-card>
-    </div>
-
-    <div v-if="activeFeature" :class="mdAndDown ? 'mobile-buttons-container' : 'desktop-buttons-container'">
-      <v-card
-        location="left"
-        variant="flat"
-        :style="{
-          backgroundColor: 'transparent'
-        }"
-      >
-        <v-btn
-          id="btn-show-stage-slider"
-          @click="toggle('stage')"
-          :color="toggledStageSlider ? 'primary' : 'white'"
-        >
-          Flood Map
-          <InfoTooltip
-            text="Toggle flood map visualization for the selected river reach based on stage values."
-          />
-        </v-btn>
-        <v-btn
-          v-if="!multiReachMode"
-          id="btn-show-historical"
-          @click="toggle('historical')"
-          :color="showHistorical ? 'primary' : 'white'"
-        >
-          Historical
-          <InfoTooltip
-            text="Display historical streamflow data for the selected river as a graph, 
-            showing hourly values in cubic feet per second (cfs)."
-            style="margin-left: 5px"
-          />
-        </v-btn>
-        <v-btn
-          v-if="!multiReachMode"
-          @click="toggle('forecast')"
-          :color="showForecast ? 'primary' : 'white'"
-        >
-          Forecast
-          <InfoTooltip
-            text="Display forecasted streamflow data for selected river or stream in a graph,
-            showing hourly values in cubic feet per second (cfs)."
-            style="margin-left: 5px"
-          />
-        </v-btn>
-      </v-card>
+            </v-btn>
+            <v-btn
+              v-if="!multiReachMode"
+              @click="toggle('forecast')"
+              :color="showForecast ? 'primary' : 'white'"
+              class="action-button"
+            >
+              Forecast
+              <InfoTooltip
+                text="Display forecasted streamflow data for selected river or stream in a graph,
+                showing hourly values in cubic feet per second (cfs)."
+                style="margin-left: 5px"
+              />
+            </v-btn>
+          </v-card>
+        </div>
+      </div>
     </div>
 
     <v-row
@@ -325,23 +335,57 @@ const handleStageChange = () => {
   height: 100%;
 }
 
-.region-selector-container {
+/* Combined Controls Container */
+.desktop-controls-container {
   position: absolute;
   top: 10px;
   left: 15px;
-  z-index: 999999; /* Match this with the prop value */
+  z-index: 999999;
   width: 300px;
 }
 
-/* Multi-reach toggle card with compact width */
+.mobile-controls-container {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  z-index: 999999;
+  width: 200px;
+}
+
+.controls-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-section {
+  width: 100%;
+  min-height: fit-content;
+}
+
+/* Multi-reach toggle card */
 .multi-reach-toggle-card {
   background-color: rgba(255, 255, 255, 0.9) !important;
-  border-radius: 4px;
-  padding: 2px 3px;
-  margin-top: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: fit-content;
-  pointer-events: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  position: relative;
+}
+
+/* Action buttons card */
+.action-buttons-card {
+  background-color: transparent !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  position: relative;
+}
+
+.action-button {
+  width: 100%;
+  justify-content: start;
+  padding-left: 12px;
 }
 
 .desktop-map-container {
@@ -355,22 +399,6 @@ const handleStageChange = () => {
   position: fixed;
   top: 320px;
   z-index: 99999;
-}
-
-.desktop-buttons-container {
-  width: 400px;
-  position: absolute;
-  z-index: 99999;
-  transform: translate(0px, 140px);
-  margin-top: 10px;
-}
-
-.mobile-buttons-container {
-  width: 200px;
-  position: absolute;
-  z-index: 99999;
-  transform: translate(0px, 210px);
-  margin-top: 10px;
 }
 
 .mobile-map-container {
@@ -389,7 +417,6 @@ const handleStageChange = () => {
   position: absolute;
   right: 15px;
   top: 540px;
-  transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
 }
@@ -398,7 +425,6 @@ const handleStageChange = () => {
   position: absolute;
   right: 15px;
   top: 325px;
-  transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
 }
