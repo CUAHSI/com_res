@@ -152,7 +152,7 @@ const containerStyle = computed(() => ({
 
 const mercuryStyle = computed(() => ({
   height: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
-  backgroundColor: mercuryColor.value,
+  backgroundColor: 'blue',
   margin: '0 10px' // Add horizontal padding
 }))
 
@@ -160,19 +160,6 @@ const handleStyle = computed(() => ({
   bottom: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
   cursor: isDragging.value ? 'grabbing' : 'grab'
 }))
-
-const mercuryColor = computed(() => {
-  const percent = (props.modelValue - props.min) / (props.max - props.min)
-  if (percent < 0.5) {
-    const subPercent = percent * 2
-    const hue = 200 + (280 - 200) * subPercent
-    return `hsl(${hue}, 80%, ${70 - subPercent * 20}%)`
-  } else {
-    const subPercent = (percent - 0.5) * 2
-    const hue = 280 + (360 - 280) * subPercent
-    return `hsl(${hue > 360 ? hue - 360 : hue}, 80%, ${50 - subPercent * 10}%)`
-  }
-})
 
 const flowFromStage = (stage) => {
   const index = props.stages.indexOf(stage)
