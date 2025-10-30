@@ -51,7 +51,7 @@ const deselectFeature = (feature) => {
 
 const selectFeature = async (feature) => {
   const featureStore = useFeaturesStore()
-  const { activeFeature, selectedFeatures } = storeToRefs(featureStore)
+  const { activeFeature, selectedFeatures, toggledStageSlider } = storeToRefs(featureStore)
   try {
     activeFeatureLayer.value.setFeatureStyle(feature.id, {
       color: featureOptions.value.selectedColor,
@@ -99,7 +99,10 @@ const selectFeature = async (feature) => {
       )
       return
     }
-    addCogsToMap(cogUrls)
+    // if flood maps are enabled, add the cogs to the map
+    if (toggledStageSlider.value) {
+      addCogsToMap(cogUrls)
+    }
   } catch (error) {
     console.warn('Attempted to select feature:', error)
   }
@@ -456,6 +459,7 @@ const showHoverPopup = (feature, latlng, closeable = false) => {
 
 function createFlowlinesFeatureLayer(region) {
   const featureStore = useFeaturesStore()
+  const { multiReachMode } = storeToRefs(featureStore)
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayer = esriLeaflet.featureLayer({
     url: url,
@@ -482,11 +486,18 @@ function createFlowlinesFeatureLayer(region) {
 
   // Show popup on mouseover
   featureLayer.on('mouseover', (e) => {
+    // set cursor to pointer if we are not in multi-reach mode
+    if (multiReachMode.value && (e.originalEvent.ctrlKey || e.originalEvent.metaKey)) {
+      leaflet.value.getContainer().style.cursor = 'copy'
+    } else {
+      leaflet.value.getContainer().style.cursor = 'pointer'
+    }
     showHoverPopup(e.layer.feature, e.latlng, false)
   })
 
   // Hide popup on mouseout
   featureLayer.on('mouseout', function (e) {
+    leaflet.value.getContainer().style.cursor = ''
     let feature = e.layer.feature
     // Clear the timeout if it hasn't triggered yet
     if (feature.hoverTimeout) {
@@ -506,7 +517,7 @@ function createFlowlinesFeatureLayer(region) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
     const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
-    if (isCtrlOrCmdClick) {
+    if (isCtrlOrCmdClick && multiReachMode.value) {
       console.log('Multi-select enabled via Ctrl/Cmd key.')
       featureStore.mergeFeature(feature)
     } else {

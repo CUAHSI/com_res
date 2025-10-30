@@ -1,6 +1,11 @@
 <template>
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
   <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
+
+  <TheMultiSelectIndicator
+    v-if="ctrlActive && multiReachMode"
+  />
+
   <ContextMenu
     v-if="contextMenu.show"
     :context="contextMenu"
@@ -12,15 +17,15 @@
     @dismiss="dismissContextMenu"
   />
 </template>
+
 <script setup>
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-easybutton/src/easy-button.css'
 import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
-// WIP https://github.com/CUAHSI/SWOT-Data-Viewer/pull/99/files
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, ref, watch, nextTick } from 'vue'
+import { onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
 import {
   mapObject,
   featureLayerProviders,
@@ -35,7 +40,8 @@ import {
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import ContextMenu from '@/components/ContextMenu.vue'
-import { onUnmounted } from 'vue'
+import TheMultiSelectIndicator from '@/components/TheMultiSelectIndicator.vue'
+import { storeToRefs } from 'pinia'
 
 const featureStore = useFeaturesStore()
 const alertStore = useAlertStore()
@@ -51,9 +57,37 @@ const contextMenu = ref({
 
 const contextMenuFeatureLatLng = ref(null)
 const layerControlExpanded = ref(false)
+const ctrlActive = ref(false)
+
+const { multiReachMode } = storeToRefs(featureStore)
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
+
+// Keyboard event handlers
+const handleKeyDown = (event) => {
+  if ((event.ctrlKey || event.metaKey) && multiReachMode) {
+    ctrlActive.value = true
+  }
+}
+
+const handleKeyUp = (event) => {
+  if (!event.ctrlKey && !event.metaKey) {
+    ctrlActive.value = false
+  }
+}
+
+// Setup keyboard event listeners
+const setupKeyboardListeners = () => {
+  document.addEventListener('keydown', handleKeyDown)
+  document.addEventListener('keyup', handleKeyUp)
+}
+
+// Cleanup keyboard event listeners
+const cleanupKeyboardListeners = () => {
+  document.removeEventListener('keydown', handleKeyDown)
+  document.removeEventListener('keyup', handleKeyUp)
+}
 
 onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
@@ -226,6 +260,8 @@ onMounted(() => {
 
   // TODO: update when the layer control is expanded/collapsed
   // update layerControlIsExpanded.value
+
+  setupKeyboardListeners()
 
   mapLoaded.value = true
 })
@@ -490,6 +526,9 @@ onUnmounted(() => {
   if (mapObject.value.layerControlObserver) {
     mapObject.value.layerControlObserver.disconnect()
   }
+
+  // Cleanup keyboard listeners
+  cleanupKeyboardListeners()
 })
 </script>
 <style scoped>
@@ -498,5 +537,14 @@ onUnmounted(() => {
   height: 100%;
   position: relative;
   z-index: 1;
+}
+
+/* Override cursor behavior for Leaflet features */
+#mapContainer :deep(.leaflet-interactive) {
+  cursor: inherit !important;
+}
+
+#mapContainer :deep(.leaflet-layer canvas) {
+  cursor: inherit !important;
 }
 </style>

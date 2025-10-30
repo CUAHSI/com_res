@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import * as mapHelpers from '@/helpers/map'
+import { useAlertStore } from '@/stores/alerts'
 
 export const useFeaturesStore = defineStore(
   'features',
@@ -8,6 +9,9 @@ export const useFeaturesStore = defineStore(
     const selectedFeatures = ref([])
     const activeFeature = ref(null)
     const querying = ref({ hydrocron: false, nodes: false })
+    const toggledStageSlider = ref(false)
+    const multiReachMode = ref(false)
+    const MAX_SELECTED_FEATURES = 4
 
     // define activeFeatureName as a computer property so that
     // it updates automatically when activeFeature changes
@@ -39,7 +43,23 @@ export const useFeaturesStore = defineStore(
       }
     }
 
+    const canSelectMoreFeatures = computed(() => {
+      return selectedFeatures.value.length < MAX_SELECTED_FEATURES
+    })
+
     function mergeFeature(feature) {
+      if (!canSelectMoreFeatures.value) {
+        const alertStore = useAlertStore()
+        console.log('Maximum selected features reached')
+        alertStore.displayAlert({
+          title: 'Maximum Features Selected',
+          text: 'You can select up to ' + MAX_SELECTED_FEATURES + ' features at a time.',
+          type: 'error',
+          closable: true,
+          duration: 3
+        })
+        return
+      }
       console.log('Merging feature', feature)
       const index = selectedFeatures.value.findIndex((f) => f.id === feature.id)
       if (index !== -1) {
@@ -75,7 +95,10 @@ export const useFeaturesStore = defineStore(
       deselectFeature,
       checkFeatureSelected,
       mergeFeature,
-      querying
+      querying,
+      toggledStageSlider,
+      multiReachMode,
+      canSelectMoreFeatures
     }
   },
   {
