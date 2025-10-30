@@ -23,7 +23,7 @@
           id="btn-show-historical"
           style="margin-right: 10px"
           @click="toggle('historical')"
-          :color="showHistorical ? 'blue' : 'white'"
+          :color="showHistorical ? 'primary' : 'white'"
         >
           Historical
           <InfoTooltip
@@ -36,7 +36,7 @@
           v-if="!multiReachMode"
           style="margin-right: 10px"
           @click="toggle('forecast')"
-          :color="showForecast ? 'blue' : 'white'"
+          :color="showForecast ? 'primary' : 'white'"
         >
           Forecast
           <InfoTooltip
@@ -49,7 +49,7 @@
           id="btn-show-stage-slider"
           style="margin-top: 7px"
           @click="toggle('stage')"
-          :color="toggledStageSlider ? 'blue' : 'white'"
+          :color="toggledStageSlider ? 'primary' : 'white'"
         >
           Flood Map
           <InfoTooltip
