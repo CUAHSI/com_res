@@ -505,7 +505,13 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
-    featureStore.selectFeature(feature)
+    const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+    if (isCtrlOrCmdClick) {
+      console.log('Multi-select enabled via Ctrl/Cmd key.')
+      featureStore.mergeFeature(feature)
+    } else {
+      featureStore.selectFeature(feature)
+    }
   })
 
   return featureLayer
