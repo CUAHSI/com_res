@@ -6,9 +6,42 @@
   <v-container fluid class="map-view-container">
     <div class="region-selector-container">
       <TheRegionSelector :z-index="999999" />
+      <v-card
+        variant="flat"
+        class="multi-reach-toggle-card"
+        :style="{ width: mdAndDown ? '200px' : '300px' }"
+      >
+      <v-spacer></v-spacer>
+      <v-card-title style="font-size: medium">Selection Mode</v-card-title>
+        <v-radio-group
+          v-model="multiReachMode"
+          density="compact"
+          hide-details
+          inline
+        >
+          <v-radio
+            label="Single Reach"
+            :value="false"
+            color="primary"
+          ></v-radio>
+          <v-radio
+            label="Multi-reach Mode"
+            :value="true"
+            color="primary"
+          >
+            <template v-slot:label>
+              <span>Multi-reach</span>
+              <InfoTooltip
+                text="Enable to select multiple river reaches for flood scenario analysis."
+                style="margin-left: 5px"
+              />
+            </template>
+          </v-radio>
+        </v-radio-group>
+      </v-card>
     </div>
 
-    <div v-if="activeFeature" id="div-plot-button" class="desktop-plot-buttons-container">
+    <div v-if="activeFeature" id="div-plot-button" :class="mdAndDown ? 'mobile-buttons-container' : 'desktop-buttons-container'">
       <v-card
         location="left"
         variant="flat"
@@ -19,9 +52,18 @@
         max-height="145"
       >
         <v-btn
+          id="btn-show-stage-slider"
+          @click="toggle('stage')"
+          :color="toggledStageSlider ? 'primary' : 'white'"
+        >
+          Flood Map
+          <InfoTooltip
+            text="Toggle flood map visualization for the selected river reach based on stage values."
+          />
+        </v-btn>
+        <v-btn
           v-if="!multiReachMode"
           id="btn-show-historical"
-          style="margin-right: 10px"
           @click="toggle('historical')"
           :color="showHistorical ? 'primary' : 'white'"
         >
@@ -34,7 +76,6 @@
         </v-btn>
         <v-btn
           v-if="!multiReachMode"
-          style="margin-right: 10px"
           @click="toggle('forecast')"
           :color="showForecast ? 'primary' : 'white'"
         >
@@ -42,18 +83,6 @@
           <InfoTooltip
             text="Display forecasted streamflow data for selected river or stream in a graph,
             showing hourly values in cubic feet per second (cfs)."
-            style="margin-left: 5px"
-          />
-        </v-btn>
-        <v-btn
-          id="btn-show-stage-slider"
-          style="margin-top: 7px"
-          @click="toggle('stage')"
-          :color="toggledStageSlider ? 'primary' : 'white'"
-        >
-          Flood Map
-          <InfoTooltip
-            text="Toggle flood map visualization for the selected river reach based on stage values."
             style="margin-left: 5px"
           />
         </v-btn>
@@ -85,37 +114,6 @@
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"
       />
-      <v-card
-        v-if="showStageSlider"
-        variant="flat"
-        class="multi-reach-toggle-card"
-      >
-      <v-card-title style="font-size: medium">Selection Mode</v-card-title>
-        <v-radio-group
-          v-model="multiReachMode"
-          density="compact"
-          hide-details
-        >
-          <v-radio
-            label="Single Reach"
-            :value="false"
-            color="primary"
-          ></v-radio>
-          <v-radio
-            label="Multi-reach Mode"
-            :value="true"
-            color="primary"
-          >
-            <template v-slot:label>
-              <span>Multi-reach</span>
-              <InfoTooltip
-                text="Enable to select multiple river reaches for flood scenario analysis."
-                style="margin-left: 5px"
-              />
-            </template>
-          </v-radio>
-        </v-radio-group>
-      </v-card>
     </div>
 
     <div
@@ -330,6 +328,34 @@ const handleStageChange = () => {
   height: 100%;
 }
 
+.region-selector-container {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  z-index: 999999; /* Match this with the prop value */
+  width: 300px;
+}
+
+/* Multi-reach toggle card with compact width */
+.multi-reach-toggle-card {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 4px;
+  padding: 2px 3px;
+  margin-top: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: fit-content;
+  pointer-events: auto;
+}
+
+/* Ensure the radio group is compact */
+.multi-reach-toggle-card :deep(.v-radio-group) {
+  width: fit-content;
+}
+
+.multi-reach-toggle-card :deep(.v-radio-group .v-input__control) {
+  width: fit-content;
+}
+
 .desktop-map-container {
   height: calc(100vh - 120px);
   position: relative;
@@ -339,29 +365,25 @@ const handleStageChange = () => {
   width: 500px;
   height: calc(100vh - 310px);
   position: fixed;
-  top: 250px;
+  top: 320px;
   z-index: 99999;
 }
 
-.desktop-plot-buttons-container {
+.desktop-buttons-container {
   width: 400px;
   height: 50px;
   position: absolute;
   z-index: 99999;
-  transform: translate(0px, 60px);
+  transform: translate(0px, 140px);
   margin-top: 10px;
 }
 
-/* Multi-reach toggle container */
-.multi-reach-toggle-container {
+.mobile-buttons-container {
+  width: 200px;
   position: absolute;
-  top: 10px;
-  right: 15px;
-  z-index: 999999;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  padding: 8px 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 99999;
+  transform: translate(0px, 210px);
+  margin-top: 10px;
 }
 
 .mobile-map-container {
@@ -374,14 +396,6 @@ const handleStageChange = () => {
   width: 102%;
   position: static;
   margin: 20px -10px;
-}
-
-.region-selector-container {
-  position: absolute;
-  top: 10px;
-  left: 15px;
-  z-index: 999999; /* Match this with the prop value */
-  width: 300px;
 }
 
 .desktop-stage-slider-container {
@@ -400,46 +414,6 @@ const handleStageChange = () => {
   transform: translateY(-50%);
   z-index: 99999;
   pointer-events: none;
-}
-
-/* Multi-reach toggle container - positioned below stage slider */
-.desktop-multi-reach-container {
-  position: absolute;
-  right: 15px;
-  top: 750px; /* Positioned below the stage slider */
-  z-index: 99999;
-  pointer-events: none;
-}
-
-.mobile-multi-reach-container {
-  position: absolute;
-  right: 15px;
-  top: 350px; /* Positioned below the stage slider on mobile */
-  z-index: 99999;
-  pointer-events: none;
-}
-
-/* Multi-reach toggle card with compact width */
-.multi-reach-toggle-card {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-radius: 4px;
-  padding: 2px 3px;
-  margin: 5px 0px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: fit-content;
-  min-width: auto;
-  pointer-events: auto;
-  height: auto;
-  max-height: 150px;
-}
-
-/* Ensure the radio group is compact */
-.multi-reach-toggle-card :deep(.v-radio-group) {
-  width: fit-content;
-}
-
-.multi-reach-toggle-card :deep(.v-radio-group .v-input__control) {
-  width: fit-content;
 }
 
 /* Ensure the slider itself has pointer events */
