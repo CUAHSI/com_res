@@ -490,11 +490,7 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
-    featureStore.clearSelectedFeatures()
-    if (!featureStore.checkFeatureSelected(feature)) {
-      // Only allow one feature to be selected at a time
-      featureStore.selectFeature(feature)
-    }
+    featureStore.selectFeature(feature)
   })
 
   return featureLayer

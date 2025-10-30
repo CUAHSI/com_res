@@ -11,6 +11,9 @@
         </v-btn>
       </div>
       <v-list density="compact">
+        <v-list-item @click="$emit('select-additional-feature')">
+          <v-list-item-title>Select Additional Feature</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="$emit('zoom-to-feature')">
           <v-list-item-title>Zoom to Feature</v-list-item-title>
         </v-list-item>
@@ -34,7 +37,7 @@ defineProps({
   }
 })
 
-defineEmits(['close', 'zoom-to-feature', 'select-feature', 'show-feature-info', 'dismiss'])
+defineEmits(['close', 'zoom-to-feature', 'select-feature', 'select-additional-feature', 'show-feature-info', 'dismiss'])
 
 import { mdiClose } from '@mdi/js'
 </script>

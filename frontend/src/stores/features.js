@@ -25,6 +25,7 @@ export const useFeaturesStore = defineStore(
 
     function selectFeature(feature) {
       console.log('Selecting feature', feature)
+      clearSelectedFeatures()
       mapHelpers.selectFeature(feature)
       selectedFeatures.value.push(feature)
       activeFeature.value = feature
@@ -49,6 +50,7 @@ export const useFeaturesStore = defineStore(
         selectedFeatures.value.push(feature)
       }
       activeFeature.value = feature
+      mapHelpers.selectFeature(feature)
     }
 
     const clearSelectedFeatures = () => {
