@@ -7,92 +7,98 @@
     <!-- Combined Controls Container -->
     <div :class="mdAndDown ? 'mobile-controls-container' : 'desktop-controls-container'">
       <div class="controls-content">
-        <!-- Region Selector -->
-        <div class="control-section">
-          <TheRegionSelector :z-index="999999" />
-        </div>
+        <!-- Left Column - Region Selector and Mode Toggle -->
+        <div class="left-column">
+          <!-- Region Selector -->
+          <div class="control-section">
+            <TheRegionSelector :z-index="999999" />
+          </div>
 
-        <!-- Multi-reach Mode Toggle -->
-        <div class="control-section">
-          <v-card
-            variant="flat"
-            class="multi-reach-toggle-card"
-          >
-            <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px;">Selection Mode</v-card-title>
-            <v-radio-group
-              v-model="multiReachMode"
-              density="compact"
-              hide-details
-              inline
-              style="padding: 0px 12px 8px 12px;"
+          <!-- Multi-reach Mode Toggle -->
+          <div class="control-section">
+            <v-card
+              variant="flat"
+              class="multi-reach-toggle-card"
             >
-              <v-radio
-                label="Single Reach"
-                :value="false"
-                color="primary"
-              ></v-radio>
-              <v-radio
-                label="Multi-reach Mode"
-                :value="true"
-                color="primary"
+              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px;">Selection Mode</v-card-title>
+              <v-radio-group
+                v-model="multiReachMode"
+                density="compact"
+                hide-details
+                inline
+                style="padding: 0px 12px 8px 12px;"
               >
-                <template v-slot:label>
-                  <span>Multi-reach</span>
-                  <InfoTooltip
-                    text="Enable to select multiple river reaches for flood scenario analysis."
-                    style="margin-left: 5px"
-                  />
-                </template>
-              </v-radio>
-            </v-radio-group>
-          </v-card>
+                <v-radio
+                  label="Single Reach"
+                  :value="false"
+                  color="primary"
+                ></v-radio>
+                <v-radio
+                  label="Multi-reach Mode"
+                  :value="true"
+                  color="primary"
+                >
+                  <template v-slot:label>
+                    <span>Multi-reach</span>
+                    <InfoTooltip
+                      text="Enable to select multiple river reaches for flood scenario analysis."
+                      style="margin-left: 5px"
+                    />
+                  </template>
+                </v-radio>
+              </v-radio-group>
+            </v-card>
+          </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div v-if="activeFeature" class="control-section">
-          <v-card
-            variant="flat"
-            class="action-buttons-card"
-          >
-            <v-btn
-              id="btn-show-stage-slider"
-              @click="toggle('stage')"
-              :color="toggledStageSlider ? 'primary' : 'white'"
-              class="action-button"
+        <!-- Right Column - Action Buttons -->
+        <div class="right-column">
+          <!-- Action Buttons -->
+          <div v-if="activeFeature" class="control-section">
+            <v-card
+              variant="flat"
+              class="action-buttons-card"
             >
-              Flood Map
-              <InfoTooltip
-                text="Toggle flood map visualization for the selected river reach based on stage values."
-              />
-            </v-btn>
-            <v-btn
-              v-if="!multiReachMode"
-              id="btn-show-historical"
-              @click="toggle('historical')"
-              :color="showHistorical ? 'primary' : 'white'"
-              class="action-button"
-            >
-              Historical
-              <InfoTooltip
-                text="Display historical streamflow data for the selected river as a graph, 
-                showing hourly values in cubic feet per second (cfs)."
-                style="margin-left: 5px"
-              />
-            </v-btn>
-            <v-btn
-              v-if="!multiReachMode"
-              @click="toggle('forecast')"
-              :color="showForecast ? 'primary' : 'white'"
-              class="action-button"
-            >
-              Forecast
-              <InfoTooltip
-                text="Display forecasted streamflow data for selected river or stream in a graph,
-                showing hourly values in cubic feet per second (cfs)."
-                style="margin-left: 5px"
-              />
-            </v-btn>
-          </v-card>
+              <v-btn
+                id="btn-show-stage-slider"
+                @click="toggle('stage')"
+                :color="toggledStageSlider ? 'primary' : 'white'"
+                class="action-button"
+              >
+                Flood Map
+                <InfoTooltip
+                  text="Toggle flood map visualization for the selected river reach based on stage values."
+                />
+              </v-btn>
+              <v-btn
+                v-if="!multiReachMode"
+                id="btn-show-historical"
+                @click="toggle('historical')"
+                :color="showHistorical ? 'primary' : 'white'"
+                class="action-button"
+              >
+                Historical
+                <InfoTooltip
+                  text="Display historical streamflow data for the selected river as a graph, 
+                  showing hourly values in cubic feet per second (cfs)."
+                  style="margin-left: 5px"
+                />
+              </v-btn>
+              <v-btn
+                v-if="!multiReachMode"
+                @click="toggle('forecast')"
+                :color="showForecast ? 'primary' : 'white'"
+                class="action-button"
+              >
+                Forecast
+                <InfoTooltip
+                  text="Display forecasted streamflow data for selected river or stream in a graph,
+                  showing hourly values in cubic feet per second (cfs)."
+                  style="margin-left: 5px"
+                />
+              </v-btn>
+            </v-card>
+          </div>
         </div>
       </div>
     </div>
@@ -132,10 +138,7 @@
     </div>
     <div
       v-if="showStageSlider"
-      :class="{
-        'desktop-stage-slider-container': !mdAndDown,
-        'mobile-stage-slider-container': mdAndDown
-      }"
+      class='desktop-stage-slider-container'
     >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
@@ -341,7 +344,7 @@ const handleStageChange = () => {
   top: 10px;
   left: 15px;
   z-index: 999999;
-  width: 300px;
+  width: 500px; /* Increased width to accommodate two columns */
 }
 
 .mobile-controls-container {
@@ -352,7 +355,32 @@ const handleStageChange = () => {
   width: 200px;
 }
 
-.controls-content {
+/* Desktop: Two-column layout */
+.desktop-controls-container .controls-content {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.desktop-controls-container .left-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0; /* Prevent flex item from overflowing */
+}
+
+.desktop-controls-container .right-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0; /* Prevent flex item from overflowing */
+}
+
+/* Mobile: Single column layout */
+.mobile-controls-container .controls-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -395,9 +423,9 @@ const handleStageChange = () => {
 
 .desktop-plot-container {
   width: 500px;
-  height: calc(100vh - 310px);
+  height: calc(100vh - 270px);
   position: fixed;
-  top: 320px;
+  top: 280px;
   z-index: 99999;
 }
 
@@ -416,22 +444,13 @@ const handleStageChange = () => {
 .desktop-stage-slider-container {
   position: absolute;
   right: 15px;
-  top: 540px;
-  z-index: 99999;
-  pointer-events: none;
-}
-
-.mobile-stage-slider-container {
-  position: absolute;
-  right: 15px;
-  top: 325px;
+  top: 230px;
   z-index: 99999;
   pointer-events: none;
 }
 
 /* Ensure the slider itself has pointer events */
-.desktop-stage-slider-container >>> .thermometer-slider-container,
-.mobile-stage-slider-container >>> .thermometer-slider-container {
+.desktop-stage-slider-container >>> .thermometer-slider-container {
   pointer-events: auto;
 }
 </style>
