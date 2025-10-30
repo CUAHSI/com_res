@@ -486,11 +486,18 @@ function createFlowlinesFeatureLayer(region) {
 
   // Show popup on mouseover
   featureLayer.on('mouseover', (e) => {
+    // set cursor to pointer if we are not in multi-reach mode
+    if (multiReachMode.value && (e.originalEvent.ctrlKey || e.originalEvent.metaKey)) {
+      leaflet.value.getContainer().style.cursor = 'copy'
+    } else {
+      leaflet.value.getContainer().style.cursor = 'pointer'
+    }
     showHoverPopup(e.layer.feature, e.latlng, false)
   })
 
   // Hide popup on mouseout
   featureLayer.on('mouseout', function (e) {
+    leaflet.value.getContainer().style.cursor = ''
     let feature = e.layer.feature
     // Clear the timeout if it hasn't triggered yet
     if (feature.hoverTimeout) {

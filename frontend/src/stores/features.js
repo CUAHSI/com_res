@@ -43,8 +43,12 @@ export const useFeaturesStore = defineStore(
       }
     }
 
+    const canSelectMoreFeatures = computed(() => {
+      return selectedFeatures.value.length < MAX_SELECTED_FEATURES
+    })
+
     function mergeFeature(feature) {
-      if (selectedFeatures.value.length >= MAX_SELECTED_FEATURES) {
+      if (!canSelectMoreFeatures.value) {
         const alertStore = useAlertStore()
         console.log('Maximum selected features reached')
         alertStore.displayAlert({
@@ -93,7 +97,8 @@ export const useFeaturesStore = defineStore(
       mergeFeature,
       querying,
       toggledStageSlider,
-      multiReachMode
+      multiReachMode,
+      canSelectMoreFeatures
     }
   },
   {
