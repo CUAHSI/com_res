@@ -41,15 +41,13 @@
       </v-card>
     </div>
 
-    <div v-if="activeFeature" id="div-plot-button" :class="mdAndDown ? 'mobile-buttons-container' : 'desktop-buttons-container'">
+    <div v-if="activeFeature" :class="mdAndDown ? 'mobile-buttons-container' : 'desktop-buttons-container'">
       <v-card
         location="left"
         variant="flat"
         :style="{
           backgroundColor: 'transparent'
         }"
-        max-width="500"
-        max-height="145"
       >
         <v-btn
           id="btn-show-stage-slider"
@@ -98,25 +96,6 @@
     </v-row>
 
     <div
-      v-if="showStageSlider"
-      :class="{
-        'desktop-stage-slider-container': !mdAndDown,
-        'mobile-stage-slider-container': mdAndDown
-      }"
-    >
-      <TheStageSlider
-        v-model="mapHelpers.stageValue.value"
-        :min="activeFeatureFimCogData.stages_m[0]"
-        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-        :stages="activeFeatureFimCogData.stages_m"
-        :flows="activeFeatureFimCogData.flows_cms"
-        :width="mdAndDown ? '50px' : '60px'"
-        :height="mdAndDown ? '100px' : '400px'"
-        @update:modelValue="handleStageChange"
-      />
-    </div>
-
-    <div
       v-if="(showHistorical || showForecast) && !multiReachMode"
       :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }"
     >
@@ -139,6 +118,24 @@
         :forecast_ensemble="forecastEnsemble"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showForecast"
+      />
+    </div>
+    <div
+      v-if="showStageSlider"
+      :class="{
+        'desktop-stage-slider-container': !mdAndDown,
+        'mobile-stage-slider-container': mdAndDown
+      }"
+    >
+      <TheStageSlider
+        v-model="mapHelpers.stageValue.value"
+        :min="activeFeatureFimCogData.stages_m[0]"
+        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+        :stages="activeFeatureFimCogData.stages_m"
+        :flows="activeFeatureFimCogData.flows_cms"
+        :width="mdAndDown ? '50px' : '60px'"
+        :height="mdAndDown ? '100px' : '400px'"
+        @update:modelValue="handleStageChange"
       />
     </div>
   </v-container>
@@ -347,15 +344,6 @@ const handleStageChange = () => {
   pointer-events: auto;
 }
 
-/* Ensure the radio group is compact */
-.multi-reach-toggle-card :deep(.v-radio-group) {
-  width: fit-content;
-}
-
-.multi-reach-toggle-card :deep(.v-radio-group .v-input__control) {
-  width: fit-content;
-}
-
 .desktop-map-container {
   height: calc(100vh - 120px);
   position: relative;
@@ -371,7 +359,6 @@ const handleStageChange = () => {
 
 .desktop-buttons-container {
   width: 400px;
-  height: 50px;
   position: absolute;
   z-index: 99999;
   transform: translate(0px, 140px);
