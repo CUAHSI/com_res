@@ -333,25 +333,50 @@ const handleStageChange = () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
   mapHelpers.clearCogsFromMap()
   let addedCogs = false
-  console.log ('Selected features:', selectedFeatures.value)
-  for (const feature of selectedFeatures.value) {
+  
+  // Get the features to process based on mode
+  const featuresToProcess = multiReachMode.value ? selectedFeatures.value : [activeFeature.value]
+  
+  for (const feature of featuresToProcess) {
+    if (!feature?.properties?.fimCogData) continue
+    
     console.log('Processing feature for COGs:', feature)
     const fimCogData = feature.properties.fimCogData
     console.log('FIM COG Data:', fimCogData)
+    
     if (fimCogData) {
-      // enable "snapping to nearest stage" functionality
-      // if the stage value is not in the list of stages
-      if (!fimCogData.stages_m.includes(mapHelpers.stageValue.value)) {
-        // find the nearest stage value
-        const nearestStage = fimCogData.stages_m.reduce((prev, curr) => {
-          return Math.abs(curr - mapHelpers.stageValue.value) <
-            Math.abs(prev - mapHelpers.stageValue.value)
-            ? curr
-            : prev
-        })
-        mapHelpers.stageValue.value = nearestStage
-        console.log('Snapped to nearest stage:', nearestStage)
+      // In multi-reach mode, use the common stages range
+      let targetStage = mapHelpers.stageValue.value
+      
+      if (multiReachMode.value && multiReachStageData.value) {
+        // Ensure the stage is within the common range and snap if needed
+        if (!multiReachStageData.value.stages_m.includes(targetStage)) {
+          const nearestStage = multiReachStageData.value.stages_m.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage)
+              ? curr
+              : prev
+          })
+          targetStage = nearestStage
+          console.log('Snapped to nearest common stage:', nearestStage)
+        }
+      } else {
+        // Single reach mode - use original snapping logic
+        if (!fimCogData.stages_m.includes(targetStage)) {
+          const nearestStage = fimCogData.stages_m.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage)
+              ? curr
+              : prev
+          })
+          targetStage = nearestStage
+          console.log('Snapped to nearest stage:', nearestStage)
+        }
       }
+      
+      // Update the stage value if it was snapped
+      if (targetStage !== mapHelpers.stageValue.value) {
+        mapHelpers.stageValue.value = targetStage
+      }
+      
       const cogUrls = mapHelpers.determineCogsForStage(
         fimCogData.files,
         fimCogData.stages_m
@@ -362,6 +387,7 @@ const handleStageChange = () => {
       }
     }
   }
+  
   if (!addedCogs) {
     alertStore.displayAlert({
       title: 'No Data Available',
