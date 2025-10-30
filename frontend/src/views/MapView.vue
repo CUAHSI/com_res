@@ -150,9 +150,9 @@
     >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="activeFeatureFimCogData.stages_m[0]"
-        :max="activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-        :stages="activeFeatureFimCogData.stages_m"
+        :min="multiReachMode && multiReachStageData ? multiReachStageData.min : activeFeatureFimCogData.stages_m[0]"
+        :max="multiReachMode && multiReachStageData ? multiReachStageData.max : activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
+        :stages="multiReachMode && multiReachStageData ? multiReachStageData.stages_m : activeFeatureFimCogData.stages_m"
         :flows="activeFeatureFimCogData.flows_cms"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
@@ -281,10 +281,52 @@ const activeFeatureFimCogData = computed(() => {
   return activeFeature.value.properties.fimCogData || null
 })
 
+// New computed property for multi-reach stage data
+const multiReachStageData = computed(() => {
+  if (selectedFeatures.value.length === 0) return null
+  
+  // Collect all fimCogData from selected features
+  const allFimCogData = selectedFeatures.value
+    .map(feature => feature.properties?.fimCogData)
+    .filter(data => data && data.stages_m && data.stages_m.length > 0)
+  
+  if (allFimCogData.length === 0) return null
+  
+  // Find the minimum of all maximum stage values
+  const maxStages = allFimCogData.map(data => 
+    data.stages_m[data.stages_m.length - 1]
+  )
+  const minMaxStage = Math.min(...maxStages)
+  
+  // Find the maximum of all minimum stage values
+  const minStages = allFimCogData.map(data => data.stages_m[0])
+  const maxMinStage = Math.max(...minStages)
+  
+  // Get all unique stages within the common range
+  const allStages = Array.from(
+    new Set(
+      allFimCogData.flatMap(data => 
+        data.stages_m.filter(stage => 
+          stage >= maxMinStage && stage <= minMaxStage
+        )
+      )
+    )
+  ).sort((a, b) => a - b)
+  
+  return {
+    stages_m: allStages,
+    min: maxMinStage,
+    max: minMaxStage,
+    allFimCogData: allFimCogData
+  }
+})
+
 const showStageSlider = computed(() => {
-  const activeFeatureHasData =
-    activeFeatureFimCogData.value && activeFeatureFimCogData.value.stages_m.length > 0
-  return activeFeatureHasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
+  // Check if any selected feature has data
+  const hasData = selectedFeatures.value.some(feature => 
+    feature.properties?.fimCogData?.stages_m?.length > 0
+  )
+  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
 })
 
 const handleStageChange = () => {
