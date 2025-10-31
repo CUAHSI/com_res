@@ -34,7 +34,7 @@ def align_quantiles_with_timeseries(quantiles: pandas.DataFrame, dates: pandas.S
 def create_quantile_plot(quantiles: pandas.DataFrame, xfield='datetime', xlabel='Date'):
 
         
-    fig = plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(12, 10))
     ax = fig.add_subplot(111);
     
     # create a copy of the input data so that our manipulations
@@ -86,8 +86,8 @@ def create_quantile_plot(quantiles: pandas.DataFrame, xfield='datetime', xlabel=
 
     ax.fill_between(
         x_data,          # x values
-        dat.q75,            # lower bound
-        dat.q90,            # upper bound
+        dat.q90,            # lower bound
+        dat.q100,            # upper bound
         color='darkblue',             # fill color
         alpha=0.2,                # transparency
         label='Much Above Normal'       # legend label
