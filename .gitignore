@@ -2,6 +2,8 @@
 .DS_Store?
 
 .env
+.venv
+.ipynb_checkpoints
 
 # VI Swap #
 ###########
