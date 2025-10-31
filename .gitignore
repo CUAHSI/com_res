@@ -4,6 +4,8 @@
 .env
 .venv
 .ipynb_checkpoints
+*.parquet
+*.jsonl
 
 # VI Swap #
 ###########
