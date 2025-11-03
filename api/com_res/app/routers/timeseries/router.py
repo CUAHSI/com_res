@@ -9,7 +9,7 @@ from .historical import AnalysisAssim
 router = APIRouter()
 
 
-@router.get("/timeseries/nwm-historical")
+@router.get("/nwm-historical")
 async def get_historical_nwm(
     reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     start_date: date = Query(
@@ -59,7 +59,7 @@ async def get_historical_nwm(
     return JSONResponse(content=data)
 
 
-@router.get("/timeseries/nwm-forecast")
+@router.get("/nwm-forecast")
 async def get_forecast_nwm(
     reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     date_time: datetime = Query(
