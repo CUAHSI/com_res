@@ -1,10 +1,17 @@
+import logging
 from datetime import date, datetime
 
+from app.routers.fim.router import get_bigquery_client
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
+
+from google.cloud import bigquery
 
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -134,3 +141,72 @@ async def get_forecast_nwm(
     }
 
     return JSONResponse(content=data)
+
+
+@router.get("/historical-quantiles")
+async def get_quantiles(
+    feature_id: int = Query(
+        ...,
+        description="The unique NWM feature identifier.",
+        example=3627071,
+    ),
+) -> JSONResponse:
+    """
+    Get quantiles data for a given feature ID.
+
+    Arguments:
+    ==========
+    feature_id: int - the NWM feature ID for which to collect quantiles data.
+
+    Returns:
+    ========
+    JSONResponse:
+    a dictionary containing the quantiles data for the specified feature ID.
+
+    Raises:
+    =======
+    HTTPException:
+    if the BigQuery operation fails or if the feature ID is not found.
+    """
+    try:
+        client = get_bigquery_client()
+
+        query = """
+        SELECT *
+        FROM `com-res.flood_data.quantiles_catalog`
+        WHERE feature_id = @feature_id
+        ORDER BY doy ASC
+        """
+
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter(
+                    "feature_id", "INT64", feature_id
+                ),
+            ]
+        )
+
+        query_job = client.query(query, job_config=job_config)
+
+        results = []
+        for row in query_job:
+            results.append({
+                "feature_id": row['feature_id'],
+                "doy": row['doy'],
+                "q0": row['q0'],
+                "q5": row['q5'],
+                "q10": row['q10'],
+                "q25": row['q25'],
+                "q75": row['q75'],
+                "q90": row['q90'],
+                "q100": row['q100']
+            })
+
+    except Exception as e:
+        logging.error(f"Quantiles query failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"BigQuery operation failed: {str(e)}"
+        )
+
+    return JSONResponse(content=jsonable_encoder(results))
