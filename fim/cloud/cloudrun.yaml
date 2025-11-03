@@ -39,7 +39,7 @@ spec:
                 bucketName: com_res_fim_output
           containers:
           - name: fimserv-1
-            image: 'us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:0.2.1'
+            image: 'us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest'
             args:
             - reachfim_interval
             - '11010001'
@@ -48,8 +48,8 @@ spec:
             - '1'
             resources:
               limits:
-                cpu: 4000m
-                memory: 16Gi
+                cpu: 8000m
+                memory: 32Gi
             volumeMounts:
             - name: com-res-fim-output
               mountPath: /home/output
