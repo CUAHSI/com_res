@@ -38,10 +38,39 @@
     <LinePlot
       v-if="!isLoading && hasData"
       :timeseries="plot_timeseries"
+      :quantiles="quantilesData"
       :title="plot_title"
       :style="plot_style"
+      :use-log-scale="showQuantiles"
     />
+
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+      <!-- Quantiles Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :color="showQuantiles ? 'primary' : 'default'"
+            :disabled="loadingQuantiles"
+            :loading="loadingQuantiles"
+            @click="toggleQuantiles"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="mdiChartAreaspline"></v-icon>
+            <v-progress-circular
+              v-if="loadingQuantiles"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
+      </v-tooltip>
+
       <!-- CSV Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
@@ -100,9 +129,11 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, watch, toRef } from 'vue'
+import { mdiChartAreaspline } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '@/components/InfoTooltip.vue'
+import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
   Chart as ChartJS,
   Title,
@@ -114,6 +145,11 @@ import {
   TimeScale,
   Filler
 } from 'chart.js'
+import { storeToRefs } from 'pinia'
+
+// Use Pinia store
+const quantilesStore = useQuantilesStore()
+const { showQuantiles, quantilesData } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -121,6 +157,7 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
+const loadingQuantiles = ref(false)
 const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
@@ -152,6 +189,17 @@ const datetime = toRef(props, 'forecast_datetime')
 const forecast_mode = toRef(props, 'forecast_mode')
 const ensemble = toRef(props, 'forecast_ensemble')
 
+const clearPlot = () => {
+  plot_timeseries.value = []
+  plot_title.value = ''
+  plot_style.value = {}
+}
+
+// Toggle quantiles display - uses the shared store so both plots stay synchronized
+const toggleQuantiles = () => {
+  quantilesStore.setShowQuantiles(!showQuantiles.value)
+}
+
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
   console.log('Current props:', {
     reach_id: reach_id.value,
@@ -170,12 +218,6 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
     )
   }
 })
-
-const clearPlot = () => {
-  plot_timeseries.value = []
-  plot_title.value = ''
-  plot_style.value = {}
-}
 
 const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble) => {
   try {
