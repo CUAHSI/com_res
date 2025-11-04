@@ -48,8 +48,8 @@ const chartData = computed(() => {
       label: 'Streamflow (cms)',
       data: props.timeseries,
       fill: !hasQuantiles.value, // Only fill when quantiles are NOT shown
-      backgroundColor: 'rgba(54, 162, 235, 0.2)',
-      borderColor: 'rgba(54, 162, 235, 1)',
+      backgroundColor: 'rgba(0, 0, 0, 0.2)', // black with transparency
+      borderColor: 'rgba(0, 0, 0, 1)', // solid black
       tension: 0.4, // makes the line smooth
       pointRadius: 0, // turn off points
       pointHoverRadius: 6,
