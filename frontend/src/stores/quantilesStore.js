@@ -4,6 +4,7 @@ import { ref } from 'vue'
 export const useQuantilesStore = defineStore('quantiles', () => {
   const showQuantiles = ref(false)
   const quantilesData = ref([])
+  const loadingQuantiles = ref(false)
 
   const setShowQuantiles = (value) => {
     showQuantiles.value = value
@@ -14,6 +15,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   }
 
   return {
+    loadingQuantiles,
     showQuantiles,
     quantilesData,
     setShowQuantiles,
