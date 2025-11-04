@@ -30,7 +30,7 @@
     <LinePlot
       v-if="!isLoading"
       :timeseries="plot_timeseries"
-      :quantiles="quantiles_data"
+      :quantiles="quantilesData"
       :title="plot_title"
       :style="plot_style"
       :use-log-scale="showQuantiles"
@@ -212,6 +212,7 @@ import { mdiCalendarExpandHorizontal, mdiChartAreaspline } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '../components/InfoTooltip.vue'
+import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
   Chart as ChartJS,
   Title,
@@ -223,6 +224,11 @@ import {
   TimeScale,
   Filler
 } from 'chart.js'
+import { storeToRefs } from 'pinia'
+
+// Use Pinia store
+const quantilesStore = useQuantilesStore()
+const { showQuantiles, quantilesData } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -239,12 +245,10 @@ const reach_id = toRef(props, 'reachid') // make this property reactive to it tr
 const reach_name = toRef(props, 'reachname') // make this property reactive to it triggers watch()
 
 const plot_timeseries = ref([])
-const quantiles_data = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
 const loadingQuantiles = ref(false)
-const showQuantiles = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
@@ -300,7 +304,7 @@ const formattedEndDate = computed({
 
 const clearPlot = () => {
   plot_timeseries.value = []
-  quantiles_data.value = []
+  quantilesData.value = []
   plot_title.value = ''
   plot_style.value = {}
   showQuantiles.value = false
@@ -330,7 +334,7 @@ const getQuantilesData = async () => {
     })
     
     // Transform the quantiles data for the chart - use actual dates for current year
-    quantiles_data.value = [
+    const transformedQuantiles = [
       {
         // Hidden Q0 dataset - serves as the base for fills but doesn't show in legend/tooltips
         label: '', // Empty label to hide from legend
@@ -422,6 +426,9 @@ const getQuantilesData = async () => {
       }
     ]
     
+    // Set the shared quantiles data in Pinia store
+    quantilesStore.setQuantilesData(transformedQuantiles)
+    
   } catch (err) {
     console.error('Failed to load quantiles data:', err)
     error.value = `Failed to load quantiles data: ${err.message}`
@@ -434,12 +441,11 @@ const getQuantilesData = async () => {
 const toggleQuantiles = async () => {
   if (showQuantiles.value) {
     // If currently showing, just hide them
-    showQuantiles.value = false
-    quantiles_data.value = []
+    quantilesStore.setShowQuantiles(false)
   } else {
     // If not showing, fetch and show quantiles
-    showQuantiles.value = true
-    if (quantiles_data.value.length === 0) {
+    quantilesStore.setShowQuantiles(true)
+    if (quantilesData.value.length === 0) {
       await getQuantilesData()
     }
   }
@@ -497,7 +503,7 @@ watch([startDate, endDate, reach_id], async () => {
     await getHistoricalData()
     // Reset quantiles when reach ID changes
     if (showQuantiles.value) {
-      quantiles_data.value = []
+      quantilesData.value = []
       await getQuantilesData()
     }
   }
