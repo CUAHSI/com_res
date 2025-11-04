@@ -324,7 +324,7 @@ const getQuantilesData = async () => {
     // Transform the quantiles data for the chart - use actual dates for current year
     quantiles_data.value = [
       {
-        label: 'Q0 (Min)',
+        hidden: true,
         data: data.map(item => {
           // Convert DOY to actual date in current year
           const date = new Date(currentYear, 0) // Start with Jan 1 of current year
@@ -337,60 +337,48 @@ const getQuantilesData = async () => {
         fill: false
       },
       {
-        label: 'Q10',
+        label: 'Much Below Normal',
         data: data.map(item => {
           const date = new Date(currentYear, 0)
           date.setDate(item.doy)
           return { x: date.toISOString().split('T')[0], y: item.q10 }
         }),
-        borderColor: 'rgba(65, 105, 225, 0.4)',
-        backgroundColor: 'rgba(65, 105, 225, 0.1)',
-        fill: '-1'
+        borderColor: 'darkred',
+        backgroundColor: 'red',
+        fill: true
       },
       {
-        label: 'Q25',
+        label: 'Below Normal',
         data: data.map(item => {
           const date = new Date(currentYear, 0)
           date.setDate(item.doy)
           return { x: date.toISOString().split('T')[0], y: item.q25 }
         }),
-        borderColor: 'rgba(30, 144, 255, 0.5)',
-        backgroundColor: 'rgba(30, 144, 255, 0.1)',
+        borderColor: 'darkyellow',
+        backgroundColor: 'yellow',
         fill: '-1'
       },
       {
-        label: 'Q75',
+        label: 'Normal',
         data: data.map(item => {
           const date = new Date(currentYear, 0)
           date.setDate(item.doy)
           return { x: date.toISOString().split('T')[0], y: item.q75 }
         }),
-        borderColor: 'rgba(255, 99, 132, 0.5)',
-        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-        fill: '+1'
+        borderColor: 'darkgreen',
+        backgroundColor: 'green',
+        fill: '-1'
       },
       {
-        label: 'Q90',
+        label: 'Above Normal',
         data: data.map(item => {
           const date = new Date(currentYear, 0)
           date.setDate(item.doy)
           return { x: date.toISOString().split('T')[0], y: item.q90 }
         }),
-        borderColor: 'rgba(220, 20, 60, 0.4)',
-        backgroundColor: 'rgba(220, 20, 60, 0.1)',
-        fill: '+1'
-      },
-      {
-        label: 'Q100 (Max)',
-        data: data.map(item => {
-          const date = new Date(currentYear, 0)
-          date.setDate(item.doy)
-          return { x: date.toISOString().split('T')[0], y: item.q100 }
-        }),
-        borderColor: 'rgba(139, 0, 0, 0.3)',
-        backgroundColor: 'rgba(139, 0, 0, 0.1)',
-        borderDash: [5, 5],
-        fill: false
+        borderColor: 'darkblue',
+        backgroundColor: 'blue',
+        fill: '-1'
       }
     ]
     
