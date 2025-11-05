@@ -343,7 +343,7 @@ const getQuantilesData = async () => {
         pointRadius: 0, // No points
         pointHoverRadius: 0, // No hover points
         borderWidth: 0, // No border
-        fill: false,
+        fill: true, // This will be the base fill
         showLine: false, // Don't show the line
         hidden: false, // Keep it visible for filling purposes
         // Hide from tooltips and legend
@@ -363,7 +363,10 @@ const getQuantilesData = async () => {
         borderWidth: 1,
         pointRadius: 0,
         pointHoverRadius: 0,
-        fill: true,
+        fill: {
+          target: '-1', // Fill to the previous dataset (Q0)
+          above: 'rgba(139, 0, 0, 0.3)' // Fill color for the area
+        },
         tension: 0.1
       },
       {
