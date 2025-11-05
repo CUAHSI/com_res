@@ -100,8 +100,6 @@ const chartOptions = computed(() => ({
         callback: function(value) {
           // Format tick labels for logarithmic scale
           if (hasQuantiles.value) {
-            // For very small values, show 0 instead of scientific notation
-            if (value < 0.1) return '0'
             return Number(value.toString()) // Convert to number and back to string to avoid scientific notation
           }
           return value
@@ -110,31 +108,20 @@ const chartOptions = computed(() => ({
       grid: {
         color: '#eee'
       },
-      // Configure logarithmic scale to start as close to 0 as possible
+      // Configure logarithmic scale behavior
       ...(hasQuantiles.value && {
-        min: 0.001, // Set a very small minimum to approximate starting at 0
+        min: 0.01, // Set a reasonable minimum for log scale
         afterBuildTicks: function(axis) {
           // Customize ticks for better readability on log scale
           const ticks = []
-          const minPower = Math.floor(Math.log10(axis.min))
-          const maxPower = Math.ceil(Math.log10(axis.max))
+          const min = Math.pow(10, Math.floor(Math.log10(axis.min)))
+          const max = Math.pow(10, Math.ceil(Math.log10(axis.max)))
           
-          // Include 0 as the first tick
-          ticks.push(0)
-          
-          // Add logarithmic ticks
-          for (let i = minPower; i <= maxPower; i++) {
-            const tickValue = Math.pow(10, i)
-            if (tickValue >= axis.min && tickValue <= axis.max) {
-              ticks.push(tickValue)
-            }
+          for (let i = Math.floor(Math.log10(min)); i <= Math.ceil(Math.log10(max)); i++) {
+            ticks.push(Math.pow(10, i))
           }
           return ticks
         }
-      }),
-      // For linear scale, ensure it starts at 0
-      ...(!hasQuantiles.value && {
-        beginAtZero: true
       })
     }
   },
