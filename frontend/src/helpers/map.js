@@ -270,6 +270,8 @@ const limitToBounds = (region) => {
       leaflet.value.invalidateSize()
 
       // prevent panning from bounds
+      // TODO: CAM-885: setting max bounds causes boundary issues
+      // https://cuahsi.atlassian.net/browse/CAM-885
       leaflet.value.setMaxBounds(bounds)
       // instead of fitbounds, use default zoom
       // leaflet.value.fitBounds(bounds)
