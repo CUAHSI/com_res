@@ -33,6 +33,7 @@
       :quantiles="quantiles_data"
       :title="plot_title"
       :style="plot_style"
+      :use-log-scale="showQuantiles"
     />
 
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
