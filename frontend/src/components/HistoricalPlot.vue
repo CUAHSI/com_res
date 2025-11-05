@@ -313,6 +313,13 @@ const clearPlot = () => {
 const getQuantilesData = async () => {
   if (!reach_id.value) return
   
+  // Check if we have cached data for this reach_id
+  if (quantilesStore.hasCachedQuantilesData(reach_id.value)) {
+    const cachedData = quantilesStore.getCachedQuantilesData(reach_id.value)
+    quantilesStore.setQuantilesData(cachedData)
+    return
+  }
+  
   try {
     loadingQuantiles.value = true
     const response = await fetch(`${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id.value}`)
@@ -424,6 +431,9 @@ const getQuantilesData = async () => {
         tension: 0.1
       }
     ]
+    
+    // Cache the data for future use
+    quantilesStore.cacheQuantilesData(reach_id.value, transformedQuantiles)
     
     // Set the shared quantiles data in Pinia store
     quantilesStore.setQuantilesData(transformedQuantiles)
