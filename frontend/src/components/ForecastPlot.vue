@@ -196,7 +196,7 @@ const clearPlot = () => {
 
 // Toggle quantiles display - uses the shared store so both plots stay synchronized
 const toggleQuantiles = () => {
-  quantilesStore.setShowQuantiles(!showQuantiles.value)
+  quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
 }
 
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {

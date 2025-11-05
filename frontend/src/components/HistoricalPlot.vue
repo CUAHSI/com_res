@@ -309,155 +309,9 @@ const clearPlot = () => {
   showQuantiles.value = false
 }
 
-// Fetch quantiles data from the FastAPI endpoint
-const getQuantilesData = async () => {
-  if (!reach_id.value) return
-  
-  // Check if we have cached data for this reach_id
-  if (quantilesStore.hasCachedQuantilesData(reach_id.value)) {
-    const cachedData = quantilesStore.getCachedQuantilesData(reach_id.value)
-    quantilesStore.setQuantilesData(cachedData)
-    return
-  }
-  
-  try {
-    loadingQuantiles.value = true
-    const response = await fetch(`${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id.value}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    
-    // Get current year for date alignment
-    const currentYear = new Date().getFullYear()
-    
-    // Create the base Q0 data (hidden from legend and tooltips)
-    const q0Data = data.map(item => {
-      const date = new Date(currentYear, 0)
-      date.setDate(item.doy)
-      return { x: date.toISOString().split('T')[0], y: item.q0 }
-    })
-    
-    // Transform the quantiles data for the chart - use actual dates for current year
-    const transformedQuantiles = [
-      {
-        // Hidden Q0 dataset - serves as the base for fills but doesn't show in legend/tooltips
-        label: '', // Empty label to hide from legend
-        data: q0Data,
-        borderColor: 'transparent', // Make border invisible
-        backgroundColor: 'transparent', // Make background invisible
-        pointRadius: 0, // No points
-        pointHoverRadius: 0, // No hover points
-        borderWidth: 0, // No border
-        fill: true, // This will be the base fill
-        showLine: false, // Don't show the line
-        hidden: false, // Keep it visible for filling purposes
-        // Hide from tooltips and legend
-        tooltip: {
-          enabled: false
-        }
-      },
-      {
-        label: 'Much Below Normal',
-        data: data.map(item => {
-          const date = new Date(currentYear, 0)
-          date.setDate(item.doy)
-          return { x: date.toISOString().split('T')[0], y: item.q10 }
-        }),
-        borderColor: 'darkred',
-        backgroundColor: 'rgba(139, 0, 0, 0.3)', // Semi-transparent darkred
-        borderWidth: 1,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        fill: {
-          target: '-1', // Fill to the previous dataset (Q0)
-          above: 'rgba(139, 0, 0, 0.3)' // Fill color for the area
-        },
-        tension: 0.1
-      },
-      {
-        label: 'Below Normal',
-        data: data.map(item => {
-          const date = new Date(currentYear, 0)
-          date.setDate(item.doy)
-          return { x: date.toISOString().split('T')[0], y: item.q25 }
-        }),
-        borderColor: 'darkorange',
-        backgroundColor: 'rgba(255, 140, 0, 0.3)', // Semi-transparent darkorange
-        borderWidth: 1,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        fill: {
-          target: '-1', // Fill to the previous dataset (Q10)
-          above: 'rgba(255, 140, 0, 0.3)' // Fill color for the area
-        },
-        tension: 0.1
-      },
-      {
-        label: 'Normal',
-        data: data.map(item => {
-          const date = new Date(currentYear, 0)
-          date.setDate(item.doy)
-          return { x: date.toISOString().split('T')[0], y: item.q75 }
-        }),
-        borderColor: 'darkgreen',
-        backgroundColor: 'rgba(0, 100, 0, 0.3)', // Semi-transparent darkgreen
-        borderWidth: 1,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        fill: {
-          target: '-1', // Fill to the previous dataset (Q25)
-          above: 'rgba(0, 100, 0, 0.3)' // Fill color for the area
-        },
-        tension: 0.1
-      },
-      {
-        label: 'Above Normal',
-        data: data.map(item => {
-          const date = new Date(currentYear, 0)
-          date.setDate(item.doy)
-          return { x: date.toISOString().split('T')[0], y: item.q90 }
-        }),
-        borderColor: 'darkblue',
-        backgroundColor: 'rgba(0, 0, 139, 0.3)', // Semi-transparent darkblue
-        borderWidth: 1,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        fill: {
-          target: '-1', // Fill to the previous dataset (Q75)
-          above: 'rgba(0, 0, 139, 0.3)' // Fill color for the area
-        },
-        tension: 0.1
-      }
-    ]
-    
-    // Cache the data for future use
-    quantilesStore.cacheQuantilesData(reach_id.value, transformedQuantiles)
-    
-    // Set the shared quantiles data in Pinia store
-    quantilesStore.setQuantilesData(transformedQuantiles)
-    
-  } catch (err) {
-    console.error('Failed to load quantiles data:', err)
-    error.value = `Failed to load quantiles data: ${err.message}`
-  } finally {
-    loadingQuantiles.value = false
-  }
-}
-
 // Toggle quantiles display
-const toggleQuantiles = async () => {
-  if (showQuantiles.value) {
-    // If currently showing, just hide them
-    quantilesStore.setShowQuantiles(false)
-  } else {
-    // If not showing, fetch and show quantiles
-    quantilesStore.setShowQuantiles(true)
-    if (quantilesData.value.length === 0) {
-      await getQuantilesData()
-    }
-  }
+const toggleQuantiles = () => {
+  quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
 }
 
 // function to handle the closing of the date selection menu,
@@ -511,10 +365,7 @@ watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
     // Reset quantiles when reach ID changes
-    if (showQuantiles.value) {
-      quantilesData.value = []
-      await getQuantilesData()
-    }
+    quantilesStore.setShowQuantiles(false, reach_id.value)
   }
 })
 
