@@ -265,14 +265,8 @@ const limitToBounds = (region) => {
     }
     try {
       console.log('Setting bounds to:', bounds)
-      leaflet.value.setMaxBounds(null)
       leaflet.value.setView([0, 0], 2)
       leaflet.value.invalidateSize()
-
-      // prevent panning from bounds
-      leaflet.value.setMaxBounds(bounds)
-      // instead of fitbounds, use default zoom
-      // leaflet.value.fitBounds(bounds)
       leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
       const zoom = leaflet.value.getZoom()
       console.log('Current zoom level:', zoom)
