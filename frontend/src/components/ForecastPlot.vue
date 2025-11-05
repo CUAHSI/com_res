@@ -149,7 +149,7 @@ import { storeToRefs } from 'pinia'
 
 // Use Pinia store
 const quantilesStore = useQuantilesStore()
-const { showQuantiles, quantilesData } = storeToRefs(quantilesStore)
+const { showQuantiles, quantilesData, loadingQuantiles } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -157,7 +157,6 @@ const plot_timeseries = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
-const loadingQuantiles = ref(false)
 const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
