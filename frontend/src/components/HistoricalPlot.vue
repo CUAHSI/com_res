@@ -417,6 +417,20 @@ const toggleQuantiles = async () => {
   }
 }
 
+// function to handle the closing of the date selection menu,
+// this function is called when the user clicks the "Apply" button.
+// This is necessary to ensure that nested v-menus close properly.
+function onTimeSelectionClose() {
+  // Close the date selection menu
+  timeSelectionMenu.value = false
+
+  // Trigger data fetch with updated dates,
+  // which will trigger the watch function that
+  // updates the lineplot.
+  startDate.value = tempStartDate.value
+  endDate.value = tempEndDate.value
+}
+
 // Collects historical plot data from the CIROH NWM API
 const getHistoricalData = async () => {
   try {
