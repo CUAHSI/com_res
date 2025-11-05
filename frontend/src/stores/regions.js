@@ -101,7 +101,8 @@ export const useRegionsStore = defineStore('regions', () => {
     // clear the active feature if there is one selected
     featureStore.clearSelectedFeatures()
 
-    await mapHelpers.toggleWMSLayers(region)
+    mapHelpers.toggleWMSLayers(region)
+    await nextTick()
     try {
       await mapHelpers.toggleFeatureLayer(region)
     } catch (error) {
