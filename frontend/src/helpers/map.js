@@ -258,35 +258,33 @@ const clearCogsFromMap = () => {
 
 const limitToBounds = (region) => {
   console.log('Limiting to bounds of region', region)
-  // HOW WE USED TO DO IT:
-  // Querying the flowlines layer for bounds
-  // region.flowlinesLayer.query().bounds(async function (error, bounds) {
-  //   if (error) {
-  //     console.log('Error running bounds query:')
-  //     console.warn(error)
-  //   }
-  //   try {
-  //     console.log('Setting bounds to:', bounds)
-  //     leaflet.value.setMaxBounds(null)
-  //     leaflet.value.setView([0, 0], 2)
-  //     leaflet.value.invalidateSize()
+  region.flowlinesLayer.query().bounds(async function (error, bounds) {
+    if (error) {
+      console.log('Error running bounds query:')
+      console.warn(error)
+    }
+    try {
+      console.log('Setting bounds to:', bounds)
+      leaflet.value.setMaxBounds(null)
+      leaflet.value.setView([0, 0], 2)
+      leaflet.value.invalidateSize()
 
-  //     // prevent panning from bounds
-  //     // TODO: CAM-885: setting max bounds causes boundary issues
-  //     // https://cuahsi.atlassian.net/browse/CAM-885
-  //     leaflet.value.setMaxBounds(bounds)
-  //     // instead of fitbounds, use default zoom
-  //     // leaflet.value.fitBounds(bounds)
-  //     leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
-  //     const zoom = leaflet.value.getZoom()
-  //     console.log('Current zoom level:', zoom)
-  //     await nextTick()
-  //     // prevent zooming out
-  //     leaflet.value.setMinZoom(zoom)
-  //   } catch (error) {
-  //     console.warn('Error zooming to bounds:', error)
-  //   }
-  // })
+      // prevent panning from bounds
+      // TODO: CAM-885: setting max bounds causes boundary issues
+      // https://cuahsi.atlassian.net/browse/CAM-885
+      leaflet.value.setMaxBounds(bounds)
+      // instead of fitbounds, use default zoom
+      // leaflet.value.fitBounds(bounds)
+      leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
+      const zoom = leaflet.value.getZoom()
+      console.log('Current zoom level:', zoom)
+      await nextTick()
+      // prevent zooming out
+      leaflet.value.setMinZoom(zoom)
+    } catch (error) {
+      console.warn('Error zooming to bounds:', error)
+    }
+  })
 }
 
 async function createWMSLayers(region) {
@@ -370,50 +368,6 @@ const toggleWMSLayers = async (region) => {
         })
       }
     })
-
-    // How we want to do it now:
-    // querying the WMS layers for bounds
-    // TODO: update so that we get the MAXIMUM extent of all layers in the region
-    // Not just the first one.
-    // set the max bounds to the region, based on the wms layer extent
-    const firstLayer = wmsLayers.value[region.name][0]
-    console.log('First WMS layer for bounds:', firstLayer)
-    if (firstLayer) {
-      // firstLayer.query().bounds(async function (error, bounds) {
-      firstLayer.metadata(async function (error, metadata) {
-        if (error) {
-            console.log('Error running bounds query:')
-            console.warn(error)
-        }
-        var fullExtent = metadata.fullExtent;
-        console.log('Full Extent of Service:', fullExtent);
-        const bounds = L.latLngBounds(
-          L.latLng(fullExtent.ymin, fullExtent.xmin),
-          L.latLng(fullExtent.ymax, fullExtent.xmax)
-        );
-        try {
-          console.log('Setting bounds to:', bounds)
-          leaflet.value.setMaxBounds(null)
-          leaflet.value.setView([0, 0], 2)
-          leaflet.value.invalidateSize()
-
-          // prevent panning from bounds
-          // TODO: CAM-885: setting max bounds causes boundary issues
-          // https://cuahsi.atlassian.net/browse/CAM-885
-          leaflet.value.setMaxBounds(bounds)
-          // instead of fitbounds, use default zoom
-          // leaflet.value.fitBounds(bounds)
-          leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
-          const zoom = leaflet.value.getZoom()
-          console.log('Current zoom level:', zoom)
-          await nextTick()
-          // prevent zooming out
-          leaflet.value.setMinZoom(zoom)
-        } catch (error) {
-          console.warn('Error zooming to bounds:', error)
-        }
-      });
-    }
   } catch (error) {
     console.error(`Error toggling WMS layers for region ${region.name}:`, error)
   }
@@ -570,6 +524,7 @@ const toggleFeatureLayer = async (region) => {
     flowlinesFeatureLayers.value.push(flowlines)
     const provider = createFeatureLayerProvider(region)
     featureLayerProviders.value.push(provider)
+    region.flowlinesLayer = flowlines
   }
   // turn off all other feature layers and turn on the selected one
   console.log('Toggling feature layer:', region.name)
