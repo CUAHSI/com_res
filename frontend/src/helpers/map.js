@@ -412,7 +412,7 @@ const calculateAndSetMaxBounds = async (regionName) => {
 }
 
 /**
- * Applies the calculated bounds to the Leaflet map
+ * Applies the calculated bounds to the Leaflet map (debug version with visual bounds)
  * @param {L.LatLngBounds} bounds - The bounds to apply
  * @param {string} regionName - The name of the region for logging
  */
@@ -420,30 +420,80 @@ const applyBoundsToMap = async (bounds, regionName) => {
   try {
     console.log(`Setting bounds for region ${regionName}:`, bounds)
     
+    // Clear any existing debug rectangles
+    leaflet.value.eachLayer((layer) => {
+      if (layer._debugBounds) {
+        leaflet.value.removeLayer(layer)
+      }
+    })
+
+    // Create a red rectangle to visualize the bounds
+    const debugRectangle = L.rectangle(bounds, {
+      color: '#ff0000',
+      weight: 3,
+      fillColor: '#ff0000',
+      fillOpacity: 0.1,
+      opacity: 0.8,
+      interactive: false
+    }).addTo(leaflet.value)
+    
+    // Mark this layer as a debug bounds layer for easy removal
+    debugRectangle._debugBounds = true
+
+    // Add popup to the rectangle showing bounds info
+    const boundsInfo = `
+      <strong>Region: ${regionName}</strong><br>
+      Bounds: ${bounds.toBBoxString()}<br>
+      North: ${bounds.getNorth().toFixed(6)}<br>
+      South: ${bounds.getSouth().toFixed(6)}<br>
+      East: ${bounds.getEast().toFixed(6)}<br>
+      West: ${bounds.getWest().toFixed(6)}<br>
+      Center: ${bounds.getCenter().lat.toFixed(6)}, ${bounds.getCenter().lng.toFixed(6)}
+    `
+    debugRectangle.bindPopup(boundsInfo)
+
+    // Also add corner markers for better visualization
+    const corners = [
+      bounds.getNorthWest(),
+      bounds.getNorthEast(), 
+      bounds.getSouthWest(),
+      bounds.getSouthEast()
+    ]
+    
+    corners.forEach((corner, index) => {
+      const cornerMarker = L.circleMarker(corner, {
+        radius: 8,
+        color: '#ff0000',
+        fillColor: '#ff0000',
+        fillOpacity: 0.7,
+        interactive: false
+      }).addTo(leaflet.value)
+      cornerMarker._debugBounds = true
+    })
+
     // Reset current bounds and view
     leaflet.value.setMaxBounds(null)
     leaflet.value.setView([0, 0], 2)
     leaflet.value.invalidateSize()
 
-    // Set the new max bounds
-    leaflet.value.setMaxBounds(bounds)
+    // Instead of setting max bounds, fit the map to show the bounds rectangle with some padding
+    leaflet.value.fitBounds(bounds, { 
+      padding: [20, 20], // Add 20px padding around the bounds
+      animate: true 
+    })
     
-    // Set view to the center of the bounds with appropriate zoom
-    // You'll need to get the region object - adjust this based on your data structure
-    const regions = [] // Replace with your actual regions data source
-    const region = regions.find(r => r.name === regionName)
-    const defaultZoom = region?.defaultZoom || 10
-    
-    leaflet.value.setView(bounds.getCenter(), defaultZoom)
     const zoom = leaflet.value.getZoom()
-    
     console.log('Current zoom level:', zoom)
+    console.log('Bounds center:', bounds.getCenter())
+    console.log('Bounds size:', bounds.toBBoxString())
     
     await nextTick()
     
-    // Prevent zooming out beyond the current zoom level
-    leaflet.value.setMinZoom(zoom)
+    // Open the popup automatically to show bounds info
+    debugRectangle.openPopup()
     
+    console.log('Debug bounds rectangle added to map. Check the red outline and markers.')
+
   } catch (error) {
     console.warn('Error applying bounds to map:', error)
   }
