@@ -171,6 +171,9 @@ async def get_quantiles(
     try:
         client = get_bigquery_client()
 
+        # TODO: revert to using feature_id once all data is loaded in BigQuery
+        reachid = 3627071  # for testing purposes
+
         query = """
         SELECT *
         FROM `com-res.flood_data.quantiles_catalog`
@@ -181,7 +184,7 @@ async def get_quantiles(
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
                 bigquery.ScalarQueryParameter(
-                    "feature_id", "INT64", feature_id
+                    "feature_id", "INT64", reachid
                 ),
             ]
         )
