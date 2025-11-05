@@ -126,7 +126,7 @@ const chartOptions = computed(() => ({
       },
       // Configure logarithmic scale behavior
       ...(hasQuantiles.value && {
-        min: 0.01, // Set a reasonable minimum for log scale
+        // min: 0.01, // minimum for log scale
         afterBuildTicks: function(axis) {
           // Customize ticks for better readability on log scale
           const ticks = []
