@@ -319,7 +319,7 @@ async function createWMSLayers(region) {
 async function addWMSLayers(region) {
   for (let layer of wmsLayers.value[region.name] || []) {
     layer.addTo(leaflet.value)
-    console.log(`Adding WMS layer: ${layer.name} to map for region: ${region.name}`)
+    console.log(`Adding WMS layer: ${layer.name} to map for region: ${region.name}`, layer)
     control.value.addOverlay(layer, layer.name)
   }
 }
@@ -349,7 +349,7 @@ const toggleWMSLayers = async (region) => {
 }
 
 /**
- * Calculates the maximum bounds from all WMS layers in a region and sets them on the map
+ * Calculates the maximum bounds from specific WMS layers in a region and sets them on the map
  * @param {string} regionName - The name of the region
  */
 const calculateAndSetMaxBounds = async (regionName) => {
@@ -359,12 +359,40 @@ const calculateAndSetMaxBounds = async (regionName) => {
   }
 
   try {
-    // Array to store all bounds promises
-    const boundsPromises = wmsLayers.value[regionName].map((layer) => {
-      return new Promise((resolve, reject) => {
+    // Filter layers to only include "Domain Boundary" layers
+    const domainBoundaryLayers = wmsLayers.value[regionName].filter(layer => 
+      layer.name && layer.name.toLowerCase().includes('domain boundary')
+    )
+
+    if (domainBoundaryLayers.length === 0) {
+      console.warn(`No "Domain Boundary" layers found for region: ${regionName}. Using all layers as fallback.`)
+      // Fallback to using all layers if no domain boundary layers found
+      return await calculateBoundsFromLayers(wmsLayers.value[regionName], regionName)
+    }
+
+    console.log(`Found ${domainBoundaryLayers.length} "Domain Boundary" layer(s) for region: ${regionName}`, domainBoundaryLayers)
+    
+    // Calculate bounds from domain boundary layers only
+    await calculateBoundsFromLayers(domainBoundaryLayers, regionName)
+
+  } catch (error) {
+    console.error('Error calculating max bounds:', error)
+  }
+}
+
+/**
+ * Helper function to calculate bounds from a specific set of layers
+ */
+const calculateBoundsFromLayers = async (layers, regionName) => {
+  const successfulBounds = []
+  
+  // Process layers sequentially
+  for (const layer of layers) {
+    try {
+      console.log(`Getting bounds for layer: ${layer.name}`)
+      const bounds = await new Promise((resolve, reject) => {
         layer.metadata((error, metadata) => {
           if (error) {
-            console.warn(`Error getting metadata for layer ${layer.name}:`, error)
             reject(error)
             return
           }
@@ -380,35 +408,27 @@ const calculateAndSetMaxBounds = async (regionName) => {
           resolve(bounds)
         })
       })
-    })
-
-    // Wait for all bounds to be resolved
-    const allBounds = await Promise.allSettled(boundsPromises)
-    
-    // Filter out rejected promises and extract the bounds
-    const successfulBounds = allBounds
-      .filter(result => result.status === 'fulfilled')
-      .map(result => result.value)
-
-    if (successfulBounds.length === 0) {
-      console.warn('No valid bounds obtained from WMS layers')
-      return
+      successfulBounds.push(bounds)
+    } catch (error) {
+      console.warn(`Failed to get bounds for layer ${layer.name}:`, error)
     }
-
-    // Calculate the maximum bounds that encompass all layers
-    let maxBounds = successfulBounds[0]
-    for (let i = 1; i < successfulBounds.length; i++) {
-      maxBounds = maxBounds.extend(successfulBounds[i])
-    }
-
-    console.log('Calculated maximum bounds from all WMS layers:', maxBounds)
-    
-    // Apply the bounds to the map
-    await applyBoundsToMap(maxBounds, regionName)
-
-  } catch (error) {
-    console.error('Error calculating max bounds:', error)
   }
+
+  if (successfulBounds.length === 0) {
+    console.warn('No valid bounds obtained from WMS layers')
+    return
+  }
+
+  // Calculate the maximum bounds that encompass all layers
+  let maxBounds = successfulBounds[0]
+  for (let i = 1; i < successfulBounds.length; i++) {
+    maxBounds = maxBounds.extend(successfulBounds[i])
+  }
+
+  console.log('Calculated maximum bounds from selected WMS layers:', maxBounds)
+  
+  // Apply the bounds to the map
+  await applyBoundsToMap(maxBounds, regionName)
 }
 
 /**
@@ -472,15 +492,15 @@ const applyBoundsToMap = async (bounds, regionName) => {
     })
 
     // Reset current bounds and view
-    leaflet.value.setMaxBounds(null)
-    leaflet.value.setView([0, 0], 2)
-    leaflet.value.invalidateSize()
+    // leaflet.value.setMaxBounds(null)
+    // leaflet.value.setView([0, 0], 2)
+    // leaflet.value.invalidateSize()
 
     // Instead of setting max bounds, fit the map to show the bounds rectangle with some padding
-    leaflet.value.fitBounds(bounds, { 
-      padding: [20, 20], // Add 20px padding around the bounds
-      animate: true 
-    })
+    // leaflet.value.fitBounds(bounds, { 
+    //   padding: [20, 20], // Add 20px padding around the bounds
+    //   animate: true 
+    // })
     
     const zoom = leaflet.value.getZoom()
     console.log('Current zoom level:', zoom)
