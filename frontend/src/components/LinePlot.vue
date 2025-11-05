@@ -150,13 +150,22 @@ const chartOptions = computed(() => ({
         boxWidth: 10,
         font: {
           size: 11
+        },
+        // Filter out hidden datasets from legend
+        filter: function(item) {
+          return !item.text || item.text.length > 0 // Only show items with labels
         }
       },
       position: 'top'
     },
     tooltip: {
-      mode: 'index',
+      mode: 'nearest',
       intersect: false,
+      
+      filter: function(tooltipItem) {
+        // Skip datasets without labels (like Q0)
+        return tooltipItem.dataset.label && tooltipItem.dataset.label.length > 0
+      },
       callbacks: {
         label: function(context) {
           let label = context.dataset.label || ''
@@ -167,13 +176,17 @@ const chartOptions = computed(() => ({
             label += context.parsed.y.toFixed(2) + ' cms'
           }
           return label
+        },
+        // Custom title to show the date
+        title: function(items) {
+          if (items.length > 0 && items[0].parsed.x) {
+            const date = new Date(items[0].parsed.x)
+            return date.toLocaleDateString()
+          }
+          return ''
         }
       }
     }
-  },
-  interaction: {
-    mode: 'index',
-    intersect: false
   }
 }))
 </script>
