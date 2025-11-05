@@ -42,6 +42,19 @@ const props = defineProps({
 
 const hasQuantiles = computed(() => props.quantiles && props.quantiles.length > 0)
 
+// Calculate x-axis min and max from the streamflow data only
+const xAxisRange = computed(() => {
+  if (!props.timeseries || props.timeseries.length === 0) {
+    return { min: null, max: null }
+  }
+  
+  const dates = props.timeseries.map(item => new Date(item.x).getTime())
+  return {
+    min: new Date(Math.min(...dates)),
+    max: new Date(Math.max(...dates))
+  }
+})
+
 const chartData = computed(() => {
   const datasets = [
     {
@@ -87,7 +100,10 @@ const chartOptions = computed(() => ({
       },
       grid: {
         color: '#eee'
-      }
+      },
+      // Force x-axis to use streamflow data range only
+      min: xAxisRange.value.min,
+      max: xAxisRange.value.max
     },
     y: {
       type: hasQuantiles.value ? 'logarithmic' : 'linear',
