@@ -18,10 +18,11 @@ import {
   PointElement,
   LinearScale,
   TimeScale,
-  Filler
+  Filler,
+  LogarithmicScale
 } from 'chart.js'
 
-ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
+ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler, LogarithmicScale)
 
 // Define the chart data to be rendered in the component
 const props = defineProps({
@@ -39,6 +40,8 @@ const props = defineProps({
   }
 })
 
+const hasQuantiles = computed(() => props.quantiles && props.quantiles.length > 0)
+
 const chartData = computed(() => {
   const datasets = [
     {
@@ -55,7 +58,7 @@ const chartData = computed(() => {
   ]
 
   // Add quantiles datasets if provided
-  if (props.quantiles && props.quantiles.length > 0) {
+  if (hasQuantiles.value) {
     // Add quantiles datasets at the beginning so they appear behind the main line
     datasets.unshift(...props.quantiles.map(quantileDataset => ({
       ...quantileDataset,
@@ -70,7 +73,7 @@ const chartData = computed(() => {
   return { datasets }
 })
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   scales: {
@@ -87,16 +90,39 @@ const chartOptions = {
       }
     },
     y: {
+      type: hasQuantiles.value ? 'logarithmic' : 'linear',
       title: {
         display: true,
         text: 'Streamflow (cms)'
       },
       ticks: {
-        color: '#555'
+        color: '#555',
+        callback: function(value) {
+          // Format tick labels for logarithmic scale
+          if (hasQuantiles.value) {
+            return Number(value.toString()) // Convert to number and back to string to avoid scientific notation
+          }
+          return value
+        }
       },
       grid: {
         color: '#eee'
-      }
+      },
+      // Configure logarithmic scale behavior
+      ...(hasQuantiles.value && {
+        min: 0.1, // Set a reasonable minimum for log scale
+        afterBuildTicks: function(axis) {
+          // Customize ticks for better readability on log scale
+          const ticks = []
+          const min = Math.pow(10, Math.floor(Math.log10(axis.min)))
+          const max = Math.pow(10, Math.ceil(Math.log10(axis.max)))
+          
+          for (let i = Math.floor(Math.log10(min)); i <= Math.ceil(Math.log10(max)); i++) {
+            ticks.push(Math.pow(10, i))
+          }
+          return ticks
+        }
+      })
     }
   },
   plugins: {
@@ -133,5 +159,5 @@ const chartOptions = {
     mode: 'index',
     intersect: false
   }
-}
+}))
 </script>
