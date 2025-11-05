@@ -125,6 +125,15 @@ const chartOptions = computed(() => ({
           if (shouldUseLogScale.value) {
             return Number(value.toString()) // Convert to number and back to string to avoid scientific notation
           }
+          // Format linear scale labels to show max 2 decimal places
+          if (typeof value === 'number') {
+            // If the value is a whole number, show no decimals
+            if (value % 1 === 0) {
+              return value.toString()
+            }
+            // Otherwise, show up to 2 decimal places
+            return value.toFixed(2)
+          }
           return value
         }
       },
