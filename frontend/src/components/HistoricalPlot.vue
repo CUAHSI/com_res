@@ -30,11 +30,38 @@
     <LinePlot
       v-if="!isLoading"
       :timeseries="plot_timeseries"
+      :quantiles="quantiles_data"
       :title="plot_title"
       :style="plot_style"
     />
 
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+      <!-- Quantiles Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :color="showQuantiles ? 'primary' : 'default'"
+            :disabled="loadingQuantiles"
+            :loading="loadingQuantiles"
+            @click="toggleQuantiles"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="mdiChartAreaspline"></v-icon>
+            <v-progress-circular
+              v-if="loadingQuantiles"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
+      </v-tooltip>
+
       <!-- CSV Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
@@ -180,7 +207,7 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
-import { mdiCalendarExpandHorizontal } from '@mdi/js'
+import { mdiCalendarExpandHorizontal, mdiChartAreaspline } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '../components/InfoTooltip.vue'
@@ -211,9 +238,12 @@ const reach_id = toRef(props, 'reachid') // make this property reactive to it tr
 const reach_name = toRef(props, 'reachname') // make this property reactive to it triggers watch()
 
 const plot_timeseries = ref([])
+const quantiles_data = ref([])
 const plot_title = ref()
 const plot_style = ref()
 const isLoading = ref(false)
+const loadingQuantiles = ref(false)
+const showQuantiles = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
@@ -269,22 +299,95 @@ const formattedEndDate = computed({
 
 const clearPlot = () => {
   plot_timeseries.value = []
+  quantiles_data.value = []
   plot_title.value = ''
   plot_style.value = {}
+  showQuantiles.value = false
 }
 
-// function to handle the closing of the date selection menu,
-// this function is called when the user clicks the "Apply" button.
-// This is necessary to ensure that nested v-menus close properly.
-function onTimeSelectionClose() {
-  // Close the date selection menu
-  timeSelectionMenu.value = false
+// Fetch quantiles data from the FastAPI endpoint
+const getQuantilesData = async () => {
+  if (!reach_id.value) return
+  
+  try {
+    loadingQuantiles.value = true
+    const response = await fetch(`${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id.value}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    // Transform the quantiles data for the chart
+    // We'll create multiple series for different quantiles
+    quantiles_data.value = [
+      {
+        label: 'Q0 (Min)',
+        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q0 })),
+        borderColor: 'rgba(100, 100, 100, 0.3)',
+        backgroundColor: 'rgba(100, 100, 100, 0.1)',
+        borderDash: [5, 5],
+        fill: false
+      },
+      {
+        label: 'Q10',
+        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q10 })),
+        borderColor: 'rgba(65, 105, 225, 0.4)',
+        backgroundColor: 'rgba(65, 105, 225, 0.1)',
+        fill: '-1'
+      },
+      {
+        label: 'Q25',
+        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q25 })),
+        borderColor: 'rgba(30, 144, 255, 0.5)',
+        backgroundColor: 'rgba(30, 144, 255, 0.1)',
+        fill: '-1'
+      },
+      {
+        label: 'Q75',
+        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q75 })),
+        borderColor: 'rgba(255, 99, 132, 0.5)',
+        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+        fill: '+1'
+      },
+      {
+        label: 'Q90',
+        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q90 })),
+        borderColor: 'rgba(220, 20, 60, 0.4)',
+        backgroundColor: 'rgba(220, 20, 60, 0.1)',
+        fill: '+1'
+      },
+      {
+        label: 'Q100 (Max)',
+        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q100 })),
+        borderColor: 'rgba(139, 0, 0, 0.3)',
+        backgroundColor: 'rgba(139, 0, 0, 0.1)',
+        borderDash: [5, 5],
+        fill: false
+      }
+    ]
+    
+  } catch (err) {
+    console.error('Failed to load quantiles data:', err)
+    error.value = `Failed to load quantiles data: ${err.message}`
+  } finally {
+    loadingQuantiles.value = false
+  }
+}
 
-  // Trigger data fetch with updated dates,
-  // which will trigger the watch function that
-  // updates the lineplot.
-  startDate.value = tempStartDate.value
-  endDate.value = tempEndDate.value
+// Toggle quantiles display
+const toggleQuantiles = async () => {
+  if (showQuantiles.value) {
+    // If currently showing, just hide them
+    showQuantiles.value = false
+    quantiles_data.value = []
+  } else {
+    // If not showing, fetch and show quantiles
+    showQuantiles.value = true
+    if (quantiles_data.value.length === 0) {
+      await getQuantilesData()
+    }
+  }
 }
 
 // Collects historical plot data from the CIROH NWM API
@@ -323,6 +426,11 @@ const getHistoricalData = async () => {
 watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
+    // Reset quantiles when reach ID changes
+    if (showQuantiles.value) {
+      quantiles_data.value = []
+      await getQuantilesData()
+    }
   }
 })
 
@@ -335,6 +443,7 @@ watch(timeSelectionMenu, (isOpen) => {
     tempEndDate.value = endDate.value
   }
 })
+
 async function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
