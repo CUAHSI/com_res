@@ -8,6 +8,12 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
   const setShowQuantiles = (value) => {
     showQuantiles.value = value
+
+    // If disabling quantiles, also clear the data
+    // TODO: instead of clearing, consider caching for performance
+    if (!value) {
+      quantilesData.value = []
+    }
   }
 
   const setQuantilesData = (data) => {
