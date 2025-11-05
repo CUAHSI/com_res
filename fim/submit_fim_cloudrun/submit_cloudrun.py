@@ -241,6 +241,8 @@ def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False)
     print(f"Number of Jobs submitted: {submitted_job_count}")
     time.sleep(5)
 
+    print(f'type of jobs: {type(jobs)}')
+    
     if verbose:
         failed = show_progress_long(run_client, jobs)
     else:
@@ -259,8 +261,18 @@ def run_batch(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = 
     run_client = build("run", "v2", credentials=credentials)
 
     # Read lines (args)
-    arg_df = pandas.read_csv(file, names=['command', 'huc', 'reach', 'cms','label'])
-
+    arg_df = pandas.read_csv(file,
+                             names=['command',
+                                    'huc',
+                                    'reach',
+                                    'cms',
+                                    'label'],
+                            dtype={'commmand': str,
+                                   'huc': str,
+                                   'reach': str,
+                                   'cms': str,
+                                   'label': str}
+                            )
     # group by reach id
     grouped = arg_df.groupby('reach')
 
@@ -276,23 +288,30 @@ def run_batch(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = 
         previously_submitted_jobs = f.read().splitlines()
     
     jobs = []
+    skipped_count = 0
+    print('\nSubmitting Jobs to CloudRun...', end='', flush=True)
     for reachid, df in grouped:
         args = [
-            df.command.iloc[0],                # command
-            df.huc.iloc[0].astype(str),        # huc
-            ','.join(df.reach.astype(str)),    # reach ids, comma separated
-            ','.join(df.cms.astype(str)),      # flow rates, comma separated
-            '8',                               # number of processes
-            ','.join(df.label.astype(str)),    # output labels
-            df.reach.iloc[0].astype(str)]      # reach id as subdir
+            df.command.iloc[0],    # command
+            df.huc.iloc[0],        # huc
+            ','.join(df.reach),    # reach ids, comma separated
+            ','.join(df.cms),      # flow rates, comma separated
+            '8',                   # number of processes
+            ','.join(df.label),    # output labels
+            df.reach.iloc[0]]      # reach id as subdir
 
         # skip jobs that have already been submitted
         if ','.join(args) in previously_submitted_jobs:
-            print(f"Skipping HUC {df.huc.iloc[0].astype(str)}, ReachID(s) {df.reach.unique()}")
-            continue
-              
-    
+            skipped_count += 1
+            #print(f"Skipping HUC {df.huc.iloc[0]}, ReachID(s) {df.reach.unique()}")
+            continue   
+
+        # submit the job for execution
         execution_id = execute_job(run_client, args)
+        print('.', end='', flush=True)
+
+        # store information about the submitted job so it can be
+        # displayed in the terminal later.
         jobs.append(
             {
                 "args": " ".join(args),
@@ -308,10 +327,16 @@ def run_batch(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = 
         with open('submitted_jobs.txt', 'a') as f:
             f.write(f'{",".join(args)}\n')
 
+        # exit when 140 jobs have been submitted. This is the 
+        # maximum that can be submitted per minute via CloudRun.
+        # This limit can be raised but 140 is the default.
         if len(jobs) >= 140:
             break
-                    
-    print(f'{len(jobs)} Jobs Submitted')
+
+    print('\n\n-------')
+    print(f'{len(jobs)} Jobs Submitted.\n')
+    print(f'{skipped_count} Have Already Been Submitted.')
+    print(f'{len(grouped) - (len(jobs) + skipped_count)} Remain to be Submitted.\n\n')
     
 
 
