@@ -318,12 +318,19 @@ const getQuantilesData = async () => {
     
     const data = await response.json()
     
-    // Transform the quantiles data for the chart
-    // We'll create multiple series for different quantiles
+    // Get current year for date alignment
+    const currentYear = new Date().getFullYear()
+    
+    // Transform the quantiles data for the chart - use actual dates for current year
     quantiles_data.value = [
       {
         label: 'Q0 (Min)',
-        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q0 })),
+        data: data.map(item => {
+          // Convert DOY to actual date in current year
+          const date = new Date(currentYear, 0) // Start with Jan 1 of current year
+          date.setDate(item.doy) // Set to the day-of-year
+          return { x: date.toISOString().split('T')[0], y: item.q0 }
+        }),
         borderColor: 'rgba(100, 100, 100, 0.3)',
         backgroundColor: 'rgba(100, 100, 100, 0.1)',
         borderDash: [5, 5],
@@ -331,35 +338,55 @@ const getQuantilesData = async () => {
       },
       {
         label: 'Q10',
-        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q10 })),
+        data: data.map(item => {
+          const date = new Date(currentYear, 0)
+          date.setDate(item.doy)
+          return { x: date.toISOString().split('T')[0], y: item.q10 }
+        }),
         borderColor: 'rgba(65, 105, 225, 0.4)',
         backgroundColor: 'rgba(65, 105, 225, 0.1)',
         fill: '-1'
       },
       {
         label: 'Q25',
-        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q25 })),
+        data: data.map(item => {
+          const date = new Date(currentYear, 0)
+          date.setDate(item.doy)
+          return { x: date.toISOString().split('T')[0], y: item.q25 }
+        }),
         borderColor: 'rgba(30, 144, 255, 0.5)',
         backgroundColor: 'rgba(30, 144, 255, 0.1)',
         fill: '-1'
       },
       {
         label: 'Q75',
-        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q75 })),
+        data: data.map(item => {
+          const date = new Date(currentYear, 0)
+          date.setDate(item.doy)
+          return { x: date.toISOString().split('T')[0], y: item.q75 }
+        }),
         borderColor: 'rgba(255, 99, 132, 0.5)',
         backgroundColor: 'rgba(255, 99, 132, 0.1)',
         fill: '+1'
       },
       {
         label: 'Q90',
-        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q90 })),
+        data: data.map(item => {
+          const date = new Date(currentYear, 0)
+          date.setDate(item.doy)
+          return { x: date.toISOString().split('T')[0], y: item.q90 }
+        }),
         borderColor: 'rgba(220, 20, 60, 0.4)',
         backgroundColor: 'rgba(220, 20, 60, 0.1)',
         fill: '+1'
       },
       {
         label: 'Q100 (Max)',
-        data: data.map(item => ({ x: `2024-${String(item.doy).padStart(3, '0')}`, y: item.q100 })),
+        data: data.map(item => {
+          const date = new Date(currentYear, 0)
+          date.setDate(item.doy)
+          return { x: date.toISOString().split('T')[0], y: item.q100 }
+        }),
         borderColor: 'rgba(139, 0, 0, 0.3)',
         backgroundColor: 'rgba(139, 0, 0, 0.1)',
         borderDash: [5, 5],
