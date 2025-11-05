@@ -371,111 +371,51 @@ const toggleWMSLayers = async (region) => {
       }
     })
 
-    // Calculate bounds from ALL WMS layers in the region
-    await calculateAndSetMaxBounds(region.name)
+    // How we want to do it now:
+    // querying the WMS layers for bounds
+    // TODO: update so that we get the MAXIMUM extent of all layers in the region
+    // Not just the first one.
+    // set the max bounds to the region, based on the wms layer extent
+    const firstLayer = wmsLayers.value[region.name][0]
+    console.log('First WMS layer for bounds:', firstLayer)
+    if (firstLayer) {
+      // firstLayer.query().bounds(async function (error, bounds) {
+      firstLayer.metadata(async function (error, metadata) {
+        if (error) {
+            console.log('Error running bounds query:')
+            console.warn(error)
+        }
+        var fullExtent = metadata.fullExtent;
+        console.log('Full Extent of Service:', fullExtent);
+        const bounds = L.latLngBounds(
+          L.latLng(fullExtent.ymin, fullExtent.xmin),
+          L.latLng(fullExtent.ymax, fullExtent.xmax)
+        );
+        try {
+          console.log('Setting bounds to:', bounds)
+          leaflet.value.setMaxBounds(null)
+          leaflet.value.setView([0, 0], 2)
+          leaflet.value.invalidateSize()
+
+          // prevent panning from bounds
+          // TODO: CAM-885: setting max bounds causes boundary issues
+          // https://cuahsi.atlassian.net/browse/CAM-885
+          leaflet.value.setMaxBounds(bounds)
+          // instead of fitbounds, use default zoom
+          // leaflet.value.fitBounds(bounds)
+          leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
+          const zoom = leaflet.value.getZoom()
+          console.log('Current zoom level:', zoom)
+          await nextTick()
+          // prevent zooming out
+          leaflet.value.setMinZoom(zoom)
+        } catch (error) {
+          console.warn('Error zooming to bounds:', error)
+        }
+      });
+    }
   } catch (error) {
     console.error(`Error toggling WMS layers for region ${region.name}:`, error)
-  }
-}
-
-/**
- * Calculates the maximum bounds from all WMS layers in a region and sets them on the map
- * @param {string} regionName - The name of the region
- */
-const calculateAndSetMaxBounds = async (regionName) => {
-  if (!wmsLayers.value[regionName] || wmsLayers.value[regionName].length === 0) {
-    console.warn(`No WMS layers found for region: ${regionName}`)
-    return
-  }
-
-  try {
-    // Array to store all bounds promises
-    const boundsPromises = wmsLayers.value[regionName].map((layer) => {
-      return new Promise((resolve, reject) => {
-        layer.metadata((error, metadata) => {
-          if (error) {
-            console.warn(`Error getting metadata for layer ${layer.name}:`, error)
-            reject(error)
-            return
-          }
-          
-          const fullExtent = metadata.fullExtent
-          console.log(`Full Extent for ${layer.name}:`, fullExtent)
-          
-          // Convert extent to LatLngBounds
-          const bounds = L.latLngBounds(
-            L.latLng(fullExtent.ymin, fullExtent.xmin),
-            L.latLng(fullExtent.ymax, fullExtent.xmax)
-          )
-          resolve(bounds)
-        })
-      })
-    })
-
-    // Wait for all bounds to be resolved
-    const allBounds = await Promise.allSettled(boundsPromises)
-    
-    // Filter out rejected promises and extract the bounds
-    const successfulBounds = allBounds
-      .filter(result => result.status === 'fulfilled')
-      .map(result => result.value)
-
-    if (successfulBounds.length === 0) {
-      console.warn('No valid bounds obtained from WMS layers')
-      return
-    }
-
-    // Calculate the maximum bounds that encompass all layers
-    let maxBounds = successfulBounds[0]
-    for (let i = 1; i < successfulBounds.length; i++) {
-      maxBounds = maxBounds.extend(successfulBounds[i])
-    }
-
-    console.log('Calculated maximum bounds from all WMS layers:', maxBounds)
-    
-    // Apply the bounds to the map
-    await applyBoundsToMap(maxBounds, regionName)
-
-  } catch (error) {
-    console.error('Error calculating max bounds:', error)
-  }
-}
-
-/**
- * Applies the calculated bounds to the Leaflet map
- * @param {L.LatLngBounds} bounds - The bounds to apply
- * @param {string} regionName - The name of the region for logging
- */
-const applyBoundsToMap = async (bounds, regionName) => {
-  try {
-    console.log(`Setting bounds for region ${regionName}:`, bounds)
-    
-    // Reset current bounds and view
-    leaflet.value.setMaxBounds(null)
-    leaflet.value.setView([0, 0], 2)
-    leaflet.value.invalidateSize()
-
-    // Set the new max bounds
-    leaflet.value.setMaxBounds(bounds)
-    
-    // Set view to the center of the bounds with appropriate zoom
-    // You'll need to get the region object - adjust this based on your data structure
-    const regions = [] // Replace with your actual regions data source
-    const region = regions.find(r => r.name === regionName)
-    const defaultZoom = region?.defaultZoom || 10
-    
-    leaflet.value.setView(bounds.getCenter(), defaultZoom)
-    const zoom = leaflet.value.getZoom()
-    
-    console.log('Current zoom level:', zoom)
-    
-    await nextTick()
-    
-    // Prevent zooming out beyond the current zoom level
-    leaflet.value.setMinZoom(zoom)
-    
-  } catch (error) {
-    console.warn('Error applying bounds to map:', error)
   }
 }
 
