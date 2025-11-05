@@ -321,20 +321,31 @@ const getQuantilesData = async () => {
     // Get current year for date alignment
     const currentYear = new Date().getFullYear()
     
+    // Create the base Q0 data (hidden from legend and tooltips)
+    const q0Data = data.map(item => {
+      const date = new Date(currentYear, 0)
+      date.setDate(item.doy)
+      return { x: date.toISOString().split('T')[0], y: item.q0 }
+    })
+    
     // Transform the quantiles data for the chart - use actual dates for current year
     quantiles_data.value = [
       {
-        hidden: true,
-        data: data.map(item => {
-          // Convert DOY to actual date in current year
-          const date = new Date(currentYear, 0) // Start with Jan 1 of current year
-          date.setDate(item.doy) // Set to the day-of-year
-          return { x: date.toISOString().split('T')[0], y: item.q0 }
-        }),
-        borderColor: 'rgba(100, 100, 100, 0.3)',
-        backgroundColor: 'rgba(100, 100, 100, 0.1)',
-        borderDash: [5, 5],
-        fill: false
+        // Hidden Q0 dataset - serves as the base for fills but doesn't show in legend/tooltips
+        label: '', // Empty label to hide from legend
+        data: q0Data,
+        borderColor: 'transparent', // Make border invisible
+        backgroundColor: 'transparent', // Make background invisible
+        pointRadius: 0, // No points
+        pointHoverRadius: 0, // No hover points
+        borderWidth: 0, // No border
+        fill: true, // This will be the base fill
+        showLine: false, // Don't show the line
+        hidden: false, // Keep it visible for filling purposes
+        // Hide from tooltips and legend
+        tooltip: {
+          enabled: false
+        }
       },
       {
         label: 'Much Below Normal',
@@ -344,8 +355,15 @@ const getQuantilesData = async () => {
           return { x: date.toISOString().split('T')[0], y: item.q10 }
         }),
         borderColor: 'darkred',
-        backgroundColor: 'red',
-        fill: true
+        backgroundColor: 'rgba(139, 0, 0, 0.3)', // Semi-transparent darkred
+        borderWidth: 1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        fill: {
+          target: '-1', // Fill to the previous dataset (Q0)
+          above: 'rgba(139, 0, 0, 0.3)' // Fill color for the area
+        },
+        tension: 0.1
       },
       {
         label: 'Below Normal',
@@ -354,9 +372,16 @@ const getQuantilesData = async () => {
           date.setDate(item.doy)
           return { x: date.toISOString().split('T')[0], y: item.q25 }
         }),
-        borderColor: 'darkyellow',
-        backgroundColor: 'yellow',
-        fill: '-1'
+        borderColor: 'darkorange',
+        backgroundColor: 'rgba(255, 140, 0, 0.3)', // Semi-transparent darkorange
+        borderWidth: 1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        fill: {
+          target: '-1', // Fill to the previous dataset (Q10)
+          above: 'rgba(255, 140, 0, 0.3)' // Fill color for the area
+        },
+        tension: 0.1
       },
       {
         label: 'Normal',
@@ -366,8 +391,15 @@ const getQuantilesData = async () => {
           return { x: date.toISOString().split('T')[0], y: item.q75 }
         }),
         borderColor: 'darkgreen',
-        backgroundColor: 'green',
-        fill: '-1'
+        backgroundColor: 'rgba(0, 100, 0, 0.3)', // Semi-transparent darkgreen
+        borderWidth: 1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        fill: {
+          target: '-1', // Fill to the previous dataset (Q25)
+          above: 'rgba(0, 100, 0, 0.3)' // Fill color for the area
+        },
+        tension: 0.1
       },
       {
         label: 'Above Normal',
@@ -377,8 +409,15 @@ const getQuantilesData = async () => {
           return { x: date.toISOString().split('T')[0], y: item.q90 }
         }),
         borderColor: 'darkblue',
-        backgroundColor: 'blue',
-        fill: '-1'
+        backgroundColor: 'rgba(0, 0, 139, 0.3)', // Semi-transparent darkblue
+        borderWidth: 1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        fill: {
+          target: '-1', // Fill to the previous dataset (Q75)
+          above: 'rgba(0, 0, 139, 0.3)' // Fill color for the area
+        },
+        tension: 0.1
       }
     ]
     
