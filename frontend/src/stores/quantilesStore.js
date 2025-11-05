@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { API_BASE } from '@/constants'
+import { useAlertStore } from '@/stores/alerts'
 
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -82,6 +83,22 @@ export const useQuantilesStore = defineStore('quantiles', () => {
       }
       
       const data = await response.json()
+
+      // if the data is empty, return
+      if (!data || data.length === 0) {
+        const alertStore = useAlertStore()
+        alertStore.displayAlert({
+          title: 'No Quantiles Data',
+          text: 'No quantiles data available for the selected reach.',
+          type: 'error',
+          closable: true,
+          duration: 3
+        })
+
+        loadingQuantiles.value = false
+        showQuantiles.value = false
+        return
+      }
       
       // Get current year for date alignment
       const currentYear = new Date().getFullYear()
