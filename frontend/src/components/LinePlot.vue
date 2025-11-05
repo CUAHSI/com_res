@@ -47,7 +47,7 @@ const chartData = computed(() => {
     {
       label: 'Streamflow (cms)',
       data: props.timeseries,
-      fill: true,
+      fill: !hasQuantiles.value, // Only fill when quantiles are NOT shown
       backgroundColor: 'rgba(54, 162, 235, 0.2)',
       borderColor: 'rgba(54, 162, 235, 1)',
       tension: 0.4, // makes the line smooth
