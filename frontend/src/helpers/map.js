@@ -256,37 +256,10 @@ const clearCogsFromMap = () => {
   })
 }
 
-const limitToBounds = (region) => {
+const limitToBounds = async (region) => {
   console.log('Limiting to bounds of region', region)
-  // HOW WE USED TO DO IT:
-  // Querying the flowlines layer for bounds
-  // region.flowlinesLayer.query().bounds(async function (error, bounds) {
-  //   if (error) {
-  //     console.log('Error running bounds query:')
-  //     console.warn(error)
-  //   }
-  //   try {
-  //     console.log('Setting bounds to:', bounds)
-  //     leaflet.value.setMaxBounds(null)
-  //     leaflet.value.setView([0, 0], 2)
-  //     leaflet.value.invalidateSize()
-
-  //     // prevent panning from bounds
-  //     // TODO: CAM-885: setting max bounds causes boundary issues
-  //     // https://cuahsi.atlassian.net/browse/CAM-885
-  //     leaflet.value.setMaxBounds(bounds)
-  //     // instead of fitbounds, use default zoom
-  //     // leaflet.value.fitBounds(bounds)
-  //     leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
-  //     const zoom = leaflet.value.getZoom()
-  //     console.log('Current zoom level:', zoom)
-  //     await nextTick()
-  //     // prevent zooming out
-  //     leaflet.value.setMinZoom(zoom)
-  //   } catch (error) {
-  //     console.warn('Error zooming to bounds:', error)
-  //   }
-  // })
+  // Calculate bounds from ALL WMS layers in the region
+  await calculateAndSetMaxBounds(region.name)
 }
 
 async function createWMSLayers(region) {
@@ -370,9 +343,6 @@ const toggleWMSLayers = async (region) => {
         })
       }
     })
-
-    // Calculate bounds from ALL WMS layers in the region
-    await calculateAndSetMaxBounds(region.name)
   } catch (error) {
     console.error(`Error toggling WMS layers for region ${region.name}:`, error)
   }
