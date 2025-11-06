@@ -65,7 +65,7 @@ def __write_flow_input_file(
     return basepath / output_label
 
 
-def __download_huc_fim(huc_id: str, fim_data_dir: Path) -> None:
+def __download_huc_fim(huc_id: str, fim_data_dir: Path, fim_data_version=None) -> None:
     """
     Downloads the FIM map for a specific HUC identifier.
 
@@ -77,7 +77,7 @@ def __download_huc_fim(huc_id: str, fim_data_dir: Path) -> None:
 
     if not fim_data_dir.exists():
         # Download the HUC input data if it does not exist.
-        fm.DownloadHUC8(huc_id)
+        fm.DownloadHUC8(huc_id, version=fim_data_version)
     else:
         print("FIM Data Already Exists. Skipping download.")
         # if the data already exists, perfom the remaining
@@ -336,7 +336,7 @@ def generate_reach_fim_at_intervals(
     fim_data_dir = f"/home/output/flood_{huc_id}/{huc_id}"
 
     # download HUC data if it doesn't exist
-    __download_huc_fim(huc_id, Path(fim_data_dir))
+    __download_huc_fim(huc_id, Path(fim_data_dir), fim_data_version='4.5')
 
     # compute flow from stage increments
     print("Computing rating increments...", end="")
@@ -503,7 +503,7 @@ def generate_reach_fim(
     print(f'FIM data directory: {fim_data_dir}')
 
     # download HUC data if it doesn't exist
-    __download_huc_fim(huc_id, Path(fim_data_dir))
+    __download_huc_fim(huc_id, Path(fim_data_dir), fim_data_version='4.5')
 
     # generate output file names if not provided
     if output_labels is None: 
@@ -523,13 +523,14 @@ def generate_reach_fim(
     for output_label in output_labels:
         print(f'  - {output_label}')
               
-    # write the input files that will be used to generate the FIM
+    # write the input files that will be used to generate the FIMa
+    print('Writing input flow file:')
     flow_rate_filepaths = []
     for i in range(0, len(r_ids)):
-        flow_rate_filepaths.append(
-            __write_flow_input_file([r_ids[i]], [f_rates[i]], output_labels[i])
-        )
-        
+        p = __write_flow_input_file([r_ids[i]], [f_rates[i]], output_labels[i])
+        flow_rate_filepaths.append(p)
+        print(f' - {p}')
+    
     with ProcessPoolExecutor(max_workers=max_procs) as executor:
 
         futures = []

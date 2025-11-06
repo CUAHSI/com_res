@@ -30,11 +30,58 @@
     <LinePlot
       v-if="!isLoading"
       :timeseries="plot_timeseries"
+      :quantiles="quantilesData"
       :title="plot_title"
       :style="plot_style"
+      :use-log-scale="showQuantiles"
+      :show-legend="showLegend"
     />
 
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+      <!-- Legend Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
+            :color="showLegend ? 'primary' : 'default'"
+            @click="quantilesStore.toggleLegend"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
+          </v-btn>
+        </template>
+        <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
+      </v-tooltip>
+
+      <!-- Quantiles Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :color="showQuantiles ? 'primary' : 'default'"
+            :disabled="loadingQuantiles"
+            :loading="loadingQuantiles"
+            @click="quantilesStore.toggleQuantiles(reach_id)"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="mdiChartAreaspline"></v-icon>
+            <v-progress-circular
+              v-if="loadingQuantiles"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
+      </v-tooltip>
+
       <!-- CSV Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
@@ -180,10 +227,11 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
-import { mdiCalendarExpandHorizontal } from '@mdi/js'
+import { mdiCalendarExpandHorizontal, mdiChartAreaspline, mdiEye, mdiEyeOff } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '../components/InfoTooltip.vue'
+import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
   Chart as ChartJS,
   Title,
@@ -195,6 +243,11 @@ import {
   TimeScale,
   Filler
 } from 'chart.js'
+import { storeToRefs } from 'pinia'
+
+// Use Pinia store
+const quantilesStore = useQuantilesStore()
+const { showQuantiles, quantilesData, loadingQuantiles, showLegend } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -269,6 +322,7 @@ const formattedEndDate = computed({
 
 const clearPlot = () => {
   plot_timeseries.value = []
+  quantilesData.value = []
   plot_title.value = ''
   plot_style.value = {}
 }
@@ -323,6 +377,9 @@ const getHistoricalData = async () => {
 watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
+    // Fetch new quantiles when reach ID changes
+    quantilesStore.setQuantilesData([], reach_id.value)
+    quantilesStore.getQuantilesData(reach_id.value)
   }
 })
 
@@ -335,6 +392,7 @@ watch(timeSelectionMenu, (isOpen) => {
     tempEndDate.value = endDate.value
   }
 })
+
 async function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
