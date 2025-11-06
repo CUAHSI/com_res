@@ -217,6 +217,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     }
   }
 
+  // Toggle legend visibility
+  const toggleLegend = () => {
+    showLegend.value = !showLegend.value
+  }
+
   return {
     loadingQuantiles,
     showQuantiles,
@@ -231,5 +236,6 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     hasCachedQuantilesData,
     clearCache,
     clearCacheForReach,
+    toggleLegend,
   }
 })

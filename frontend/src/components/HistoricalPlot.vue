@@ -45,7 +45,7 @@
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
             :color="showLegend ? 'primary' : 'default'"
-            @click="toggleLegend"
+            @click="quantilesStore.toggleLegend"
             icon
             size="small"
             class="mr-1"
@@ -331,11 +331,6 @@ const clearPlot = () => {
 // Toggle quantiles display
 const toggleQuantiles = () => {
   quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
-}
-
-// Toggle legend visibility
-const toggleLegend = () => {
-  showLegend.value = !showLegend.value
 }
 
 // function to handle the closing of the date selection menu,

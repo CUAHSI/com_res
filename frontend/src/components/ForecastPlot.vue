@@ -53,7 +53,7 @@
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
             :color="showLegend ? 'primary' : 'default'"
-            @click="toggleLegend"
+            @click="quantilesStore.toggleLegend"
             icon
             size="small"
             class="mr-1"
@@ -217,11 +217,6 @@ const clearPlot = () => {
 // Toggle quantiles display - uses the shared store so both plots stay synchronized
 const toggleQuantiles = () => {
   quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
-}
-
-// Toggle legend visibility
-const toggleLegend = () => {
-  showLegend.value = !showLegend.value
 }
 
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
