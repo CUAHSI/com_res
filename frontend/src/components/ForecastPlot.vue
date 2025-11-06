@@ -73,7 +73,7 @@
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="loadingQuantiles"
             :loading="loadingQuantiles"
-            @click="toggleQuantiles"
+            @click="quantilesStore.toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
@@ -212,11 +212,6 @@ const clearPlot = () => {
   plot_title.value = ''
   plot_style.value = {}
   showQuantiles.value = false
-}
-
-// Toggle quantiles display - uses the shared store so both plots stay synchronized
-const toggleQuantiles = () => {
-  quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
 }
 
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {

@@ -217,6 +217,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     }
   }
 
+  // Toggle quantiles display - uses the shared store so both plots stay synchronized
+  const toggleQuantiles = (reach_id) => {
+    setShowQuantiles(!showQuantiles.value, reach_id)
+  }
+
   // Toggle legend visibility
   const toggleLegend = () => {
     showLegend.value = !showLegend.value
@@ -237,5 +242,6 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     clearCache,
     clearCacheForReach,
     toggleLegend,
+    toggleQuantiles,
   }
 })
