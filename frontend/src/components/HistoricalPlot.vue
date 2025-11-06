@@ -378,6 +378,7 @@ watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
     // Fetch new quantiles when reach ID changes
+    quantilesStore.setQuantilesData([], reach_id.value)
     quantilesStore.getQuantilesData(reach_id.value)
   }
 })

@@ -230,6 +230,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
       ensemble.value
     )
     // Fetch new quantiles when reach ID changes
+    quantilesStore.setQuantilesData([], reach_id.value)
     quantilesStore.getQuantilesData(reach_id.value)
   }
 })
