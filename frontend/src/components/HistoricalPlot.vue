@@ -30,7 +30,7 @@
     <LinePlot
       v-if="!isLoading"
       :timeseries="plot_timeseries"
-      :quantiles="quantilesData"
+      :quantiles="showQuantiles ? quantilesData : []"
       :title="plot_title"
       :style="plot_style"
       :use-log-scale="showQuantiles"
@@ -39,7 +39,7 @@
 
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
       <!-- Legend Toggle Button -->
-      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+      <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
@@ -247,7 +247,7 @@ import { storeToRefs } from 'pinia'
 
 // Use Pinia store
 const quantilesStore = useQuantilesStore()
-const { showQuantiles, quantilesData, loadingQuantiles, quantilesFailed, showLegend } = storeToRefs(quantilesStore)
+const { showQuantiles, quantilesData, loadingQuantiles, quantilesFailed, showLegend, showLegendToggle } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -322,9 +322,9 @@ const formattedEndDate = computed({
 
 const clearPlot = () => {
   plot_timeseries.value = []
-  quantilesData.value = []
   plot_title.value = ''
   plot_style.value = {}
+  quantilesStore.setQuantilesData([])
 }
 
 // function to handle the closing of the date selection menu,
@@ -378,7 +378,7 @@ watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
     // Fetch new quantiles when reach ID changes
-    quantilesStore.setQuantilesData([], reach_id.value)
+    await quantilesStore.setQuantilesData([])
     quantilesStore.getQuantilesData(reach_id.value)
   }
 })

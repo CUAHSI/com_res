@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { API_BASE } from '@/constants'
-import { useAlertStore } from '@/stores/alerts'
 
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -11,7 +10,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const loadingQuantiles = ref(false)
   const quantilesFailed = ref(false)
   const showLegend = ref(true)
-  
+
+  const showLegendToggle = computed(() => {
+    return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
+  })
+
   // Cache for quantiles data by reach_id
   const quantilesCache = ref(new Map())
 
@@ -27,7 +30,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     }
   }
 
-  const setQuantilesData = (data) => {
+  const setQuantilesData = async (data) => {
     quantilesData.value = data
   }
 
@@ -69,17 +72,18 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   // Fetch quantiles data from the FastAPI endpoint
   const getQuantilesData = async (reach_id) => {
     if (!reach_id) return
+    loadingQuantiles.value = true
+    quantilesFailed.value = false
 
     // Check if we have cached data for this reach_id
     if (hasCachedQuantilesData(reach_id)) {
       const cachedData = getCachedQuantilesData(reach_id)
       setQuantilesData(cachedData)
+      loadingQuantiles.value = false
       return
     }
     
     try {
-      loadingQuantiles.value = true
-      quantilesFailed.value = false
       const response = await fetch(`${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -91,8 +95,6 @@ export const useQuantilesStore = defineStore('quantiles', () => {
       if (!data || data.length === 0) {
         loadingQuantiles.value = false
         quantilesFailed.value = true
-        // clear the quantiles display
-        setShowQuantiles(false, reach_id)
         return
       }
       
@@ -229,6 +231,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     quantilesData,
     quantilesCache,
     showLegend,
+    showLegendToggle,
     getQuantilesData,
     setShowQuantiles,
     setQuantilesData,
