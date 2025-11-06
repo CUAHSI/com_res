@@ -17,10 +17,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-import epdb
-
-epdb.serve(port=8181)
-
 
 @router.get("/nwm-historical")
 async def get_historical_nwm(
