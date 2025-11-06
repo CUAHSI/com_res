@@ -41,6 +41,10 @@ const props = defineProps({
   useLogScale: {
     type: Boolean,
     default: false
+  },
+  showLegend: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -159,7 +163,7 @@ const chartOptions = computed(() => ({
   },
   plugins: {
     legend: {
-      display: true, // Enable legend to show quantile labels
+      display: props.showLegend && hasQuantiles.value, // Control visibility via prop and only show when quantiles are present
       labels: {
         color: '#333',
         usePointStyle: true,

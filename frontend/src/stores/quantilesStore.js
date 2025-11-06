@@ -9,6 +9,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const showQuantiles = ref(false)
   const quantilesData = ref([])
   const loadingQuantiles = ref(false)
+  const showLegend = ref(true)
   
   // Cache for quantiles data by reach_id
   const quantilesCache = ref(new Map())
@@ -221,6 +222,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     showQuantiles,
     quantilesData,
     quantilesCache,
+    showLegend,
     getQuantilesData,
     setShowQuantiles,
     setQuantilesData,
@@ -228,6 +230,6 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     getCachedQuantilesData,
     hasCachedQuantilesData,
     clearCache,
-    clearCacheForReach
+    clearCacheForReach,
   }
 })
