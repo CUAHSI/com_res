@@ -1,27 +1,12 @@
 <template>
-  <div>
-    <div class="plot-header">
-      <h5>{{ props.title }}</h5>
-      <v-btn
-        v-if="hasQuantiles"
-        @click="toggleLegend"
-        icon
-        size="x-small"
-        variant="text"
-        class="legend-toggle"
-        :title="showLegend ? 'Hide Legend' : 'Show Legend'"
-      >
-        <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
-      </v-btn>
-    </div>
-    <div style="height: calc(23vh); width: 100%">
-      <Line :data="chartData" :options="chartOptions" />
-    </div>
+  <h5>{{ props.title }}</h5>
+  <div style="height: calc(23vh); width: 100%">
+    <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import 'chartjs-adapter-date-fns'
 import {
@@ -36,7 +21,6 @@ import {
   Filler,
   LogarithmicScale
 } from 'chart.js'
-import { mdiEye, mdiEyeOff } from '@mdi/js'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler, LogarithmicScale)
 
@@ -59,9 +43,6 @@ const props = defineProps({
     default: false
   }
 })
-
-// Reactive state for showing/hiding legend
-const showLegend = ref(true)
 
 const hasQuantiles = computed(() => props.quantiles && props.quantiles.length > 0)
 
@@ -178,7 +159,7 @@ const chartOptions = computed(() => ({
   },
   plugins: {
     legend: {
-      display: showLegend.value && hasQuantiles.value, // Only show legend when quantiles are present and toggle is on
+      display: true, // Enable legend to show quantile labels
       labels: {
         color: '#333',
         usePointStyle: true,
@@ -235,26 +216,4 @@ const chartOptions = computed(() => ({
     }
   }
 }))
-
-// Toggle legend visibility
-const toggleLegend = () => {
-  showLegend.value = !showLegend.value
-}
 </script>
-
-<style scoped>
-.plot-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.plot-header h5 {
-  margin: 0;
-}
-
-.legend-toggle {
-  margin-left: auto;
-}
-</style>
