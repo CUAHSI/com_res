@@ -220,6 +220,8 @@ onMounted(() => {
   })
 
   leaflet.value.on('zoomend', () => {
+    let zoom = leaflet.value.getZoom()
+    console.log('Current zoom level:', zoom)
     updateContextMenuPosition()
   })
 
