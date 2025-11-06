@@ -9,6 +9,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const showQuantiles = ref(false)
   const quantilesData = ref([])
   const loadingQuantiles = ref(false)
+  const quantilesFailed = ref(false)
   const showLegend = ref(true)
   
   // Cache for quantiles data by reach_id
@@ -78,6 +79,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     
     try {
       loadingQuantiles.value = true
+      quantilesFailed.value = false
       const response = await fetch(`${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -87,16 +89,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
       // if the data is empty, return
       if (!data || data.length === 0) {
-        const alertStore = useAlertStore()
-        alertStore.displayAlert({
-          title: 'No Quantiles Data',
-          text: 'No quantiles data available for the selected reach.',
-          type: 'error',
-          closable: true,
-          duration: 3
-        })
-
         loadingQuantiles.value = false
+        quantilesFailed.value = true
         // clear the quantiles display
         setShowQuantiles(false, reach_id)
         return
@@ -230,6 +224,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
   return {
     loadingQuantiles,
+    quantilesFailed,
     showQuantiles,
     quantilesData,
     quantilesCache,

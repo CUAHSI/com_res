@@ -63,7 +63,7 @@
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
             :color="showQuantiles ? 'primary' : 'default'"
-            :disabled="loadingQuantiles"
+            :disabled="quantilesFailed"
             :loading="loadingQuantiles"
             @click="quantilesStore.toggleQuantiles(reach_id)"
             icon
@@ -247,7 +247,7 @@ import { storeToRefs } from 'pinia'
 
 // Use Pinia store
 const quantilesStore = useQuantilesStore()
-const { showQuantiles, quantilesData, loadingQuantiles, showLegend } = storeToRefs(quantilesStore)
+const { showQuantiles, quantilesData, loadingQuantiles, quantilesFailed, showLegend } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
