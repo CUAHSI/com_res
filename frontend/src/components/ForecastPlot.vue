@@ -211,7 +211,6 @@ const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
   plot_style.value = {}
-  showQuantiles.value = false
 }
 
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
@@ -230,8 +229,8 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
       forecast_mode.value,
       ensemble.value
     )
-    // Reset quantiles and legend when data changes
-    quantilesStore.setShowQuantiles(false, reach_id.value)
+    // Fetch new quantiles when reach ID changes
+    quantilesStore.getQuantilesData(reach_id.value)
   }
 })
 

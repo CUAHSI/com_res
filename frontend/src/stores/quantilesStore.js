@@ -97,7 +97,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         })
 
         loadingQuantiles.value = false
-        showQuantiles.value = false
+        // clear the quantiles display
+        setShowQuantiles(false, reach_id)
         return
       }
       

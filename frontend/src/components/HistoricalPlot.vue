@@ -325,7 +325,6 @@ const clearPlot = () => {
   quantilesData.value = []
   plot_title.value = ''
   plot_style.value = {}
-  showQuantiles.value = false
 }
 
 // function to handle the closing of the date selection menu,
@@ -378,8 +377,8 @@ const getHistoricalData = async () => {
 watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
-    // Reset quantiles when reach ID changes
-    quantilesStore.setShowQuantiles(false, reach_id.value)
+    // Fetch new quantiles when reach ID changes
+    quantilesStore.getQuantilesData(reach_id.value)
   }
 })
 
