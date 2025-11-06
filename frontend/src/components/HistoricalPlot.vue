@@ -326,16 +326,11 @@ const clearPlot = () => {
   plot_title.value = ''
   plot_style.value = {}
   showQuantiles.value = false
-  showLegend.value = true // Reset legend visibility when clearing plot
 }
 
 // Toggle quantiles display
 const toggleQuantiles = () => {
   quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
-  // Auto-show legend when enabling quantiles
-  if (!showQuantiles.value) {
-    showLegend.value = true
-  }
 }
 
 // Toggle legend visibility
@@ -395,7 +390,6 @@ watch([startDate, endDate, reach_id], async () => {
     await getHistoricalData()
     // Reset quantiles when reach ID changes
     quantilesStore.setShowQuantiles(false, reach_id.value)
-    showLegend.value = true // Reset legend visibility when data changes
   }
 })
 

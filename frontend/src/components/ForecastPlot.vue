@@ -212,16 +212,11 @@ const clearPlot = () => {
   plot_title.value = ''
   plot_style.value = {}
   showQuantiles.value = false
-  showLegend.value = true // Reset legend visibility when clearing plot
 }
 
 // Toggle quantiles display - uses the shared store so both plots stay synchronized
 const toggleQuantiles = () => {
   quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
-  // Auto-show legend when enabling quantiles
-  if (!showQuantiles.value) {
-    showLegend.value = true
-  }
 }
 
 // Toggle legend visibility
@@ -247,7 +242,6 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
     )
     // Reset quantiles and legend when data changes
     quantilesStore.setShowQuantiles(false, reach_id.value)
-    showLegend.value = true
   }
 })
 
