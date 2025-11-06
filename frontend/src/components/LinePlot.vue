@@ -41,6 +41,10 @@ const props = defineProps({
   useLogScale: {
     type: Boolean,
     default: false
+  },
+  showLegend: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -159,20 +163,31 @@ const chartOptions = computed(() => ({
   },
   plugins: {
     legend: {
-      display: true, // Enable legend to show quantile labels
+      display: props.showLegend && hasQuantiles.value, // Control visibility via prop and only show when quantiles are present
       labels: {
         color: '#333',
         usePointStyle: true,
-        boxWidth: 10,
+        boxWidth: 8,
+        boxHeight: 8,
+        padding: 10,
         font: {
-          size: 11
+          size: 10,
+          weight: 'normal'
         },
         // Filter out hidden datasets from legend
         filter: function(item) {
           return !item.text || item.text.length > 0 // Only show items with labels
         }
       },
-      position: 'top'
+      position: 'bottom',
+      maxHeight: 60, // Limit the maximum height of the legend
+      // Make legend more compact
+      rtl: false,
+      // Reduce spacing between legend items
+      itemMargin: {
+        horizontal: 8,
+        vertical: 2
+      }
     },
     tooltip: {
       mode: 'nearest',

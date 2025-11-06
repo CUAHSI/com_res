@@ -34,9 +34,28 @@
       :title="plot_title"
       :style="plot_style"
       :use-log-scale="showQuantiles"
+      :show-legend="showLegend"
     />
 
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+      <!-- Legend Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
+            :color="showLegend ? 'primary' : 'default'"
+            @click="quantilesStore.toggleLegend"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
+          </v-btn>
+        </template>
+        <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
+      </v-tooltip>
+
       <!-- Quantiles Toggle Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
@@ -46,7 +65,7 @@
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="loadingQuantiles"
             :loading="loadingQuantiles"
-            @click="toggleQuantiles"
+            @click="quantilesStore.toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
@@ -208,7 +227,7 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
-import { mdiCalendarExpandHorizontal, mdiChartAreaspline } from '@mdi/js'
+import { mdiCalendarExpandHorizontal, mdiChartAreaspline, mdiEye, mdiEyeOff } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '../components/InfoTooltip.vue'
@@ -228,7 +247,7 @@ import { storeToRefs } from 'pinia'
 
 // Use Pinia store
 const quantilesStore = useQuantilesStore()
-const { showQuantiles, quantilesData, loadingQuantiles } = storeToRefs(quantilesStore)
+const { showQuantiles, quantilesData, loadingQuantiles, showLegend } = storeToRefs(quantilesStore)
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -306,12 +325,6 @@ const clearPlot = () => {
   quantilesData.value = []
   plot_title.value = ''
   plot_style.value = {}
-  showQuantiles.value = false
-}
-
-// Toggle quantiles display
-const toggleQuantiles = () => {
-  quantilesStore.setShowQuantiles(!showQuantiles.value, reach_id.value)
 }
 
 // function to handle the closing of the date selection menu,
@@ -364,8 +377,9 @@ const getHistoricalData = async () => {
 watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
-    // Reset quantiles when reach ID changes
-    quantilesStore.setShowQuantiles(false, reach_id.value)
+    // Fetch new quantiles when reach ID changes
+    quantilesStore.setQuantilesData([], reach_id.value)
+    quantilesStore.getQuantilesData(reach_id.value)
   }
 })
 

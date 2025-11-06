@@ -9,6 +9,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const showQuantiles = ref(false)
   const quantilesData = ref([])
   const loadingQuantiles = ref(false)
+  const showLegend = ref(true)
   
   // Cache for quantiles data by reach_id
   const quantilesCache = ref(new Map())
@@ -96,7 +97,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         })
 
         loadingQuantiles.value = false
-        showQuantiles.value = false
+        // clear the quantiles display
+        setShowQuantiles(false, reach_id)
         return
       }
       
@@ -216,11 +218,22 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     }
   }
 
+  // Toggle quantiles display - uses the shared store so both plots stay synchronized
+  const toggleQuantiles = (reach_id) => {
+    setShowQuantiles(!showQuantiles.value, reach_id)
+  }
+
+  // Toggle legend visibility
+  const toggleLegend = () => {
+    showLegend.value = !showLegend.value
+  }
+
   return {
     loadingQuantiles,
     showQuantiles,
     quantilesData,
     quantilesCache,
+    showLegend,
     getQuantilesData,
     setShowQuantiles,
     setQuantilesData,
@@ -228,6 +241,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     getCachedQuantilesData,
     hasCachedQuantilesData,
     clearCache,
-    clearCacheForReach
+    clearCacheForReach,
+    toggleLegend,
+    toggleQuantiles,
   }
 })
