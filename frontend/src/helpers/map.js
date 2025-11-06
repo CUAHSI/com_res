@@ -265,14 +265,13 @@ const limitToBounds = (region) => {
     }
     try {
       console.log('Setting bounds to:', bounds)
-      leaflet.value.setView([0, 0], 2)
+      // leaflet.value.setView([0, 0], 2)
       leaflet.value.invalidateSize()
-      leaflet.value.setView(bounds.getCenter(), region.defaultZoom || 10)
-      const zoom = leaflet.value.getZoom()
-      console.log('Current zoom level:', zoom)
-      await nextTick()
-      // prevent zooming out
-      leaflet.value.setMinZoom(zoom)
+      let zoom = region.defaultZoom || 9
+      leaflet.value.setView(bounds.getCenter(), zoom)
+      leaflet.value.setZoom(zoom)
+      // prevent zooming out beyond min wms zoom
+      leaflet.value.setMinZoom(MIN_WMS_ZOOM)
     } catch (error) {
       console.warn('Error zooming to bounds:', error)
     }
