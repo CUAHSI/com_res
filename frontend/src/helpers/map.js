@@ -51,7 +51,7 @@ const deselectFeature = (feature) => {
 
 const selectFeature = async (feature) => {
   const featureStore = useFeaturesStore()
-  const { activeFeature } = storeToRefs(featureStore)
+  const { activeFeature, selectedFeatures, toggledStageSlider } = storeToRefs(featureStore)
   try {
     activeFeatureLayer.value.setFeatureStyle(feature.id, {
       color: featureOptions.value.selectedColor,
@@ -73,6 +73,21 @@ const selectFeature = async (feature) => {
         return
       } else {
         saveCatalogDataToFeature(activeFeature, fimCogData)
+        // also save the data to the original feature object
+        feature = {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            fimCogData: fimCogData
+          }
+        }
+        // save the data into selectedFeatures as well
+        for (let i = 0; i < selectedFeatures.value.length; i++) {
+          if (selectedFeatures.value[i].id === feature.id) {
+            selectedFeatures.value[i] = feature
+            break
+          }
+        }
       }
     }
     console.log('FIM COG DATA:', fimCogData)
@@ -84,7 +99,10 @@ const selectFeature = async (feature) => {
       )
       return
     }
-    addCogsToMap(cogUrls)
+    // if flood maps are enabled, add the cogs to the map
+    if (toggledStageSlider.value) {
+      addCogsToMap(cogUrls)
+    }
   } catch (error) {
     console.warn('Attempted to select feature:', error)
   }
@@ -434,6 +452,7 @@ const showHoverPopup = (feature, latlng, closeable = false) => {
 
 function createFlowlinesFeatureLayer(region) {
   const featureStore = useFeaturesStore()
+  const { multiReachMode } = storeToRefs(featureStore)
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayer = esriLeaflet.featureLayer({
     url: url,
@@ -460,11 +479,18 @@ function createFlowlinesFeatureLayer(region) {
 
   // Show popup on mouseover
   featureLayer.on('mouseover', (e) => {
+    // set cursor to pointer if we are not in multi-reach mode
+    if (multiReachMode.value && (e.originalEvent.ctrlKey || e.originalEvent.metaKey)) {
+      leaflet.value.getContainer().style.cursor = 'copy'
+    } else {
+      leaflet.value.getContainer().style.cursor = 'pointer'
+    }
     showHoverPopup(e.layer.feature, e.latlng, false)
   })
 
   // Hide popup on mouseout
   featureLayer.on('mouseout', function (e) {
+    leaflet.value.getContainer().style.cursor = ''
     let feature = e.layer.feature
     // Clear the timeout if it hasn't triggered yet
     if (feature.hoverTimeout) {
@@ -483,9 +509,11 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
-    featureStore.clearSelectedFeatures()
-    if (!featureStore.checkFeatureSelected(feature)) {
-      // Only allow one feature to be selected at a time
+    const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+    if (isCtrlOrCmdClick && multiReachMode.value) {
+      console.log('Multi-select enabled via Ctrl/Cmd key.')
+      featureStore.mergeFeature(feature)
+    } else {
       featureStore.selectFeature(feature)
     }
   })
