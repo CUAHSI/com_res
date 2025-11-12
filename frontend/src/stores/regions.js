@@ -58,7 +58,7 @@ export const useRegionsStore = defineStore('regions', () => {
             from steep, forested slopes in the west to rolling foothills and the broad Connecticut 
             River valley in the east.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 1,
       defaultZoom: 10
     },
@@ -70,7 +70,7 @@ export const useRegionsStore = defineStore('regions', () => {
              member towns across Windsor and Orange counties. The region is bordered by the Green
              Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 3,
       defaultZoom: 10
     },
@@ -83,7 +83,7 @@ export const useRegionsStore = defineStore('regions', () => {
              rural villages, forested landscapes, and small urban centers that are primarily covered by
              forests, including spruce, fir, and white pine.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 3,
       defaultZoom: 10
     }
