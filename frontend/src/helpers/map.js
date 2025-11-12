@@ -357,10 +357,13 @@ async function createWMSLayers(region) {
   const data = await response.json()
   if (data && data.layers) {
     console.log(`Creating WMS Layers for ${region.name}`)
-    data.layers.forEach((layer) => {
-      // https://developers.arcgis.com/esri-leaflet/api-reference/layers/dynamic-map-layer/
-      // https://developers.arcgis.com/esri-leaflet/api-reference/layers/tiled-map-layer/
-      // TODO: change this to L.esri.tiledMapLayer
+    
+    // Sort layers by their ID to maintain the published order
+    const sortedLayers = data.layers.sort((a, b) => a.id - b.id)
+    
+    wmsLayers.value[region.name] = [] // Initialize the array
+    
+    sortedLayers.forEach((layer) => {
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
         pane: 'overlayPane',
@@ -368,60 +371,65 @@ async function createWMSLayers(region) {
         transparent: true,
         format: 'image/png',
         minZoom: MIN_WMS_ZOOM
-        // updateWhenIdle: true
       })
-      //      url = `${COMRES_SERVICE_URL}/${region.name}/MapServer/WmsServer?`
-      //      console.log(`Creating WMS layer for ${layer.name} at URL: ${url}`)
-      //      const wmsLayer = L.tileLayer.wms(url,
-      //      {
-      //        layers: layer.id,
-      //        transparent: true,
-      //        format: 'image/png',
-      //        minZoom: MIN_WMS_ZOOM,
-      //        tiled: true,
-      //        updateWhenIdle: true,
-      //            crossOrigin: true
-      //      })
-
-      console.log(wmsLayer)
+      
       wmsLayer.name = `${layer.name}`
       wmsLayer.id = layer.id
-      wmsLayers.value[region.name] = wmsLayers.value[region.name] || []
+      wmsLayer.order = layer.id // Store the order for reference
+      
       wmsLayers.value[region.name].push(wmsLayer)
-      console.log(`Created WMS layer: ${wmsLayer.name} for region: ${region.name}`)
+      console.log(`Created WMS layer: ${wmsLayer.name} (ID: ${layer.id}) for region: ${region.name}`)
     })
+    
+    // Ensure the layers array is sorted by ID
+    wmsLayers.value[region.name].sort((a, b) => a.id - b.id)
   } else {
     console.error(`No layers found for ${region.name}`)
   }
 }
 
+// Helper function to remove WMS layers
+function removeWMSLayers(regionName) {
+  if (wmsLayers.value[regionName]) {
+    wmsLayers.value[regionName].forEach((wmsLayer) => {
+      if (leaflet.value && leaflet.value.hasLayer(wmsLayer)) {
+        wmsLayer.removeFrom(leaflet.value)
+      }
+      if (control.value) {
+        control.value.removeLayer(wmsLayer)
+      }
+    })
+  }
+}
+
 async function addWMSLayers(region) {
-  for (let layer of wmsLayers.value[region.name] || []) {
+  // Remove any existing layers for this region first to prevent duplicates
+  removeWMSLayers(region.name)
+  
+  // Ensure layers are added in the correct order (lowest ID first)
+  const sortedLayers = [...(wmsLayers.value[region.name] || [])].sort((a, b) => a.id - b.id)
+  
+  for (let layer of sortedLayers) {
     layer.addTo(leaflet.value)
-    console.log(`Adding WMS layer: ${layer.name} to map for region: ${region.name}`)
+    console.log(`Adding WMS layer: ${layer.name} (ID: ${layer.id}) to map for region: ${region.name}`)
     control.value.addOverlay(layer, layer.name)
   }
 }
 
 const toggleWMSLayers = async (region) => {
-  // if the regionName is not in wmsLayers, create it
   console.log('Toggling WMS layers for region:', region.name)
   try {
+    // Remove all WMS layers first
+    Object.keys(wmsLayers.value).forEach((regionName) => {
+      removeWMSLayers(regionName)
+    })
+    
+    // Now create and add layers for the current region
     if (!wmsLayers.value[region.name]) {
       await createWMSLayers(region)
     }
     addWMSLayers(region)
-
-    // turn off wms layers that are not part of the current region
-    Object.keys(wmsLayers.value).forEach((regionName) => {
-      if (regionName !== region.name) {
-        console.log(`Removing WMS layers for region: ${regionName}`)
-        wmsLayers.value[regionName].forEach((wmsLayer) => {
-          wmsLayer.removeFrom(leaflet.value)
-          control.value.removeLayer(wmsLayer)
-        })
-      }
-    })
+    
   } catch (error) {
     console.error(`Error toggling WMS layers for region ${region.name}:`, error)
   }
