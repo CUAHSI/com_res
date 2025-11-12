@@ -229,116 +229,148 @@ const addCogsToMap = async (cogs) => {
       
       // Debug the values structure more thoroughly
       let values = georaster.values
-      console.log('Values structure:', {
-        isArray: Array.isArray(values),
-        length: values?.length,
-        firstElementType: typeof values?.[0],
-        firstElementIsArray: Array.isArray(values?.[0]),
-        firstElementLength: values?.[0]?.length
-      })
-
-      // Since it's [band][pixels] structure with length 328 (height) and each element is an array
-      // Let's examine the actual data
+      console.log('Full values structure:', values)
+      
+      // The structure is [band][rows] where some rows are arrays and some are Float32Arrays
       const pixelData = values[0] // First band
-      console.log('First few pixels of first row:', pixelData[0]?.slice(0, 10))
-      console.log('First few pixels of last row:', pixelData[pixelData.length - 1]?.slice(0, 10))
-
+      
+      // Let's examine what types we have
+      let arrayCount = 0
+      let float32ArrayCount = 0
+      let otherCount = 0
+      
+      for (let y = 0; y < pixelData.length; y++) {
+        if (Array.isArray(pixelData[y])) {
+          arrayCount++
+        } else if (pixelData[y] instanceof Float32Array) {
+          float32ArrayCount++
+        } else {
+          otherCount++
+          console.log(`Row ${y} has unexpected type:`, typeof pixelData[y], pixelData[y])
+        }
+      }
+      
+      console.log(`Row types - Arrays: ${arrayCount}, Float32Arrays: ${float32ArrayCount}, Other: ${otherCount}`)
+      
+      // Check if we have any valid data at all by sampling different areas
+      console.log('Sampling first row (array):', pixelData[0]?.slice(0, 10))
+      console.log('Sampling last valid row:', pixelData[309]?.slice(0, 10))
+      console.log('Sampling first Float32Array row:', pixelData[310]?.slice(0, 10))
+      
       const noDataValue = georaster.noDataValue ?? -9999
       let dataPixels = 0
       let minValue = Infinity
       let maxValue = -Infinity
+      let renderedPixels = 0
       
-      // First pass: analyze the data with correct access pattern
+      // Render the data with proper Float32Array handling
       for (let y = 0; y < georaster.height; y++) {
         const row = pixelData[y]
-        if (!Array.isArray(row)) {
-          console.log(`Row ${y} is not an array:`, row)
-          continue
-        }
         
         for (let x = 0; x < georaster.width; x++) {
-          const pixelValue = Number(row[x])
+          const index = (y * georaster.width + x) * 4
           
-          // Check if it's valid data (not NaN and not noDataValue)
-          if (!isNaN(pixelValue) && pixelValue !== noDataValue) {
-            minValue = Math.min(minValue, pixelValue)
-            maxValue = Math.max(maxValue, pixelValue)
-            dataPixels++
+          let pixelValue
+          if (Array.isArray(row)) {
+            pixelValue = row[x]
+          } else if (row instanceof Float32Array) {
+            pixelValue = row[x]
+          } else {
+            pixelValue = NaN
+          }
+          
+          // Check if it's a valid number (not NaN)
+          if (typeof pixelValue === 'number' && !isNaN(pixelValue)) {
+            // Update statistics
+            if (pixelValue !== noDataValue) {
+              minValue = Math.min(minValue, pixelValue)
+              maxValue = Math.max(maxValue, pixelValue)
+              dataPixels++
+            }
+            
+            // Render the pixel
+            if (pixelValue !== noDataValue && pixelValue > 0) {
+              // For now, use a simple threshold - any positive value gets blue
+              imageData.data[index] = 0        // R
+              imageData.data[index + 1] = 0    // G
+              imageData.data[index + 2] = 255  // B
+              imageData.data[index + 3] = 200  // A
+              renderedPixels++
+            } else {
+              // Transparent for no-data, zero, or negative values
+              imageData.data[index + 3] = 0
+            }
+          } else {
+            // Invalid pixel (NaN) - make it transparent
+            imageData.data[index + 3] = 0
           }
         }
       }
       
       console.log(`Data analysis: ${dataPixels} valid pixels, range: ${minValue} to ${maxValue}`)
+      console.log(`Rendered ${renderedPixels} pixels`)
       
-      // If still no valid data, let's check what values we actually have
-      if (dataPixels === 0 || minValue === Infinity) {
-        console.log('No valid data found with noDataValue check, checking all values...')
+      // If we still have no valid data, let's try a different approach
+      // Maybe the noDataValue is wrong or we need to handle the data differently
+      if (dataPixels === 0) {
+        console.log('Trying alternative data interpretation...')
         
-        // Check what values we actually have, ignoring noDataValue check
-        let allMin = Infinity
-        let allMax = -Infinity
-        let totalPixels = 0
-        
+        // Let's check what actual values we have, ignoring noDataValue
+        let allValues = []
         for (let y = 0; y < georaster.height; y++) {
           const row = pixelData[y]
-          if (!Array.isArray(row)) continue
-          
           for (let x = 0; x < georaster.width; x++) {
-            const pixelValue = Number(row[x])
-            if (!isNaN(pixelValue)) {
-              allMin = Math.min(allMin, pixelValue)
-              allMax = Math.max(allMax, pixelValue)
-              totalPixels++
+            let pixelValue
+            if (Array.isArray(row)) {
+              pixelValue = row[x]
+            } else if (row instanceof Float32Array) {
+              pixelValue = row[x]
+            }
+            
+            if (typeof pixelValue === 'number' && !isNaN(pixelValue)) {
+              allValues.push(pixelValue)
             }
           }
         }
         
-        console.log(`All pixel values - Count: ${totalPixels}, Range: ${allMin} to ${allMax}`)
+        console.log('All numeric values found:', allValues.slice(0, 20))
+        console.log('Value statistics:', {
+          count: allValues.length,
+          min: Math.min(...allValues),
+          max: Math.max(...allValues),
+          mean: allValues.reduce((a, b) => a + b, 0) / allValues.length
+        })
         
-        // If we found values but they're all equal to noDataValue, we need to adjust our threshold
-        if (totalPixels > 0) {
-          console.log('Adjusting noDataValue check or using all values')
-          minValue = allMin
-          maxValue = allMax
-          dataPixels = totalPixels
-        }
-      }
-      
-      // Second pass: render the data
-      const valueRange = Math.max(1, maxValue - minValue) // Avoid division by zero
-      let renderedPixels = 0
-      
-      for (let y = 0; y < georaster.height; y++) {
-        const row = pixelData[y]
-        if (!Array.isArray(row)) continue
-        
-        for (let x = 0; x < georaster.width; x++) {
-          const index = (y * georaster.width + x) * 4
-          const pixelValue = Number(row[x])
+        // If we found values but they're all equal to noDataValue, adjust our rendering
+        if (allValues.length > 0) {
+          minValue = Math.min(...allValues)
+          maxValue = Math.max(...allValues)
           
-          if (isNaN(pixelValue)) {
-            // Invalid pixel - transparent
-            imageData.data[index + 3] = 0
-          } else if (pixelValue === noDataValue) {
-            // No-data pixel - transparent
-            imageData.data[index + 3] = 0
-          } else {
-            // Valid data pixel - color based on value
-            const normalized = (pixelValue - minValue) / valueRange
-            
-            // Use blue color with opacity based on normalized value
-            // For flood inundation, you might want to adjust this color mapping
-            imageData.data[index] = 0                    // R
-            imageData.data[index + 1] = 100              // G (slight green tint)
-            imageData.data[index + 2] = 255              // B
-            imageData.data[index + 3] = Math.floor(normalized * 200) + 55 // A (55-255 opacity)
-            
-            renderedPixels++
+          // Re-render with the actual values we found
+          for (let y = 0; y < georaster.height; y++) {
+            const row = pixelData[y]
+            for (let x = 0; x < georaster.width; x++) {
+              const index = (y * georaster.width + x) * 4
+              
+              let pixelValue
+              if (Array.isArray(row)) {
+                pixelValue = row[x]
+              } else if (row instanceof Float32Array) {
+                pixelValue = row[x]
+              }
+              
+              if (typeof pixelValue === 'number' && !isNaN(pixelValue)) {
+                const normalized = (pixelValue - minValue) / (maxValue - minValue || 1)
+                imageData.data[index] = 0                    // R
+                imageData.data[index + 1] = 0                // G
+                imageData.data[index + 2] = 255              // B
+                imageData.data[index + 3] = Math.floor(normalized * 200) + 55 // A
+                renderedPixels++
+              }
+            }
           }
         }
       }
-      
-      console.log(`Rendered ${renderedPixels} data pixels`)
       
       ctx.putImageData(imageData, 0, 0)
       
@@ -357,7 +389,25 @@ const addCogsToMap = async (cogs) => {
       canvas.style.left = '10px'
       canvas.style.zIndex = '9999'
       canvas.style.border = '2px solid red'
-      canvas.style.background = 'white' // Add background to see transparent areas
+      canvas.style.background = 'white'
+      
+      // If we still have no opaque pixels, create a test pattern so we can verify ImageOverlay works
+      if (opaquePixels === 0) {
+        console.log('Creating test pattern since no data was rendered')
+        // Create a simple diagonal pattern
+        for (let y = 0; y < georaster.height; y++) {
+          for (let x = 0; x < georaster.width; x++) {
+            const index = (y * georaster.width + x) * 4
+            if (x === y || x === georaster.width - y - 1) {
+              imageData.data[index] = 255    // R
+              imageData.data[index + 1] = 0  // G
+              imageData.data[index + 2] = 0  // B
+              imageData.data[index + 3] = 255 // A
+            }
+          }
+        }
+        ctx.putImageData(imageData, 0, 0)
+      }
       
       // Convert canvas to data URL
       const dataURL = canvas.toDataURL('image/png')
@@ -383,7 +433,7 @@ const addCogsToMap = async (cogs) => {
       
       L.marker(center)
         .addTo(leaflet.value)
-        .bindPopup(`COG Debug<br>Valid: ${dataPixels}<br>Rendered: ${renderedPixels}<br>Opaque: ${opaquePixels}<br>Range: ${minValue.toFixed(4)}-${maxValue.toFixed(4)}`)
+        .bindPopup(`COG Debug<br>Valid: ${dataPixels}<br>Rendered: ${renderedPixels}<br>Opaque: ${opaquePixels}<br>Range: ${minValue}-${maxValue}`)
         .openPopup()
       
       leaflet.value.fitBounds(geographicBounds)
