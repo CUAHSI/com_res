@@ -288,14 +288,6 @@ const addCogsToMap = async (cogs) => {
       if (!window.cogOverlays) window.cogOverlays = []
       window.cogOverlays.push(overlay)
       
-      // Add debug marker
-      const center = leafletBounds.getCenter()
-      
-      L.marker(center)
-        .addTo(leaflet.value)
-        .bindPopup(`Flood Inundation<br>${inundatedPixels} pixels (${((inundatedPixels / (georaster.width * georaster.height)) * 100).toFixed(1)}% area)`)
-        .openPopup()
-      
       // Fit bounds to show the overlay with some padding
       leaflet.value.fitBounds(leafletBounds.pad(0.1))
       
@@ -342,12 +334,6 @@ const clearCogsFromMap = () => {
     })
     window.cogOverlays = []
   }
-  // Also clear any debug markers (optional)
-  leaflet.value.eachLayer(layer => {
-    if (layer instanceof L.Marker && layer.getPopup()?.getContent()?.includes('Flood Inundation')) {
-      leaflet.value.removeLayer(layer)
-    }
-  })
 }
 
 const limitToBounds = (region) => {
