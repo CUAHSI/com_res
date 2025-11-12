@@ -138,7 +138,7 @@ onMounted(() => {
     'USGS Imagery': USGS_Imagery
   }
 
-  CartoDB_PositronNoLabels.addTo(leaflet.value)
+  Esri_WorldImagery.addTo(leaflet.value)
 
   const Esri_Hydro_Reference_Overlay = esriLeaflet.tiledMapLayer({
     url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/Esri_Hydro_Reference_Overlay/MapServer',
