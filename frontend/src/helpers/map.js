@@ -202,70 +202,85 @@ const determineCogsForStage = (cogs, stage) => {
  *
  * @returns {void}
  */
-const addCogsToMap = (cogs) => {
+const addCogsToMap = async (cogs) => {
   const alertStore = useAlertStore()
-  console.log('Adding COGs to map:', cogs)
-  try {
-    for (let cog of cogs) {
-      fetch(cog)
-        .then((res) => res.arrayBuffer())
-        .then((arrayBuffer) => {
-          parseGeoraster(arrayBuffer).then((georaster) => {
-            /*
-            GeoRasterLayer is an extension of GridLayer,
-            which means we can use GridLayer options like opacity.
-            http://leafletjs.com/reference-1.2.0.html#gridlayer
-            https://github.com/GeoTIFF/georaster-layer-for-leaflet?tab=readme-ov-file#options-for-georasterlayer
-          */
-            const raster = new GeoRasterLayer({
-              attribution: 'CUAHSI',
-              georaster: georaster,
-              resolution: 512,
-              tileSize: 512, // Match tile size to resolution
-              updateWhenIdle: false, // Render immediately on zoom
-              updateWhenZooming: true, // Update during zoom animation
-              keepBuffer: 8, // Keep more tiles in buffer
-              opacity: 0.8,
-              zIndex: 1000, // Ensure it's above other layers
-              pixelValuesToColorFn: (pixelValues) => {
-                // Assuming pixelValues is an array of values, map them to colors
-                return pixelValues.map((value) => {
-                  // Example: Map value to a color based on some condition
-                  if (value > 0) {
-                    return 'blue' // Color for inundated areas
-                  } else {
-                    return 'transparent' // Color for non-inundated areas
-                  }
-                })
-              },
-              bandIndex: 0, // Assuming the raster has a single band
-              noDataValue: 0 // Assuming 0 is the no-data value
-            })
-            raster.addTo(leaflet.value)
-            // leaflet.value.fitBounds(raster.getBounds())
-            console.log(`Added GeoRasterLayer for ${cog}`)
-          })
-        })
-        .catch((error) => {
-          console.error('Error fetching or parsing GeoTIFF:', error)
-          alertStore.displayAlert({
-            title: 'Error Loading COG',
-            text: `Failed to load COG: ${error.message}`,
-            type: 'error',
-            closable: true,
-            duration: 5
-          })
-        })
+  
+  for (let cog of cogs) {
+    try {
+      const response = await fetch(cog)
+      const arrayBuffer = await response.arrayBuffer()
+      const georaster = await parseGeoraster(arrayBuffer)
+      
+      console.log('Georaster data:', georaster)
+      
+      // Convert the raster to a canvas image
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      canvas.width = georaster.width
+      canvas.height = georaster.height
+      
+      // Create image data
+      const imageData = ctx.createImageData(georaster.width, georaster.height)
+      
+      // Populate imageData from georaster values
+      // Assuming georaster.values is a 2D array [band][pixel]
+      const values = georaster.values[0] // Get first band
+      
+      for (let y = 0; y < georaster.height; y++) {
+        for (let x = 0; x < georaster.width; x++) {
+          const index = (y * georaster.width + x) * 4
+          const pixelValue = values[y][x]
+          
+          if (pixelValue > 0) {
+            // Blue color for inundated areas
+            imageData.data[index] = 0      // R
+            imageData.data[index + 1] = 0  // G
+            imageData.data[index + 2] = 255 // B
+            imageData.data[index + 3] = 200 // A (semi-transparent)
+          } else {
+            // Transparent for non-inundated areas
+            imageData.data[index] = 0      // R
+            imageData.data[index + 1] = 0  // G
+            imageData.data[index + 2] = 0  // B
+            imageData.data[index + 3] = 0  // A (fully transparent)
+          }
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0)
+      
+      // Convert canvas to data URL
+      const dataURL = canvas.toDataURL('image/png')
+      
+      // Create bounds from georaster
+      const bounds = [
+        [georaster.ymin, georaster.xmin],
+        [georaster.ymax, georaster.xmax]
+      ]
+      
+      console.log('Adding image overlay with bounds:', bounds)
+      console.log('Image dimensions:', georaster.width, 'x', georaster.height)
+      
+      // Add as ImageOverlay
+      const overlay = L.imageOverlay(dataURL, bounds, {
+        opacity: 0.8,
+        interactive: false,
+        zIndex: 1000,
+      }).addTo(leaflet.value)
+      
+      // Fit map to show the overlay (optional)
+      leaflet.value.fitBounds(bounds)
+      
+    } catch (error) {
+      console.error('Error processing COG:', error)
+      alertStore.displayAlert({
+        title: 'Error Loading COG',
+        text: `Failed to load COG: ${error.message}`,
+        type: 'error',
+        closable: true,
+        duration: 5
+      })
     }
-  } catch (error) {
-    console.error('Error loading GeoRasterLayer:', error)
-    alertStore.displayAlert({
-      title: 'Error',
-      text: `Failed to process COGs: ${error.message}`,
-      type: 'error',
-      closable: true,
-      duration: 5
-    })
   }
 }
 
@@ -294,7 +309,7 @@ const limitToBounds = (region) => {
       leaflet.value.setView(bounds.getCenter(), zoom)
       leaflet.value.setZoom(zoom)
       // prevent zooming out beyond min wms zoom
-      leaflet.value.setMinZoom(MIN_WMS_ZOOM)
+      // leaflet.value.setMinZoom(MIN_WMS_ZOOM)
     } catch (error) {
       console.warn('Error zooming to bounds:', error)
     }
