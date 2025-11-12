@@ -1,12 +1,13 @@
 import { nextTick, ref, shallowRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import L, { canvas } from 'leaflet'
+import 'proj4leaflet'
+import proj4 from 'proj4'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import { ENDPOINTS } from '@/constants'
-import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
 
 const leaflet = shallowRef(null)
@@ -211,8 +212,13 @@ const addCogsToMap = async (cogs) => {
       const arrayBuffer = await response.arrayBuffer()
       const georaster = await parseGeoraster(arrayBuffer)
       
-      console.log('Georaster data:', georaster)
-      
+      console.log('Georaster coordinates (EPSG:5070):', {
+        xmin: georaster.xmin,
+        ymin: georaster.ymin, 
+        xmax: georaster.xmax,
+        ymax: georaster.ymax
+      })
+
       // Convert the raster to a canvas image
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
@@ -222,54 +228,94 @@ const addCogsToMap = async (cogs) => {
       // Create image data
       const imageData = ctx.createImageData(georaster.width, georaster.height)
       
-      // Populate imageData from georaster values
-      // Assuming georaster.values is a 2D array [band][pixel]
-      const values = georaster.values[0] // Get first band
+      // Handle georaster values
+      let values
+      if (georaster.values && Array.isArray(georaster.values)) {
+        if (Array.isArray(georaster.values[0])) {
+          if (Array.isArray(georaster.values[0][0])) {
+            values = georaster.values[0]
+          } else {
+            values = [georaster.values[0]]
+          }
+        } else {
+          values = [georaster.values]
+        }
+      }
+      
+      const noDataValue = georaster.noDataValue || -9999
+      let minValue = Infinity
+      let maxValue = -Infinity
+      let dataPixels = 0
       
       for (let y = 0; y < georaster.height; y++) {
         for (let x = 0; x < georaster.width; x++) {
           const index = (y * georaster.width + x) * 4
-          const pixelValue = values[y][x]
           
-          if (pixelValue > 0) {
-            // Blue color for inundated areas
-            imageData.data[index] = 0      // R
-            imageData.data[index + 1] = 0  // G
-            imageData.data[index + 2] = 255 // B
-            imageData.data[index + 3] = 200 // A (semi-transparent)
+          let pixelValue
+          if (Array.isArray(values[y])) {
+            pixelValue = values[y][x]
+          } else if (Array.isArray(values[0])) {
+            const pixelIndex = y * georaster.width + x
+            pixelValue = values[0][pixelIndex]
           } else {
-            // Transparent for non-inundated areas
-            imageData.data[index] = 0      // R
-            imageData.data[index + 1] = 0  // G
-            imageData.data[index + 2] = 0  // B
-            imageData.data[index + 3] = 0  // A (fully transparent)
+            const pixelIndex = y * georaster.width + x
+            pixelValue = values[pixelIndex]
+          }
+          
+          pixelValue = Number(pixelValue)
+          if (isNaN(pixelValue)) pixelValue = noDataValue
+          
+          if (pixelValue !== noDataValue && !isNaN(pixelValue)) {
+            minValue = Math.min(minValue, pixelValue)
+            maxValue = Math.max(maxValue, pixelValue)
+            dataPixels++
+          }
+          
+          if (pixelValue !== noDataValue && pixelValue > 0 && !isNaN(pixelValue)) {
+            imageData.data[index] = 0
+            imageData.data[index + 1] = 0
+            imageData.data[index + 2] = 255
+            imageData.data[index + 3] = 200
+          } else {
+            imageData.data[index] = 0
+            imageData.data[index + 1] = 0
+            imageData.data[index + 2] = 0
+            imageData.data[index + 3] = 0
           }
         }
       }
       
-      ctx.putImageData(imageData, 0, 0)
+      console.log(`Pixel value range: ${minValue} to ${maxValue}, data pixels: ${dataPixels}`)
       
-      // Convert canvas to data URL
+      ctx.putImageData(imageData, 0, 0)
       const dataURL = canvas.toDataURL('image/png')
       
-      // Create bounds from georaster
-      const bounds = [
-        [georaster.ymin, georaster.xmin],
-        [georaster.ymax, georaster.xmax]
-      ]
+      // REPROJECT FROM EPSG:5070 TO EPSG:4326 (WGS84)
+      const geographicBounds = reprojectEPSG5070ToWGS84(georaster)
       
-      console.log('Adding image overlay with bounds:', bounds)
-      console.log('Image dimensions:', georaster.width, 'x', georaster.height)
+      console.log('Reprojected bounds (EPSG:4326):', geographicBounds)
       
-      // Add as ImageOverlay
-      const overlay = L.imageOverlay(dataURL, bounds, {
+      // Add as ImageOverlay with reprojected bounds
+      const overlay = L.imageOverlay(dataURL, geographicBounds, {
         opacity: 0.8,
         interactive: false,
         zIndex: 1000,
       }).addTo(leaflet.value)
       
-      // Fit map to show the overlay (optional)
-      leaflet.value.fitBounds(bounds)
+      // Add debug marker
+      const center = [
+        (geographicBounds[0][0] + geographicBounds[1][0]) / 2,
+        (geographicBounds[0][1] + geographicBounds[1][1]) / 2
+      ]
+      
+      L.marker(center)
+        .addTo(leaflet.value)
+        .bindPopup(`COG Center<br>Reprojected from EPSG:5070`)
+        .openPopup()
+      
+      leaflet.value.fitBounds(geographicBounds)
+      
+      console.log('COG successfully added with reprojection')
       
     } catch (error) {
       console.error('Error processing COG:', error)
@@ -284,13 +330,36 @@ const addCogsToMap = async (cogs) => {
   }
 }
 
+// Reprojection function for EPSG:5070 to EPSG:4326
+function reprojectEPSG5070ToWGS84(georaster) {
+  // Define EPSG:5070 projection (NAD83 Conus Albers)
+  proj4.defs("EPSG:5070", "+proj=aea +lat_0=23 +lon_0=-96 +lat_1=29.5 +lat_2=45.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs");
+  
+  // Define EPSG:4326 (WGS84 - standard lat/lng)
+  proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs");
+  
+  // Convert all four corners
+  const sw = proj4("EPSG:5070", "EPSG:4326", [georaster.xmin, georaster.ymin]);
+  const ne = proj4("EPSG:5070", "EPSG:4326", [georaster.xmax, georaster.ymax]);
+  const nw = proj4("EPSG:5070", "EPSG:4326", [georaster.xmin, georaster.ymax]);
+  const se = proj4("EPSG:5070", "EPSG:4326", [georaster.xmax, georaster.ymin]);
+  
+  // Create bounds that encompass all points
+  const bounds = [
+    [Math.min(sw[1], nw[1], ne[1], se[1]), Math.min(sw[0], nw[0], ne[0], se[0])], // SW [min lat, min lng]
+    [Math.max(sw[1], nw[1], ne[1], se[1]), Math.max(sw[0], nw[0], ne[0], se[0])]  // NE [max lat, max lng]
+  ];
+  
+  return bounds;
+}
+
 const clearCogsFromMap = () => {
   console.log('Clearing all COGs from map')
   leaflet.value.eachLayer((layer) => {
-    if (layer instanceof GeoRasterLayer) {
-      console.log('Removing GeoRasterLayer:', layer)
-      leaflet.value.removeLayer(layer)
-    }
+    // if (layer instanceof L.ImageOverlay) {
+    //   leaflet.value.removeLayer(layer)
+    //   console.log('Removed COG layer:', layer)
+    // }
   })
 }
 
