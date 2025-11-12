@@ -19,8 +19,8 @@ const control = shallowRef(null)
 const layerControlIsExpanded = ref(false)
 const featureOptions = ref({
   selectedColor: '#00FFFF', // Cyan color for selected features
-  defaultColor: 'blue',
-  defaultWeight: 2,
+  defaultColor: 'lightblue',
+  defaultWeight: 1,
   selectedWeight: 5,
   opacity: 0.7
 })
