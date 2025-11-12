@@ -265,9 +265,9 @@ const addCogsToMap = async (cogs) => {
       const leafletBounds = L.latLngBounds(geographicBounds)
       
       const overlay = L.imageOverlay(dataURL, leafletBounds, {
-        opacity: 0.8,
+        opacity: 0.6,
         interactive: false,
-        zIndex: 1000,
+        zIndex: 100000,
       }).addTo(leaflet.value)
       
       console.log('ImageOverlay added to map')
