@@ -215,6 +215,7 @@ const addCogsToMap = (cogs) => {
             GeoRasterLayer is an extension of GridLayer,
             which means we can use GridLayer options like opacity.
             http://leafletjs.com/reference-1.2.0.html#gridlayer
+            https://github.com/GeoTIFF/georaster-layer-for-leaflet?tab=readme-ov-file#options-for-georasterlayer
           */
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
