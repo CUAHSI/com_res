@@ -20,6 +20,8 @@ import requests
 # import environment variables from config
 from config import get_settings
 
+from . import unit_conversions as units
+
 
 class ForecastTypes(Enum):
     """
@@ -53,14 +55,17 @@ class Forecasts:
         """
         Filters the ensembles, returning only those that exist in the given forecast type.
 
-        Arguments:
+        Parameters:
         ==========
-        forecast_type: ForecastType - The type of forecast to filter ensembles for.
-        ensembles: Union[List[str], None] - A list of user-defined ensembles to filter, or None to return all ensembles (default: None).
+        forecast_type: ForecastType
+            The type of forecast to filter ensembles for.
+        ensembles: Union[List[str], None]
+            A list of user-defined ensembles to filter, or None to return all ensembles (default: None).
 
         Returns:
         ========
-        List: A list of valid ensembles for the specified forecast type.
+        List:
+            A list of valid ensembles for the specified forecast type.
         """
 
         if forecast_type not in self.ENSEMBLES:
@@ -122,9 +127,37 @@ class Forecasts:
         forecast_type: ForecastTypes,
         reference_times: List[str],
         ensembles: Union[List[int], None] = None,
-    ):
+        si_units: bool = False,
+    ) -> None:
         """
-        :param ensembles: list or str - A list of user-defined ensembles to filter, or 'all' to return all ensembles.
+        Collects forecast timeseries data for the specified COMIDs, forecast type, reference times, and ensembles.
+
+        Parameters:
+        ==========
+        comids: list[str]
+            A list of NWM COMIDs to collect data for.
+        forecast_type: ForecastTypes
+            The type of forecast to collect data for.
+        reference_times: list[str]
+            A list of reference times to collect data for in the format: '2025-11-20 00:00:00'
+        ensembles: Union[list[int], None]
+            A list of user-defined ensembles to filter, or None to return all ensembles (default: None).
+        si_units: bool
+            A flag indicating whether to return data in SI units (default: False).
+
+        Returns:
+        =======
+        None, but sets the `df` attribute of the class to a pandas DataFrame containing the collected data.
+        The resulting DataFrame will have the following format:
+
+               feature_id  reference_time  time                 ensemble  streamflow  velocity
+            0  3627611     2025-11-11      2025-11-11 01:00:00  3         0.13        0.12
+            1  3627611     2025-11-11      2025-11-11 02:00:00  3         0.13        0.12
+            2  3627611     2025-11-11      2025-11-11 03:00:00  3         0.13        0.12
+            3  3627611     2025-11-11      2025-11-11 04:00:00  3         0.13        0.12
+            4  3627611     2025-11-11      2025-11-11 05:00:00  3         0.13        0.12
+            ...
+
         """
 
         # get ensembles
@@ -159,5 +192,13 @@ class Forecasts:
         # clean datetime columns and return
         df.time = pandas.to_datetime(df.time)
         df.reference_time = pandas.to_datetime(df.reference_time)
+
+        # convert the units to cfs if necessary
+        if not si_units:
+            # convert streamflow from cms to cfs
+            df["streamflow"] = df["streamflow"].apply(units.cms_to_cfs)
+
+            # convert vertical datum from meters per second to feet per second
+            df["velocity"] = df["velocity"].apply(units.m_to_ft)
 
         self.df = df
