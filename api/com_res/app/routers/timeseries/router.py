@@ -1,12 +1,12 @@
 import logging
 from datetime import date, datetime
 
-from app.routers.fim.router import get_bigquery_client
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
-
 from google.cloud import bigquery
+
+from app.routers.fim.router import get_bigquery_client
 
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
@@ -180,9 +180,7 @@ async def get_quantiles(
 
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter(
-                    "feature_id", "INT64", feature_id
-                ),
+                bigquery.ScalarQueryParameter("feature_id", "INT64", feature_id),
             ]
         )
 
@@ -190,23 +188,22 @@ async def get_quantiles(
 
         results = []
         for row in query_job:
-            results.append({
-                "feature_id": row['feature_id'],
-                "doy": row['doy'],
-                "q0": row['q0'],
-                "q5": row['q5'],
-                "q10": row['q10'],
-                "q25": row['q25'],
-                "q75": row['q75'],
-                "q90": row['q90'],
-                "q100": row['q100']
-            })
+            results.append(
+                {
+                    "feature_id": row['feature_id'],
+                    "doy": row['doy'],
+                    "q0": row['q0'],
+                    "q5": row['q5'],
+                    "q10": row['q10'],
+                    "q25": row['q25'],
+                    "q75": row['q75'],
+                    "q90": row['q90'],
+                    "q100": row['q100'],
+                }
+            )
 
     except Exception as e:
         logging.error(f"Quantiles query failed: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"BigQuery operation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"BigQuery operation failed: {str(e)}")
 
     return JSONResponse(content=jsonable_encoder(results))
