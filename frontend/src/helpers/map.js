@@ -1,12 +1,13 @@
 import { nextTick, ref, shallowRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import L, { canvas } from 'leaflet'
+import 'proj4leaflet'
+import proj4 from 'proj4'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import { useFeaturesStore } from '@/stores/features'
 import { useAlertStore } from '@/stores/alerts'
 import { ENDPOINTS } from '@/constants'
-import GeoRasterLayer from 'georaster-layer-for-leaflet'
 import parseGeoraster from 'georaster'
 
 const leaflet = shallowRef(null)
@@ -193,85 +194,129 @@ const determineCogsForStage = (cogs, stage) => {
 }
 
 /**
- * Adds Cloud Optimized GeoTIFFs (COGs) as GeoRasterLayers to a Leaflet map.
- *
- * Fetches each COG URL, parses it into a georaster object, and creates a GeoRasterLayer
- * with custom color mapping for pixel values. The layer is then added to the Leaflet map.
+ * Adds Cloud Optimized GeoTIFF (COG) overlays to the Leaflet map.
  *
  * @param {string[]} cogs - An array of URLs pointing to Cloud Optimized GeoTIFF files.
  *
  * @returns {void}
  */
-const addCogsToMap = (cogs) => {
+
+
+const addCogsToMap = async (cogs) => {
   const alertStore = useAlertStore()
-  console.log('Adding COGs to map:', cogs)
-  try {
-    for (let cog of cogs) {
-      fetch(cog)
-        .then((res) => res.arrayBuffer())
-        .then((arrayBuffer) => {
-          parseGeoraster(arrayBuffer).then((georaster) => {
-            /*
-            GeoRasterLayer is an extension of GridLayer,
-            which means we can use GridLayer options like opacity.
-            http://leafletjs.com/reference-1.2.0.html#gridlayer
-          */
-            const raster = new GeoRasterLayer({
-              attribution: 'CUAHSI',
-              georaster: georaster,
-              resolution: 256,
-              opacity: 0.8,
-              zIndex: 1000, // Ensure it's above other layers
-              pixelValuesToColorFn: (pixelValues) => {
-                // Assuming pixelValues is an array of values, map them to colors
-                return pixelValues.map((value) => {
-                  // Example: Map value to a color based on some condition
-                  if (value > 0) {
-                    return 'blue' // Color for inundated areas
-                  } else {
-                    return 'transparent' // Color for non-inundated areas
-                  }
-                })
-              },
-              bandIndex: 0, // Assuming the raster has a single band
-              noDataValue: 0 // Assuming 0 is the no-data value
-            })
-            raster.addTo(leaflet.value)
-            // leaflet.value.fitBounds(raster.getBounds())
-            console.log(`Added GeoRasterLayer for ${cog}`)
-          })
-        })
-        .catch((error) => {
-          console.error('Error fetching or parsing GeoTIFF:', error)
-          alertStore.displayAlert({
-            title: 'Error Loading COG',
-            text: `Failed to load COG: ${error.message}`,
-            type: 'error',
-            closable: true,
-            duration: 5
-          })
-        })
+  
+  for (let cog of cogs) {
+    try {
+      const response = await fetch(cog)
+      const arrayBuffer = await response.arrayBuffer()
+      const georaster = await parseGeoraster(arrayBuffer)
+      
+      console.log('Georaster structure:', georaster)
+
+      // Convert the raster to a canvas image
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      canvas.width = georaster.width
+      canvas.height = georaster.height
+      
+      const imageData = ctx.createImageData(georaster.width, georaster.height)
+      
+      // The structure is [band][rows] where all rows are Float32Arrays
+      const pixelData = georaster.values[0] // First band
+      
+      const noDataValue = georaster.noDataValue ?? -9999
+      let inundatedPixels = 0
+      
+      // Optimized rendering for binary data (1 = inundated, NaN = not inundated)
+      for (let y = 0; y < georaster.height; y++) {
+        const row = pixelData[y]
+        
+        for (let x = 0; x < georaster.width; x++) {
+          const index = (y * georaster.width + x) * 4
+          const pixelValue = row[x]
+          
+          // Check if it's an inundated pixel (value === 1)
+          if (pixelValue === 1) {
+            // Blue color for inundated areas
+            imageData.data[index] = 0        // R
+            imageData.data[index + 1] = 100  // G (slight green for better visibility)
+            imageData.data[index + 2] = 255  // B
+            imageData.data[index + 3] = 180  // A (semi-transparent)
+            inundatedPixels++
+          } else {
+            // Transparent for non-inundated areas (NaN, noDataValue, or other values)
+            imageData.data[index + 3] = 0
+          }
+        }
+      }
+      
+      console.log(`Rendered ${inundatedPixels} inundated pixels (${((inundatedPixels / (georaster.width * georaster.height)) * 100).toFixed(1)}% of area)`)
+      
+      ctx.putImageData(imageData, 0, 0)
+      
+      // Remove the temporary canvas from DOM if it exists
+      const existingCanvas = document.querySelector('canvas[style*="fixed"]')
+      if (existingCanvas) {
+        existingCanvas.remove()
+      }
+      
+      const dataURL = canvas.toDataURL('image/png')
+      const geographicBounds = reprojectEPSG5070ToWGS84(georaster)
+      const leafletBounds = L.latLngBounds(geographicBounds)
+      
+      const overlay = L.imageOverlay(dataURL, leafletBounds, {
+        opacity: 0.8,
+        interactive: false,
+        zIndex: 1000,
+      }).addTo(leaflet.value)
+      
+      console.log('ImageOverlay added to map')
+      
+      // Store reference to remove later if needed
+      if (!window.cogOverlays) window.cogOverlays = []
+      window.cogOverlays.push(overlay)
+    } catch (error) {
+      console.error('Error processing COG:', error)
+      alertStore.displayAlert({
+        title: 'Error Loading COG',
+        text: `Failed to load COG: ${error.message}`,
+        type: 'error',
+        closable: true,
+        duration: 5
+      })
     }
-  } catch (error) {
-    console.error('Error loading GeoRasterLayer:', error)
-    alertStore.displayAlert({
-      title: 'Error',
-      text: `Failed to process COGs: ${error.message}`,
-      type: 'error',
-      closable: true,
-      duration: 5
-    })
   }
 }
 
+// Also update the reprojection function to return a format that works with L.latLngBounds
+function reprojectEPSG5070ToWGS84(georaster) {
+  proj4.defs("EPSG:5070", "+proj=aea +lat_0=23 +lon_0=-96 +lat_1=29.5 +lat_2=45.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs");
+  proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs");
+  
+  const sw = proj4("EPSG:5070", "EPSG:4326", [georaster.xmin, georaster.ymin]);
+  const ne = proj4("EPSG:5070", "EPSG:4326", [georaster.xmax, georaster.ymax]);
+  const nw = proj4("EPSG:5070", "EPSG:4326", [georaster.xmin, georaster.ymax]);
+  const se = proj4("EPSG:5070", "EPSG:4326", [georaster.xmax, georaster.ymin]);
+  
+  // Return in the format that L.latLngBounds expects: [[south, west], [north, east]]
+  const bounds = [
+    [Math.min(sw[1], nw[1], ne[1], se[1]), Math.min(sw[0], nw[0], ne[0], se[0])], // SW [lat, lng]
+    [Math.max(sw[1], nw[1], ne[1], se[1]), Math.max(sw[0], nw[0], ne[0], se[0])]  // NE [lat, lng]
+  ];
+  
+  return bounds;
+}
+
 const clearCogsFromMap = () => {
-  console.log('Clearing all COGs from map')
-  leaflet.value.eachLayer((layer) => {
-    if (layer instanceof GeoRasterLayer) {
-      console.log('Removing GeoRasterLayer:', layer)
-      leaflet.value.removeLayer(layer)
-    }
-  })
+  console.log('Clearing all COG overlays from map')
+  if (window.cogOverlays) {
+    window.cogOverlays.forEach(overlay => {
+      if (overlay && leaflet.value.hasLayer(overlay)) {
+        leaflet.value.removeLayer(overlay)
+      }
+    })
+    window.cogOverlays = []
+  }
 }
 
 const limitToBounds = (region) => {
@@ -289,7 +334,7 @@ const limitToBounds = (region) => {
       leaflet.value.setView(bounds.getCenter(), zoom)
       leaflet.value.setZoom(zoom)
       // prevent zooming out beyond min wms zoom
-      leaflet.value.setMinZoom(MIN_WMS_ZOOM)
+      // leaflet.value.setMinZoom(MIN_WMS_ZOOM)
     } catch (error) {
       console.warn('Error zooming to bounds:', error)
     }
