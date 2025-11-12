@@ -22,7 +22,7 @@ export const useRegionsStore = defineStore('regions', () => {
              eight miles south of Cassville in Barry County, Missouri, 
              spanning 4,294 acres.`,
       flex: 1,
-      flowlinesLayerNumber: 13,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 4,
       defaultZoom: 11
     },
