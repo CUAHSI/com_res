@@ -219,7 +219,11 @@ const addCogsToMap = (cogs) => {
             const raster = new GeoRasterLayer({
               attribution: 'CUAHSI',
               georaster: georaster,
-              resolution: 256,
+              resolution: 512,
+              tileSize: 512, // Match tile size to resolution
+              updateWhenIdle: false, // Render immediately on zoom
+              updateWhenZooming: true, // Update during zoom animation
+              keepBuffer: 8, // Keep more tiles in buffer
               opacity: 0.8,
               zIndex: 1000, // Ensure it's above other layers
               pixelValuesToColorFn: (pixelValues) => {
