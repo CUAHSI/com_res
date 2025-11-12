@@ -34,7 +34,7 @@ export const useRegionsStore = defineStore('regions', () => {
             45 miles south of St. Louis. The surrounding terrain features rolling 
             hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 3,
       defaultZoom: 11
     },
