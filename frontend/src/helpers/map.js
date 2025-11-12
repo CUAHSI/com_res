@@ -203,6 +203,7 @@ const determineCogsForStage = (cogs, stage) => {
  *
  * @returns {void}
  */
+
 const addCogsToMap = async (cogs) => {
   const alertStore = useAlertStore()
   
@@ -213,8 +214,7 @@ const addCogsToMap = async (cogs) => {
       const georaster = await parseGeoraster(arrayBuffer)
       
       console.log('Georaster structure:', georaster)
-      console.log('Values length:', georaster.values?.length)
-      console.log('First band type:', typeof georaster.values?.[0])
+      console.log('NoData value:', georaster.noDataValue)
 
       // Convert the raster to a canvas image
       const canvas = document.createElement('canvas')
@@ -222,79 +222,134 @@ const addCogsToMap = async (cogs) => {
       canvas.width = georaster.width
       canvas.height = georaster.height
       
-      // TEST: First, fill the entire canvas with a solid color to verify ImageOverlay works
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)' // Semi-transparent red
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      
       console.log('Canvas dimensions:', canvas.width, 'x', canvas.height)
       
-      // Now try to add the actual raster data
+      // Create image data
       const imageData = ctx.createImageData(georaster.width, georaster.height)
       
-      // Debug the values structure more thoroughly
+      // Debug the values structure
       let values = georaster.values
-      console.log('Values structure debug:', {
+      console.log('Values structure:', {
         isArray: Array.isArray(values),
         length: values?.length,
-        firstElement: values?.[0],
+        firstElementType: typeof values?.[0],
         firstElementIsArray: Array.isArray(values?.[0]),
         firstElementLength: values?.[0]?.length
       })
 
-      // Try different value access patterns
+      // Determine the data structure and access pattern
       let pixelData
+      let accessFunction
+      
       if (Array.isArray(values) && Array.isArray(values[0]) && Array.isArray(values[0][0])) {
         // Structure: [band][y][x]
         console.log('Using [band][y][x] structure')
         pixelData = values[0]
+        accessFunction = (x, y) => pixelData[y]?.[x]
       } else if (Array.isArray(values) && Array.isArray(values[0]) && !Array.isArray(values[0][0])) {
         // Structure: [band][pixels] - 1D array
         console.log('Using [band][pixels] structure')
         pixelData = values[0]
+        accessFunction = (x, y) => pixelData[y * georaster.width + x]
       } else if (Array.isArray(values) && !Array.isArray(values[0])) {
         // Structure: [pixels] - flat array
         console.log('Using [pixels] structure')
         pixelData = values
+        accessFunction = (x, y) => pixelData[y * georaster.width + x]
       } else {
-        console.log('Unknown structure, using values directly')
+        console.log('Unknown structure, attempting direct access')
         pixelData = values
+        accessFunction = (x, y) => pixelData?.[y]?.[x] ?? pixelData?.[y * georaster.width + x]
       }
 
-      const noDataValue = georaster.noDataValue || -9999
+      const noDataValue = georaster.noDataValue ?? -9999
       let dataPixels = 0
-      let hasValidData = false
+      let minValue = Infinity
+      let maxValue = -Infinity
       
-      // Fill with test pattern first to verify rendering
-      for (let i = 0; i < imageData.data.length; i += 4) {
-        const x = (i / 4) % georaster.width
-        const y = Math.floor((i / 4) / georaster.width)
-        
-        // Create a checkerboard pattern for testing
-        if ((x + y) % 20 === 0) {
-          imageData.data[i] = 0      // R
-          imageData.data[i + 1] = 0  // G
-          imageData.data[i + 2] = 255 // B
-          imageData.data[i + 3] = 200 // A
-          hasValidData = true
-        } else {
-          imageData.data[i] = 0
-          imageData.data[i + 1] = 0
-          imageData.data[i + 2] = 0
-          imageData.data[i + 3] = 0
+      // First pass: analyze the data
+      for (let y = 0; y < georaster.height; y++) {
+        for (let x = 0; x < georaster.width; x++) {
+          let pixelValue = accessFunction(x, y)
+          pixelValue = Number(pixelValue)
+          
+          if (!isNaN(pixelValue) && pixelValue !== noDataValue) {
+            minValue = Math.min(minValue, pixelValue)
+            maxValue = Math.max(maxValue, pixelValue)
+            dataPixels++
+          }
         }
       }
       
-      console.log('Test pattern created, has valid data:', hasValidData)
+      console.log(`Data analysis: ${dataPixels} valid pixels, range: ${minValue} to ${maxValue}`)
+      
+      // If no valid data found, use a fallback visualization
+      if (dataPixels === 0 || minValue === Infinity) {
+        console.log('No valid data found, using fallback visualization')
+        // Create a simple gradient for testing
+        for (let y = 0; y < georaster.height; y++) {
+          for (let x = 0; x < georaster.width; x++) {
+            const index = (y * georaster.width + x) * 4
+            const intensity = (x / georaster.width) * 255
+            
+            imageData.data[index] = intensity      // R
+            imageData.data[index + 1] = 0          // G
+            imageData.data[index + 2] = 255 - intensity // B
+            imageData.data[index + 3] = 200        // A
+          }
+        }
+      } else {
+        // Second pass: render actual data
+        const valueRange = maxValue - minValue
+        
+        for (let y = 0; y < georaster.height; y++) {
+          for (let x = 0; x < georaster.width; x++) {
+            const index = (y * georaster.width + x) * 4
+            let pixelValue = accessFunction(x, y)
+            pixelValue = Number(pixelValue)
+            
+            if (isNaN(pixelValue) || pixelValue === noDataValue) {
+              // Transparent for no-data
+              imageData.data[index + 3] = 0
+            } else {
+              // Color based on value (normalized)
+              const normalized = (pixelValue - minValue) / valueRange
+              
+              // Use blue scale for positive values
+              if (pixelValue > 0) {
+                const intensity = Math.floor(normalized * 255)
+                imageData.data[index] = 0              // R
+                imageData.data[index + 1] = 0          // G  
+                imageData.data[index + 2] = 255        // B
+                imageData.data[index + 3] = intensity  // A (opacity based on value)
+              } else {
+                // Transparent for zero/negative values
+                imageData.data[index + 3] = 0
+              }
+              dataPixels++
+            }
+          }
+        }
+      }
+      
+      console.log(`Rendered ${dataPixels} data pixels`)
       
       ctx.putImageData(imageData, 0, 0)
       
+      // TEST: Verify canvas has content by checking if it's not empty
+      const imageDataCheck = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      let opaquePixels = 0
+      for (let i = 3; i < imageDataCheck.data.length; i += 4) {
+        if (imageDataCheck.data[i] > 0) opaquePixels++
+      }
+      console.log(`Canvas has ${opaquePixels} non-transparent pixels`)
+      
       // Convert canvas to data URL
       const dataURL = canvas.toDataURL('image/png')
-      console.log('Data URL created, length:', dataURL.length)
+      console.log('Data URL created')
       
       // Reproject bounds
       const geographicBounds = reprojectEPSG5070ToWGS84(georaster)
-      console.log('Reprojected bounds:', geographicBounds)
       
       // Add as ImageOverlay
       const overlay = L.imageOverlay(dataURL, geographicBounds, {
@@ -303,18 +358,9 @@ const addCogsToMap = async (cogs) => {
         zIndex: 1000,
       }).addTo(leaflet.value)
       
-      console.log('ImageOverlay created:', overlay)
+      console.log('ImageOverlay added to map')
       
-      // Add event listeners to debug
-      overlay.on('load', () => {
-        console.log('ImageOverlay load event fired - image should be visible')
-      })
-      
-      overlay.on('error', () => {
-        console.log('ImageOverlay error event fired - image failed to load')
-      })
-      
-      // Add debug marker
+      // Add debug elements
       const center = [
         (geographicBounds[0][0] + geographicBounds[1][0]) / 2,
         (geographicBounds[0][1] + geographicBounds[1][1]) / 2
@@ -322,16 +368,16 @@ const addCogsToMap = async (cogs) => {
       
       L.marker(center)
         .addTo(leaflet.value)
-        .bindPopup(`COG Center<br>Canvas: ${canvas.width}x${canvas.height}<br>Should show blue checkerboard`)
+        .bindPopup(`COG Center<br>Pixels: ${opaquePixels}/${georaster.width * georaster.height}<br>Range: ${minValue.toFixed(2)}-${maxValue.toFixed(2)}`)
         .openPopup()
       
-      // Also add rectangle showing the exact bounds
+      // Show bounds rectangle
       L.rectangle(geographicBounds, {
         color: 'red',
         weight: 2,
         fillOpacity: 0
       }).addTo(leaflet.value)
-        .bindPopup('Expected raster bounds')
+        .bindPopup('Raster bounds')
       
       leaflet.value.fitBounds(geographicBounds)
       
@@ -347,7 +393,6 @@ const addCogsToMap = async (cogs) => {
     }
   }
 }
-
 // Keep the same reprojection function
 function reprojectEPSG5070ToWGS84(georaster) {
   proj4.defs("EPSG:5070", "+proj=aea +lat_0=23 +lon_0=-96 +lat_1=29.5 +lat_2=45.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs");
