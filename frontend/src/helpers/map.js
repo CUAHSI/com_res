@@ -194,10 +194,7 @@ const determineCogsForStage = (cogs, stage) => {
 }
 
 /**
- * Adds Cloud Optimized GeoTIFFs (COGs) as GeoRasterLayers to a Leaflet map.
- *
- * Fetches each COG URL, parses it into a georaster object, and creates a GeoRasterLayer
- * with custom color mapping for pixel values. The layer is then added to the Leaflet map.
+ * Adds Cloud Optimized GeoTIFF (COG) overlays to the Leaflet map.
  *
  * @param {string[]} cogs - An array of URLs pointing to Cloud Optimized GeoTIFF files.
  *
@@ -222,9 +219,6 @@ const addCogsToMap = async (cogs) => {
       canvas.width = georaster.width
       canvas.height = georaster.height
       
-      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height)
-      
-      // Create image data
       const imageData = ctx.createImageData(georaster.width, georaster.height)
       
       // The structure is [band][rows] where all rows are Float32Arrays
@@ -266,16 +260,10 @@ const addCogsToMap = async (cogs) => {
         existingCanvas.remove()
       }
       
-      // Convert canvas to data URL
       const dataURL = canvas.toDataURL('image/png')
-      
-      // Reproject bounds
       const geographicBounds = reprojectEPSG5070ToWGS84(georaster)
-      
-      // Convert to Leaflet LatLngBounds object
       const leafletBounds = L.latLngBounds(geographicBounds)
       
-      // Add as ImageOverlay
       const overlay = L.imageOverlay(dataURL, leafletBounds, {
         opacity: 0.8,
         interactive: false,
@@ -287,10 +275,6 @@ const addCogsToMap = async (cogs) => {
       // Store reference to remove later if needed
       if (!window.cogOverlays) window.cogOverlays = []
       window.cogOverlays.push(overlay)
-      
-      // Fit bounds to show the overlay with some padding
-      leaflet.value.fitBounds(leafletBounds.pad(0.1))
-      
     } catch (error) {
       console.error('Error processing COG:', error)
       alertStore.displayAlert({
@@ -323,7 +307,6 @@ function reprojectEPSG5070ToWGS84(georaster) {
   return bounds;
 }
 
-// Clear all COG overlays function
 const clearCogsFromMap = () => {
   console.log('Clearing all COG overlays from map')
   if (window.cogOverlays) {
