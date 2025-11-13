@@ -208,6 +208,13 @@ watch(
       reach_id.value = newVal
       reach_name.value = featureStore.activeFeatureName
 
+      // if the new id is null, clear the plots
+      if (reach_id.value === null || reach_id.value === undefined) {
+        showHistorical.value = false
+        showForecast.value = false
+        return
+      }
+
       console.log('Active feature COMID changed, setting reach_id to: ', reach_id.value)
       console.log('Active feature Name: ' + reach_name.value)
     }
