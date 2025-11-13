@@ -607,7 +607,7 @@ const toggleFeatureLayer = async (region) => {
     } else {
       featureLayer.addTo(leaflet.value)
       activeFeatureLayer.value = featureLayer
-      control.value.addOverlay(featureLayer, `Flowlines features - ${featureLayer.name}`)
+      control.value.addOverlay(featureLayer, `NHDPlus Flowlines`)
     }
   })
 }
