@@ -20,13 +20,26 @@
     <v-app-bar-title class="text-h4">FloodSavvy</v-app-bar-title>
 
     <v-tabs v-if="!mdAndDown" v-model="path" align-tabs="title">
-      <v-tab
-        v-for="path of paths"
-        v-bind="path.attrs"
-        :key="path.attrs.to || path.attrs.href"
-        :text="path.label"
-        :id="`navbar-nav-${path.label.replaceAll(/[\/\s]/g, ``)}`"
-      ></v-tab>
+      <template v-for="(item, i) in paths" :key="i">
+        <!-- handle children items as dropdown menus -->
+        <v-menu v-if="item.children" open-on-hover>
+          <template #activator="{ props }">
+            <v-tab v-bind="props" :text="item.label" />
+          </template>
+          <v-list>
+            <v-list-item v-for="(child, j) in item.children" :key="j" :to="child.attrs.to" link>
+              <v-list-item-title>{{ child.label }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <!-- handle normal items as tabs -->
+        </v-menu>
+        <v-tab
+          v-else
+          v-bind="item.attrs"
+          :text="item.label"
+          :id="`navbar-nav-${item.label.replaceAll(/[\/\s]/g, ``)}`"
+        />
+      </template>
     </v-tabs>
     <v-spacer></v-spacer>
     <v-tooltip text="Report an Issue" location="bottom">
@@ -95,15 +108,15 @@ const toggleGithubDialog = () => {
 
 <style lang="scss" scoped>
 .logo {
-  height: 100%;   
-  display: flex; 
-  align-items: center; 
+  height: 100%;
+  display: flex;
+  align-items: center;
   cursor: pointer;
 
   img {
-    height: 100%;   
-    width: auto;    
-    object-fit: contain; 
+    height: 100%;
+    width: auto;
+    object-fit: contain;
     display: block;
   }
 }
