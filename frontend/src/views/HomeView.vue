@@ -1,13 +1,40 @@
 <template>
   <v-container fluid>
     <!-- === Banner section === -->
-    <v-sheet class="banner d-flex flex-column align-center justify-center pa-6" rounded>
-      <h2 class="mb-2 banner-title">FloodSavvy</h2>
-      <p class="banner-text">
+    <v-sheet class="banner d-flex flex-column align-center justify-center pa-6 text-center" rounded>
+      <h2 class="mb-2 banner-title">Translating NOAA’s National Water Model data into 
+        easy-to-understand flood risk insights</h2>
+      <!-- <p class="banner-text">
         Turning NOAA’s National Water Model data into clear, local flood risk insights.
-      </p>
+      </p> -->
     </v-sheet>
     <!-- ===================== -->
+
+    <!-- === Slideshow Section (Image + Text Underneath) === -->
+    <v-sheet class="slideshow-wrapper mx-auto my-4" max-width="1200" rounded>
+      <v-carousel
+        height="380"
+        cycle
+        interval="6000"
+        hide-delimiter-background
+        show-arrows="hover"
+      >
+        <v-carousel-item
+          v-for="(slide, i) in slides"
+          :key="i"
+        >
+          <div class="slide-container">
+            <v-img :src="slide.image" cover height="300" class="slideshow-image" />
+            
+            <!-- Text BELOW the image -->
+            <div class="slideshow-caption">
+              <p class="caption-text">{{ slide.text }}</p>
+            </div>
+          </div>
+        </v-carousel-item>
+      </v-carousel>
+    </v-sheet>
+    <!-- ================= -->
 
     <v-row>
       <v-col>
@@ -167,6 +194,16 @@ const handleCardClick = (region) => {
   // regionsStore.onRegionChange(region.name)
 }
 
+import img1 from '@/assets/Feature1-map-selection.png'
+import img2 from '@/assets/Feature2-plots.png'
+import img3 from '@/assets/Feature3-flood-maps.png'
+
+const slides = [
+  { image: img1, text: 'Easy Site Selection with a tailored map interface that helps you navigate regions.' },
+  { image: img2, text: 'Monitor Streamflow through interactive graphs that show historical conditions and 10-day forecasts.' },
+  { image: img3, text: 'Visualize Flood Scenarios using pre-computed flood maps that show how different streamflow levels could affect surrounding areas.' }
+]
+
 const features = [
   {
     title: 'Easy Site Selection',
@@ -209,22 +246,60 @@ const features = [
   }
 }
 .banner {
-  --banner-bg: rgba(36, 40, 40, 0.75);
-  --banner-fg: #ffffff;
-  --banner-title: #ffffff;
+  --banner-bg: #ffffff;
+  --banner-fg: #125664;
+  --banner-title: #0e427d; 
 
   background-color: var(--banner-bg);
   color: var(--banner-fg);
 }
 .banner .banner-title {
   color: var(--banner-title);
-  font-weight: 600;
-  font-size: 2rem;
+  font-weight: 800;
+  font-size:1.6rem;
+  text-align: center;
 }
 .banner .banner-text {
   color: var(--banner-fg) !important;
   font-size: 1.5rem;
   line-height: 1.3;
+}
+.slideshow-wrapper {
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  background: white; /* ensures bright background behind captions */
+}
+
+.slide-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.slideshow-image {
+  object-fit: cover;
+  border-bottom: 1px solid #ddd;
+}
+
+.slideshow-caption {
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.caption-text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #0e427d; 
+  line-height: 1.4;
+}
+
+/* mobile adjustments */
+@media (max-width: 600px) {
+  .caption-text {
+    font-size: 0.9rem;
+  }
 }
 .feature-box {
   background-color: #f0f0f0;
