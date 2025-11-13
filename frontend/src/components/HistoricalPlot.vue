@@ -45,7 +45,7 @@
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
             :color="showLegend ? 'primary' : 'default'"
-            @click="quantilesStore.toggleLegend"
+            @click="toggleLegend"
             icon
             size="small"
             class="mr-1"
@@ -65,7 +65,7 @@
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="quantilesFailed"
             :loading="loadingQuantiles"
-            @click="quantilesStore.toggleQuantiles(reach_id)"
+            @click="toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
@@ -247,7 +247,41 @@ import { storeToRefs } from 'pinia'
 
 // Use Pinia store
 const quantilesStore = useQuantilesStore()
-const { showQuantiles, quantilesData, loadingQuantiles, quantilesFailed, showLegend, showLegendToggle } = storeToRefs(quantilesStore)
+const { quantilesData } = storeToRefs(quantilesStore)
+const showQuantiles = ref(false)
+const loadingQuantiles = ref(false)
+const quantilesFailed = ref(false)
+const showLegend = ref(false)
+
+const showLegendToggle = computed(() => {
+  return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
+})
+
+const setShowQuantiles = async (value, reach_id) => {
+  showQuantiles.value = value
+
+  if (!value) {
+    // quantilesData.value = []
+    // TODO: we can't clear the data because it might be used by ForecastPlot
+  }else{
+    if (quantilesData.value.length === 0) {
+      loadingQuantiles.value = true
+      quantilesFailed.value = false
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+    }
+  }
+  loadingQuantiles.value = false
+}
+
+// Toggle quantiles display - uses the shared store so both plots stay synchronized
+const toggleQuantiles = (reach_id) => {
+  setShowQuantiles(!showQuantiles.value, reach_id)
+}
+
+// Toggle legend visibility
+const toggleLegend = () => {
+  showLegend.value = !showLegend.value
+}
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
