@@ -259,16 +259,10 @@ const showLegendToggle = computed(() => {
 
 const setShowQuantiles = async (value, reach_id) => {
   showQuantiles.value = value
-
-  if (!value) {
-    // quantilesData.value = []
-    // TODO: we can't clear the data because it might be used by ForecastPlot
-  }else{
-    if (quantilesData.value.length === 0) {
-      loadingQuantiles.value = true
-      quantilesFailed.value = false
-      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
-    }
+  quantilesFailed.value = false
+  if (value && quantilesData.value.length === 0) {
+    loadingQuantiles.value = true
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
   }
   loadingQuantiles.value = false
 }
@@ -412,8 +406,13 @@ watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
     // Fetch new quantiles when reach ID changes
-    await quantilesStore.setQuantilesData([])
-    quantilesStore.getQuantilesData(reach_id.value)
+    loadingQuantiles.value = true
+    quantilesFailed.value = false
+    if (showQuantiles.value) {
+      await quantilesStore.setQuantilesData([])
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value))
+    }
+    loadingQuantiles.value = false
   }
 })
 
