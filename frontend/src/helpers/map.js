@@ -92,11 +92,11 @@ const selectFeature = async (feature) => {
       }
     }
     console.log('FIM COG DATA:', fimCogData)
-    // fimCogData is now an object containing 3 arrays: files, flows_cms, and stages_m
-    const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_m)
+    // fimCogData is now an object containing 3 arrays: files, flows_cfs, and stages_ft
+    const cogUrls = determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
     if (cogUrls.length === 0) {
       console.log(
-        `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}m.`
+        `No COGs found for reach: ${feature.properties?.reach_id || feature.properties?.COMID} with selected stage: ${stageValue.value}.`
       )
       return
     }
