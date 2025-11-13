@@ -45,13 +45,16 @@
             <a href="https://water.noaa.gov" target="_blank" rel="noopener noreferrer"
               >NOAA’s National Water Model</a
             >. The web-based interface offers the ability to assess local water-related risks,
-            monitor streamflow conditions, and visualise potential flood inundation extents. It was
-            developed in partnership with selected communities in <strong>Vermont</strong> and
+            monitor streamflow conditions, and visualize potential flood inundation extents. It was
+            developed in partnership with six communities in <strong>Vermont</strong> and
             <strong>Missouri</strong> to help strengthen community resilience planning and
-            water-related decision-making. In Missouri, the study engaged with three distinct
-            communities: City of Springfield-Greene County, City of De Soto, and Roaring River State
+            water-related decision-making. In Missouri, the study engaged with three
+            communities: the City of De Soto, the City of Springfield-Greene County, and Roaring River State
             Park. In Vermont, the research focused on three Regional Planning Commissions and the
-            member towns they support: Two Rivers-Ottauquechee, Mt. Ascutney, and Windham.
+            member towns they support: 
+            <a href="https://www.marcvt.org/" target="_blank" rel="noopener noreferrer">Mt. Ascutney</a>,
+            <a href="https://www.trorc.org/" target="_blank" rel="noopener noreferrer">Two Rivers-Ottauquechee</a>, 
+            and Windham.
           </p>
         </v-sheet>
       </v-col>
