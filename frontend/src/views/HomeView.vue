@@ -125,7 +125,7 @@ const steps = [
     id: 1,
     title: '1. Select Your Region',
     text: `To use the FloodSavvy capabilities described above, please select your local region above or
-      visit the <a href="/maps">MAPS</a> page and select your region from the dropdown. This is intended to be used by
+      visit the <a href="https://floodsavvy.cuahsi.io/#/maps" target="_blank" rel="noopener noreferrer">MAPS</a> page and select your region from the dropdown. This is intended to be used by
       the individuals and organizations affiliated with the six regions in our project, who are
       interested in accessing National Water Model (NWM) information.`
   },
@@ -134,14 +134,14 @@ const steps = [
     title: '2. Using the FloodSavvy Interface',
     text: `For more information on how to use the FloodSavvy interface, including scenarios that 
       demonstrate how FloodSavvy information can be leveraged in different contexts, please 
-      visit the FloodSavvy resource page under the <a href="/resources">RESOURCES</a> page.`
+      visit the FloodSavvy resource page under the <a href="https://floodsavvy.cuahsi.io/#/resources" target="_blank" rel="noopener noreferrer">RESOURCES</a> page.`
   },
   {
     id: 3,
     title: '3. NOAA Resources (NWPS & NWM)',
     text: `If you are not one of the six communities or would like to find out more about official
       NOAA services, including the National Water Prediction Service (NWPS) and the NWM, 
-      please visit the National Water Model resource page under the <a href="/resources">RESOURCES</a> page. 
+      please visit the National Water Model resource page under the <a href="https://floodsavvy.cuahsi.io/#/resources" target="_blank" rel="noopener noreferrer">RESOURCES</a> page. 
       The tutorial-style resources for the NWPS and NWM are intended to assist all users in navigating, 
       extracting and assessing flood risk insights.`
   },
@@ -149,13 +149,13 @@ const steps = [
     id: 4,
     title: '4. About the Project',
     text: `To find out more about the project and how the FloodSavvy resource was co-developed 
-      with the six communities, please visit the <a href="/about">ABOUT</a> page.`
+      with the six communities, please visit the <a href="https://floodsavvy.cuahsi.io/#/about" target="_blank" rel="noopener noreferrer">ABOUT</a> page.`
   },
   {
     id: 5,
     title: '5. Contact Us',
     text: `If you have any questions or would like to report any issues while using the FloodSavvy 
-      website, please visit the <a href="/contact">CONTACT</a> page.`
+      website, please visit the <a href="https://floodsavvy.cuahsi.io/#/contact" target="_blank" rel="noopener noreferrer">CONTACT</a> page.`
   }
 ]
 
