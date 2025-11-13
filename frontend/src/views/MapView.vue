@@ -150,7 +150,7 @@
     >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="multiReachMode && multiReachStageData ? multiReachStageData.min : activeFeatureFimCogData.stages_m[0]"
+        min="0"
         :max="multiReachMode && multiReachStageData ? multiReachStageData.max : activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
         :stages="multiReachMode && multiReachStageData ? multiReachStageData.stages_m : activeFeatureFimCogData.stages_m"
         :flows="activeFeatureFimCogData.flows_cms"
