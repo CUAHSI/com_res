@@ -1,34 +1,14 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { API_BASE } from '@/constants'
 
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
 export const useQuantilesStore = defineStore('quantiles', () => {
-  const showQuantiles = ref(false)
   const quantilesData = ref([])
-  const loadingQuantiles = ref(false)
-  const quantilesFailed = ref(false)
-  const showLegend = ref(true)
-
-  const showLegendToggle = computed(() => {
-    return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
-  })
 
   // Cache for quantiles data by reach_id
   const quantilesCache = ref(new Map())
-
-  const setShowQuantiles = async (value, reach_id) => {
-    showQuantiles.value = value
-
-    if (!value) {
-      quantilesData.value = []
-    }else{
-      if (quantilesData.value.length === 0) {
-        await getQuantilesData(reach_id)
-      }
-    }
-  }
 
   const setQuantilesData = async (data) => {
     quantilesData.value = data
@@ -72,15 +52,12 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   // Fetch quantiles data from the FastAPI endpoint
   const getQuantilesData = async (reach_id) => {
     if (!reach_id) return
-    loadingQuantiles.value = true
-    quantilesFailed.value = false
 
     // Check if we have cached data for this reach_id
     if (hasCachedQuantilesData(reach_id)) {
       const cachedData = getCachedQuantilesData(reach_id)
       setQuantilesData(cachedData)
-      loadingQuantiles.value = false
-      return
+      return true
     }
     
     try {
@@ -93,9 +70,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
       // if the data is empty, return
       if (!data || data.length === 0) {
-        loadingQuantiles.value = false
-        quantilesFailed.value = true
-        return
+        return false
       }
       
       // Get current year for date alignment
@@ -209,38 +184,20 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
     } catch (err) {
       console.error('Failed to load quantiles data:', err)
-    } finally {
-      loadingQuantiles.value = false
+      return false
     }
-  }
-
-  // Toggle quantiles display - uses the shared store so both plots stay synchronized
-  const toggleQuantiles = (reach_id) => {
-    setShowQuantiles(!showQuantiles.value, reach_id)
-  }
-
-  // Toggle legend visibility
-  const toggleLegend = () => {
-    showLegend.value = !showLegend.value
+    return true
   }
 
   return {
-    loadingQuantiles,
-    quantilesFailed,
-    showQuantiles,
     quantilesData,
     quantilesCache,
-    showLegend,
-    showLegendToggle,
     getQuantilesData,
-    setShowQuantiles,
     setQuantilesData,
     cacheQuantilesData,
     getCachedQuantilesData,
     hasCachedQuantilesData,
     clearCache,
     clearCacheForReach,
-    toggleLegend,
-    toggleQuantiles,
   }
 })
