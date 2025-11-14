@@ -42,7 +42,7 @@
       :iqr="showIQR ? iqrData : []"
       :title="plot_title"
       :style="plot_style"
-      :use-log-scale="showQuantiles || showIQR"
+      :use-log-scale="showQuantiles"
       :show-legend="showLegend"
     />
 

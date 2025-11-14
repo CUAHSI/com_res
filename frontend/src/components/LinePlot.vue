@@ -55,8 +55,8 @@ const props = defineProps({
 const hasQuantiles = computed(() => props.quantiles && props.quantiles.length > 0)
 const hasIQR = computed(() => props.iqr && props.iqr.length > 0)
 
-// Use log scale when explicitly requested AND either quantiles or IQR are present
-const shouldUseLogScale = computed(() => props.useLogScale && (hasQuantiles.value || hasIQR.value))
+// Only use log scale when explicitly requested AND quantiles are present (not for IQR)
+const shouldUseLogScale = computed(() => props.useLogScale && hasQuantiles.value && !hasIQR.value)
 
 // Calculate x-axis min and max from the streamflow data only
 const xAxisRange = computed(() => {
@@ -134,7 +134,7 @@ const chartOptions = computed(() => ({
       max: xAxisRange.value.max
     },
     y: {
-      type: shouldUseLogScale.value ? 'logarithmic' : 'linear', // Only use log scale when explicitly requested
+      type: shouldUseLogScale.value ? 'logarithmic' : 'linear', // Only use log scale for quantiles, not IQR
       title: {
         display: true,
         text: 'Streamflow (cms)'
@@ -161,7 +161,7 @@ const chartOptions = computed(() => ({
       grid: {
         color: '#eee'
       },
-      // Configure logarithmic scale behavior - only when explicitly requested
+      // Configure logarithmic scale behavior - only when explicitly requested for quantiles
       ...(shouldUseLogScale.value && {
         // min: 0.01, // minimum for log scale
         afterBuildTicks: function(axis) {
