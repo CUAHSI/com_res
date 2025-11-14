@@ -11,18 +11,37 @@
     <v-card :prepend-icon="mdiAlertCircle" title="Disclaimer">
       <v-card-text>
         <p>
-          FloodSavvy is an experimental application that provides visualizations of potential flood
-          extents based on forecasts from NOAA's National Water Model and associated flood
-          inundation mapping (FIM) services. While FloodSavvy aims to offer useful insights into
-          where flooding may occur, the outputs are estimates and inherently include uncertainty.
-          These maps are not official flood products from NOAA or the National Weather Service,
-          although they utilize methodologies similar to those found in NOAA's experimental FIM
-          services. The purpose of FloodSavvy is to support public understanding and exploration of
-          historical and potential future flood scenarios. All underlying data are sourced from
-          publicly available datasets. For official flood forecasts, warnings, and authoritative
-          flood maps, please refer to the resources provided in the "Resources" tab. FloodSavvy is
-          intended for informational and educational use only and should not be relied upon for
-          emergency decision-making or as a substitute for official guidance.
+          FloodSavvy is an <span style="color:red; font-weight:600;">experimental</span>
+          application that visualizes potential <strong>inundation flooding</strong>
+          based on forecasts from NOAA's National Water Model (NWM) and its associated
+          Flood Inundation Mapping (FIM) services. 
+        </p>
+
+        <p>
+          This tool <strong>does not provide fluvial erosion information</strong> or other
+          flood-related hazards beyond inundation, as these processes are
+          <strong>not modeled by the NWM</strong>.
+        </p>
+
+        <p>
+          While FloodSavvy offers useful insights into where inundation may occur,
+          all outputs are estimates and include inherent uncertainty.
+          These maps are <strong>NOT official flood products</strong> from NOAA or the
+          National Weather Service, although they draw on similar methodologies to NOAA’s
+          experimental FIM services.
+        </p>
+
+        <p>
+          FloodSavvy is intended to support public understanding and exploration of
+          historical and potential future flood scenarios using publicly available data.
+          For <strong>official and authoritative flood forecasts, warnings, and maps</strong>,
+          please refer to the <span style="color:darkcyan; font-weight:600;">NWPS Resources</span> available under the <strong>Resources</strong> tab.
+        </p>
+
+        <p>
+          FloodSavvy is for <strong>informational and educational use only</strong> and
+          should <strong>NOT</strong> be relied upon for emergency decision-making or as a
+          substitute for official guidance.
         </p>
         <!-- Logo row -->
         <v-row class="mt-4" justify="space-around" align="center">
