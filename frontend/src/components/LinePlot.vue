@@ -34,6 +34,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  iqr: {
+    type: Array,
+    default: () => []
+  },
   title: {
     type: String,
     default: ''
@@ -49,9 +53,10 @@ const props = defineProps({
 })
 
 const hasQuantiles = computed(() => props.quantiles && props.quantiles.length > 0)
+const hasIQR = computed(() => props.iqr && props.iqr.length > 0)
 
-// Only use log scale when explicitly requested AND quantiles are present
-const shouldUseLogScale = computed(() => props.useLogScale && hasQuantiles.value)
+// Only use log scale when explicitly requested AND quantiles are present (not for IQR)
+const shouldUseLogScale = computed(() => props.useLogScale && hasQuantiles.value && !hasIQR.value)
 
 // Calculate x-axis min and max from the streamflow data only
 const xAxisRange = computed(() => {
@@ -71,26 +76,38 @@ const chartData = computed(() => {
     {
       label: 'Streamflow (cms)',
       data: props.timeseries,
-      fill: !hasQuantiles.value, // Only fill when quantiles are NOT shown
+      fill: !hasQuantiles.value && !hasIQR.value, // Only fill when neither quantiles nor IQR are shown
       backgroundColor: 'rgba(0, 0, 0, 0.2)', // black with transparency
       borderColor: 'rgba(0, 0, 0, 1)', // solid black
       tension: 0.4, // makes the line smooth
       pointRadius: 0, // turn off points
       pointHoverRadius: 6,
-      order: 2 // Ensure main streamflow line is on top
+      order: 3 // Ensure main streamflow line is on top of everything
     }
   ]
 
-  // Add quantiles datasets if provided
+  // Add IQR datasets if provided (before quantiles so they appear behind them)
+  if (hasIQR.value) {
+    datasets.unshift(...props.iqr.map((iqrDataset, index) => ({
+      ...iqrDataset,
+      tension: 0.1, // Less smooth for IQR lines
+      pointRadius: 0, // turn off points
+      pointHoverRadius: 3,
+      borderWidth: index === 0 ? 2 : 1, // Thicker line for mean
+      borderDash: index === 0 ? [] : [5, 5], // Dashed lines for IQR bounds
+      order: index === 0 ? 2 : 1 // Mean above IQR area, IQR area at bottom
+    })))
+  }
+
+  // Add quantiles datasets if provided (at the very bottom)
   if (hasQuantiles.value) {
-    // Add quantiles datasets at the beginning so they appear behind the main line
     datasets.unshift(...props.quantiles.map(quantileDataset => ({
       ...quantileDataset,
       tension: 0.1, // Less smooth for quantile lines
       pointRadius: 0, // turn off points
       pointHoverRadius: 3,
       borderWidth: 1,
-      order: 1 // Ensure quantiles are behind the main line
+      order: 0 // Ensure quantiles are at the very bottom
     })))
   }
 
@@ -117,7 +134,7 @@ const chartOptions = computed(() => ({
       max: xAxisRange.value.max
     },
     y: {
-      type: shouldUseLogScale.value ? 'logarithmic' : 'linear', // Only use log scale when explicitly requested
+      type: shouldUseLogScale.value ? 'logarithmic' : 'linear', // Only use log scale for quantiles, not IQR
       title: {
         display: true,
         text: 'Streamflow (cms)'
@@ -144,7 +161,7 @@ const chartOptions = computed(() => ({
       grid: {
         color: '#eee'
       },
-      // Configure logarithmic scale behavior - only when explicitly requested
+      // Configure logarithmic scale behavior - only when explicitly requested for quantiles
       ...(shouldUseLogScale.value && {
         // min: 0.01, // minimum for log scale
         afterBuildTicks: function(axis) {
@@ -163,7 +180,7 @@ const chartOptions = computed(() => ({
   },
   plugins: {
     legend: {
-      display: props.showLegend && hasQuantiles.value, // Control visibility via prop and only show when quantiles are present
+      display: props.showLegend && (hasQuantiles.value || hasIQR.value), // Control visibility via prop and only show when quantiles or IQR are present
       labels: {
         color: '#333',
         usePointStyle: true,
@@ -194,7 +211,7 @@ const chartOptions = computed(() => ({
       intersect: false,
       
       filter: function(tooltipItem) {
-        // Skip datasets without labels (like Q0)
+        // Skip datasets without labels (like Q0 or empty IQR bounds)
         return tooltipItem.dataset.label && tooltipItem.dataset.label.length > 0
       },
       callbacks: {
