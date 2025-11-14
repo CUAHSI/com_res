@@ -150,9 +150,21 @@
     >
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="multiReachMode && multiReachStageData ? multiReachStageData.min : activeFeatureFimCogData.stages_m[0]"
-        :max="multiReachMode && multiReachStageData ? multiReachStageData.max : activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-        :stages="multiReachMode && multiReachStageData ? multiReachStageData.stages_m : activeFeatureFimCogData.stages_m"
+        :min="
+          multiReachMode && multiReachStageData
+            ? multiReachStageData.min
+            : activeFeatureFimCogData.stages_ft[0]
+        "
+        :max="
+          multiReachMode && multiReachStageData
+            ? multiReachStageData.max
+            : activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]
+        "
+        :stages="
+          multiReachMode && multiReachStageData
+            ? multiReachStageData.stages_ft
+            : activeFeatureFimCogData.stages_ft
+        "
         :flows="activeFeatureFimCogData.flows_cms"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
@@ -287,34 +299,30 @@ const multiReachStageData = computed(() => {
   
   // Collect all fimCogData from selected features
   const allFimCogData = selectedFeatures.value
-    .map(feature => feature.properties?.fimCogData)
-    .filter(data => data && data.stages_m && data.stages_m.length > 0)
-  
+    .map((feature) => feature.properties?.fimCogData)
+    .filter((data) => data && data.stages_ft && data.stages_ft.length > 0)
+
   if (allFimCogData.length === 0) return null
   
   // Find the minimum of all maximum stage values
-  const maxStages = allFimCogData.map(data => 
-    data.stages_m[data.stages_m.length - 1]
-  )
+  const maxStages = allFimCogData.map((data) => data.stages_ft[data.stages_ft.length - 1])
   const minMaxStage = Math.min(...maxStages)
   
   // Find the maximum of all minimum stage values
-  const minStages = allFimCogData.map(data => data.stages_m[0])
+  const minStages = allFimCogData.map((data) => data.stages_ft[0])
   const maxMinStage = Math.max(...minStages)
   
   // Get all unique stages within the common range
   const allStages = Array.from(
     new Set(
-      allFimCogData.flatMap(data => 
-        data.stages_m.filter(stage => 
-          stage >= maxMinStage && stage <= minMaxStage
-        )
+      allFimCogData.flatMap((data) =>
+        data.stages_ft.filter((stage) => stage >= maxMinStage && stage <= minMaxStage)
       )
     )
   ).sort((a, b) => a - b)
   
   return {
-    stages_m: allStages,
+    stages_ft: allStages,
     min: maxMinStage,
     max: minMaxStage,
     allFimCogData: allFimCogData
@@ -323,8 +331,8 @@ const multiReachStageData = computed(() => {
 
 const showStageSlider = computed(() => {
   // Check if any selected feature has data
-  const hasData = selectedFeatures.value.some(feature => 
-    feature.properties?.fimCogData?.stages_m?.length > 0
+  const hasData = selectedFeatures.value.some(
+    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
   )
   return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
 })
@@ -350,22 +358,18 @@ const handleStageChange = () => {
       
       if (multiReachMode.value && multiReachStageData.value) {
         // Ensure the stage is within the common range and snap if needed
-        if (!multiReachStageData.value.stages_m.includes(targetStage)) {
-          const nearestStage = multiReachStageData.value.stages_m.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage)
-              ? curr
-              : prev
+        if (!multiReachStageData.value.stages_ft.includes(targetStage)) {
+          const nearestStage = multiReachStageData.value.stages_ft.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
           })
           targetStage = nearestStage
           console.log('Snapped to nearest common stage:', nearestStage)
         }
       } else {
         // Single reach mode - use original snapping logic
-        if (!fimCogData.stages_m.includes(targetStage)) {
-          const nearestStage = fimCogData.stages_m.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage)
-              ? curr
-              : prev
+        if (!fimCogData.stages_ft.includes(targetStage)) {
+          const nearestStage = fimCogData.stages_ft.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
           })
           targetStage = nearestStage
           console.log('Snapped to nearest stage:', nearestStage)
@@ -376,11 +380,8 @@ const handleStageChange = () => {
       if (targetStage !== mapHelpers.stageValue.value) {
         mapHelpers.stageValue.value = targetStage
       }
-      
-      const cogUrls = mapHelpers.determineCogsForStage(
-        fimCogData.files,
-        fimCogData.stages_m
-      )
+
+      const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
       if (cogUrls.length > 0) {
         addedCogs = true
         mapHelpers.addCogsToMap(cogUrls)
