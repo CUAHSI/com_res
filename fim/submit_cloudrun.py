@@ -26,6 +26,7 @@ from rich.console import Console
 from typing_extensions import Annotated
 from googleapiclient.discovery import build
 
+import pandas
 
 app = typer.Typer()
 console = Console()
@@ -71,6 +72,15 @@ def get_execution_status(run_client, execution_id):
 
 
 def show_progress_long(run_client, jobs):
+    """
+    Shows the progress of submitted jobs in long form.
+
+    Arguments:
+    ----------
+        - Jobs [List] - a list containing: [command, huc8, reach ids, flow rates, number of processes,
+                                            output labels, output subdir]
+    """
+        
     failed = []
     # Live status table
     TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELLED"}
@@ -99,11 +109,12 @@ def show_progress_long(run_client, jobs):
                     if job["status"] == "FAILED":
                         failed.append(job["args"].split(",")[2])
 
+                reaches_ids = list(set(job["args"].split(" ")[2].split(',')))
                 # add data to the table
                 table.add_row(
                     job["execution"].split("/")[-1],
-                    job["args"].split(",")[1],  # HUC8
-                    job["args"].split(",")[2],  # ReachID
+                    job["args"].split(" ")[1],  # HUC8
+                    reaches_ids,  # ReachIDs
                     job["status"],
                     job["elapsed_time"],
                 )
@@ -227,6 +238,7 @@ def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False)
             break
 
     print(f"Number of Jobs submitted: {submitted_job_count}")
+    time.sleep(5)
 
     if verbose:
         failed = show_progress_long(run_client, jobs)
@@ -238,6 +250,102 @@ def run(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False)
     with open("failed_reachids.txt", "a") as f:
         f.write("\n".join(failed))
 
+@app.command()
+def run_batch(file: Path, verbose: Annotated[bool, typer.Option("--verbose")] = False):
 
+    # Use ADC
+    credentials, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+    run_client = build("run", "v2", credentials=credentials)
+
+    # Read lines (args)
+    arg_df = pandas.read_csv(file, names=['command', 'huc', 'reach', 'cms','label'])
+
+    # group by reach id
+    grouped = arg_df.groupby('reach')
+
+    args = [str(s) for s in arg_df.iloc[0].values.flatten().tolist()]
+
+    with open('submitted_jobs.txt', 'r') as f:
+        # use read().splitlines instead of readlines to strip
+        # newline characters from the list items.
+        previously_submitted_jobs = f.read().splitlines()
+    
+    jobs = []
+    for reachid, df in grouped:
+        args = [
+            df.command.iloc[0],                # command
+            df.huc.iloc[0].astype(str),        # huc
+            ','.join(df.reach.astype(str)),    # reach ids, comma separated
+            ','.join(df.cms.astype(str)),      # flow rates, comma separated
+            '8',                               # number of processes
+            ','.join(df.label.astype(str)),    # output labels
+            df.reach.iloc[0].astype(str)]      # reach id as subdir
+
+        # skip jobs that have already been submitted
+        if ','.join(args) in previously_submitted_jobs:
+            print(f"Skipping HUC {df.huc.iloc[0].astype(str)}, ReachID(s) {df.reach.unique()}")
+            continue
+              
+    
+        execution_id = execute_job(run_client, args)
+        jobs.append(
+            {
+                "args": " ".join(args),
+                "execution": execution_id,
+                "status": "Starting",
+                "start_time": datetime.now(),
+                "elapsed_time": "---",
+            }
+         )   
+
+        # save this job to the submitted_jobs text file so that
+        # we don't run it again.
+        with open('submitted_jobs.txt', 'a') as f:
+            f.write(f'{",".join(args)}\n')
+
+        if len(jobs) >= 140:
+            break
+                    
+    print(f'{len(jobs)} Jobs Submitted')
+    
+
+
+    # # build argument JSON
+    # batch_args = []
+    # for line in lines:
+    #     args = line.split(",")
+
+    #     # skip jobs that already have been processed and saved in the output bucket
+    #     out_dir_name_in_cloud = f"flood_{args[1]}/{args[1]}_inundation/{args[2]}/"
+
+    #     # pass the reachid as an argument so that outputs are saved in
+    #     # a subdirectory named after the reachid
+    #     args.append(f"{args[2]}")
+
+    #     batch_args.append(args)
+    # jobs = []
+    # for arg_batch in args:
+    #     print(arg_batch)
+    #     #batch_payload = json.dumps(arg_batch)
+    #     #execution_id = execute_job(run_client, args=[batch_payload])
+    #     execution_id = execute_job(run_client, arg_batch)
+    #     jobs.append(
+    #         {
+    #             "args": arg_batch,
+    #             "execution": execution_id,
+    #             "status": "Starting",
+    #             "start_time": datetime.now(),
+    #             "elapsed_time": "---",
+    #         }
+    #      )
+    
+    time.sleep(5)
+
+    if verbose:
+        failed = show_progress_long(run_client, jobs)
+    else:
+        failed = show_progress_short(run_client, jobs)
+
+        
 if __name__ == "__main__":
     app()

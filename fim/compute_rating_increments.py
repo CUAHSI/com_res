@@ -15,7 +15,6 @@ from scipy import interpolate
 
 app = typer.Typer()
 
-
 def interpolate_y(
     df: pandas.DataFrame, x_column: str, y_column: str, x_value: float
 ) -> float:
