@@ -22,7 +22,7 @@ export const useRegionsStore = defineStore('regions', () => {
              eight miles south of Cassville in Barry County, Missouri, 
              spanning 4,294 acres.`,
       flex: 1,
-      flowlinesLayerNumber: 13,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 4,
       defaultZoom: 11
     },
@@ -34,7 +34,7 @@ export const useRegionsStore = defineStore('regions', () => {
             45 miles south of St. Louis. The surrounding terrain features rolling 
             hills and a network of creeks and streams that ultimately drain into the Mississippi River.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 3,
       defaultZoom: 11
     },
@@ -58,7 +58,7 @@ export const useRegionsStore = defineStore('regions', () => {
             from steep, forested slopes in the west to rolling foothills and the broad Connecticut 
             River valley in the east.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 1,
       defaultZoom: 10
     },
@@ -70,7 +70,7 @@ export const useRegionsStore = defineStore('regions', () => {
              member towns across Windsor and Orange counties. The region is bordered by the Green
              Mountains to the west and the Connecticut River valley to the east.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 3,
       defaultZoom: 10
     },
@@ -83,7 +83,7 @@ export const useRegionsStore = defineStore('regions', () => {
              rural villages, forested landscapes, and small urban centers that are primarily covered by
              forests, including spruce, fir, and white pine.`,
       flex: 1,
-      flowlinesLayerNumber: 0,
+      flowlinesLayerNumber: 1,
       eraseLayerNumber: 3,
       defaultZoom: 10
     }
