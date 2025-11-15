@@ -22,7 +22,7 @@ const dark = {
 const light = {
   dark: false,
   colors: {
-    primary: colors.green.base,
+    primary: colors.teal.lighten1,
     secondary: colors.grey.lighten4,
     accent: colors.teal.lighten4,
     error: colors.red.accent3,
