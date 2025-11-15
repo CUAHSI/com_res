@@ -68,7 +68,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { debounce } from 'lodash-es'
+import { debounce } from 'lodash'
 import InfoTooltip from './InfoTooltip.vue' // Make sure to import the InfoTooltip
 
 const props = defineProps({
