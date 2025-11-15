@@ -68,6 +68,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { debounce } from 'lodash-es'
 import InfoTooltip from './InfoTooltip.vue' // Make sure to import the InfoTooltip
 
 const props = defineProps({
@@ -119,9 +120,29 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const trackSliderChange = debounce((value) => {
+  try {
+    if (window.heap) {
+      window.heap.track('Slider Value Changed', {
+        newValue: value,
+        min: props.min,
+        max: props.max,
+        step: props.step
+      })
+    } else {
+      console.warn('Heap is not available. Slider change event not tracked.')
+    }
+  } catch (error) {
+    console.warn('Error tracking slider change event:', error)
+  }
+}, 300)
+
 const modelValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => {
+    emit('update:modelValue', value)
+    trackSliderChange(value)
+  }
 })
 
 const ticks = Array(props.tickCount).fill(0)
