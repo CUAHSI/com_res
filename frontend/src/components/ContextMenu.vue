@@ -11,7 +11,11 @@
         </v-btn>
       </div>
       <v-list density="compact">
-        <v-list-item v-if="multiReachMode" :disabled="!canAddMoreFeatures" @click="$emit('select-additional-feature')">
+        <v-list-item
+          v-if="multiReachMode"
+          :disabled="!canAddMoreFeatures"
+          @click="$emit('select-additional-feature')"
+        >
           <v-list-item-title>
             <v-icon color="warning" v-if="!canAddMoreFeatures">{{ mdiAlert }}</v-icon>
             Select Additional Feature
@@ -40,7 +44,14 @@ defineProps({
   }
 })
 
-defineEmits(['close', 'zoom-to-feature', 'select-feature', 'select-additional-feature', 'show-feature-info', 'dismiss'])
+defineEmits([
+  'close',
+  'zoom-to-feature',
+  'select-feature',
+  'select-additional-feature',
+  'show-feature-info',
+  'dismiss'
+])
 
 import { mdiClose } from '@mdi/js'
 import { useFeaturesStore } from '@/stores/features'

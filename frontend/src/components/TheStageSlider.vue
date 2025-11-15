@@ -3,10 +3,7 @@
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
       <h3>{{ headerTitle }}</h3>
-      <InfoTooltip
-        iconSize="x-small"
-        :text="tooltipText"
-      />
+      <InfoTooltip iconSize="x-small" :text="tooltipText" />
     </div>
 
     <div class="thermometer-slider-container" :style="containerStyle">
@@ -59,9 +56,7 @@
     <!-- Footer with additional info -->
     <div class="slider-footer">
       <span>{{ footerLabel }}</span>
-      <InfoTooltip
-        :text="footerTooltip"
-      />
+      <InfoTooltip :text="footerTooltip" />
     </div>
   </v-card>
 </template>
@@ -156,25 +151,19 @@ const startY = ref(0)
 const startValue = ref(0)
 
 // Computed properties for dynamic text based on multiReachMode
-const headerTitle = computed(() => 
-  multiReachMode.value ? 'Stage' : 'Stage-Flow'
-)
+const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
 
 const tooltipText = computed(() =>
-  multiReachMode.value 
+  multiReachMode.value
     ? 'This slider controls water stage levels. Drag the handle to adjust stage values. The color gradient indicates intensity levels.'
     : 'This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels.'
 )
 
 const handleLabel = computed(() =>
-  multiReachMode.value 
-    ? `${props.modelValue} m`
-    : `${flowFromStage(props.modelValue)} cms`
+  multiReachMode.value ? `${props.modelValue} m` : `${flowFromStage(props.modelValue)} cms`
 )
 
-const footerLabel = computed(() =>
-  multiReachMode.value ? 'Stage (m)' : 'Stage (m)'
-)
+const footerLabel = computed(() => (multiReachMode.value ? 'Stage (m)' : 'Stage (m)'))
 
 const footerTooltip = computed(() =>
   multiReachMode.value
