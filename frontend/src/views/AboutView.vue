@@ -59,7 +59,7 @@
         <ol class="default-font-style" style="padding-left: 4rem; border-radius: 12px; margin: 0">
           <li>
             Interviews with Vermont and Missouri stakeholders to better understand how
-            decision-making operates in their communities and organizations, their water-related
+            decision-making operates in their communities and organizations, their water-related
             information needs and priorities, and their ideas for how the NWM could help meet these
             needs.
           </li>
