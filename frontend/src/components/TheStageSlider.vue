@@ -3,10 +3,7 @@
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
       <h3>{{ headerTitle }}</h3>
-      <InfoTooltip
-        iconSize="x-small"
-        :text="tooltipText"
-      />
+      <InfoTooltip iconSize="x-small" :text="tooltipText" />
     </div>
 
     <div class="thermometer-slider-container" :style="containerStyle">
@@ -59,15 +56,14 @@
     <!-- Footer with additional info -->
     <div class="slider-footer">
       <span>{{ footerLabel }}</span>
-      <InfoTooltip
-        :text="footerTooltip"
-      />
+      <InfoTooltip :text="footerTooltip" />
     </div>
   </v-card>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
+import { debounce } from 'lodash'
 import InfoTooltip from './InfoTooltip.vue'
 import { useFeaturesStore } from '@/stores/features'
 import { storeToRefs } from 'pinia'
@@ -124,9 +120,29 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const trackSliderChange = debounce((value) => {
+  try {
+    if (window.heap) {
+      window.heap.track('Slider Value Changed', {
+        newValue: value,
+        min: props.min,
+        max: props.max,
+        step: props.step
+      })
+    } else {
+      console.warn('Heap is not available. Slider change event not tracked.')
+    }
+  } catch (error) {
+    console.warn('Error tracking slider change event:', error)
+  }
+}, 300)
+
 const modelValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => {
+    emit('update:modelValue', value)
+    trackSliderChange(value)
+  }
 })
 
 const ticks = Array(props.tickCount).fill(0)
@@ -135,25 +151,19 @@ const startY = ref(0)
 const startValue = ref(0)
 
 // Computed properties for dynamic text based on multiReachMode
-const headerTitle = computed(() => 
-  multiReachMode.value ? 'Stage' : 'Stage-Flow'
-)
+const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
 
 const tooltipText = computed(() =>
-  multiReachMode.value 
+  multiReachMode.value
     ? 'This slider controls water stage levels. Drag the handle to adjust stage values. The color gradient indicates intensity levels.'
     : 'This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels.'
 )
 
 const handleLabel = computed(() =>
-  multiReachMode.value 
-    ? `${props.modelValue} m`
-    : `${flowFromStage(props.modelValue)} cms`
+  multiReachMode.value ? `${props.modelValue} m` : `${flowFromStage(props.modelValue)} cms`
 )
 
-const footerLabel = computed(() =>
-  multiReachMode.value ? 'Stage (m)' : 'Stage (m)'
-)
+const footerLabel = computed(() => (multiReachMode.value ? 'Stage (m)' : 'Stage (m)'))
 
 const footerTooltip = computed(() =>
   multiReachMode.value

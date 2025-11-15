@@ -201,16 +201,15 @@ const determineCogsForStage = (cogs, stage) => {
  * @returns {void}
  */
 
-
 const addCogsToMap = async (cogs) => {
   const alertStore = useAlertStore()
-  
+
   for (let cog of cogs) {
     try {
       const response = await fetch(cog)
       const arrayBuffer = await response.arrayBuffer()
       const georaster = await parseGeoraster(arrayBuffer)
-      
+
       console.log('Georaster structure:', georaster)
 
       // Convert the raster to a canvas image
@@ -218,30 +217,30 @@ const addCogsToMap = async (cogs) => {
       const ctx = canvas.getContext('2d')
       canvas.width = georaster.width
       canvas.height = georaster.height
-      
+
       const imageData = ctx.createImageData(georaster.width, georaster.height)
-      
+
       // The structure is [band][rows] where all rows are Float32Arrays
       const pixelData = georaster.values[0] // First band
-      
+
       const noDataValue = georaster.noDataValue ?? -9999
       let inundatedPixels = 0
-      
+
       // Optimized rendering for binary data (1 = inundated, NaN = not inundated)
       for (let y = 0; y < georaster.height; y++) {
         const row = pixelData[y]
-        
+
         for (let x = 0; x < georaster.width; x++) {
           const index = (y * georaster.width + x) * 4
           const pixelValue = row[x]
-          
+
           // Check if it's an inundated pixel (value === 1)
           if (pixelValue === 1) {
             // Blue color for inundated areas
-            imageData.data[index] = 0        // R
-            imageData.data[index + 1] = 100  // G (slight green for better visibility)
-            imageData.data[index + 2] = 255  // B
-            imageData.data[index + 3] = 180  // A (semi-transparent)
+            imageData.data[index] = 0 // R
+            imageData.data[index + 1] = 100 // G (slight green for better visibility)
+            imageData.data[index + 2] = 255 // B
+            imageData.data[index + 3] = 180 // A (semi-transparent)
             inundatedPixels++
           } else {
             // Transparent for non-inundated areas (NaN, noDataValue, or other values)
@@ -249,29 +248,31 @@ const addCogsToMap = async (cogs) => {
           }
         }
       }
-      
-      console.log(`Rendered ${inundatedPixels} inundated pixels (${((inundatedPixels / (georaster.width * georaster.height)) * 100).toFixed(1)}% of area)`)
-      
+
+      console.log(
+        `Rendered ${inundatedPixels} inundated pixels (${((inundatedPixels / (georaster.width * georaster.height)) * 100).toFixed(1)}% of area)`
+      )
+
       ctx.putImageData(imageData, 0, 0)
-      
+
       // Remove the temporary canvas from DOM if it exists
       const existingCanvas = document.querySelector('canvas[style*="fixed"]')
       if (existingCanvas) {
         existingCanvas.remove()
       }
-      
+
       const dataURL = canvas.toDataURL('image/png')
       const geographicBounds = reprojectEPSG5070ToWGS84(georaster)
       const leafletBounds = L.latLngBounds(geographicBounds)
-      
+
       const overlay = L.imageOverlay(dataURL, leafletBounds, {
         opacity: 0.6,
         interactive: false,
-        zIndex: 100000,
+        zIndex: 100000
       }).addTo(leaflet.value)
-      
+
       console.log('ImageOverlay added to map')
-      
+
       // Store reference to remove later if needed
       if (!window.cogOverlays) window.cogOverlays = []
       window.cogOverlays.push(overlay)
@@ -290,27 +291,30 @@ const addCogsToMap = async (cogs) => {
 
 // Also update the reprojection function to return a format that works with L.latLngBounds
 function reprojectEPSG5070ToWGS84(georaster) {
-  proj4.defs("EPSG:5070", "+proj=aea +lat_0=23 +lon_0=-96 +lat_1=29.5 +lat_2=45.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs");
-  proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs");
-  
-  const sw = proj4("EPSG:5070", "EPSG:4326", [georaster.xmin, georaster.ymin]);
-  const ne = proj4("EPSG:5070", "EPSG:4326", [georaster.xmax, georaster.ymax]);
-  const nw = proj4("EPSG:5070", "EPSG:4326", [georaster.xmin, georaster.ymax]);
-  const se = proj4("EPSG:5070", "EPSG:4326", [georaster.xmax, georaster.ymin]);
-  
+  proj4.defs(
+    'EPSG:5070',
+    '+proj=aea +lat_0=23 +lon_0=-96 +lat_1=29.5 +lat_2=45.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs'
+  )
+  proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs')
+
+  const sw = proj4('EPSG:5070', 'EPSG:4326', [georaster.xmin, georaster.ymin])
+  const ne = proj4('EPSG:5070', 'EPSG:4326', [georaster.xmax, georaster.ymax])
+  const nw = proj4('EPSG:5070', 'EPSG:4326', [georaster.xmin, georaster.ymax])
+  const se = proj4('EPSG:5070', 'EPSG:4326', [georaster.xmax, georaster.ymin])
+
   // Return in the format that L.latLngBounds expects: [[south, west], [north, east]]
   const bounds = [
     [Math.min(sw[1], nw[1], ne[1], se[1]), Math.min(sw[0], nw[0], ne[0], se[0])], // SW [lat, lng]
-    [Math.max(sw[1], nw[1], ne[1], se[1]), Math.max(sw[0], nw[0], ne[0], se[0])]  // NE [lat, lng]
-  ];
-  
-  return bounds;
+    [Math.max(sw[1], nw[1], ne[1], se[1]), Math.max(sw[0], nw[0], ne[0], se[0])] // NE [lat, lng]
+  ]
+
+  return bounds
 }
 
 const clearCogsFromMap = () => {
   console.log('Clearing all COG overlays from map')
   if (window.cogOverlays) {
-    window.cogOverlays.forEach(overlay => {
+    window.cogOverlays.forEach((overlay) => {
       if (overlay && leaflet.value.hasLayer(overlay)) {
         leaflet.value.removeLayer(overlay)
       }
@@ -357,12 +361,12 @@ async function createWMSLayers(region) {
   const data = await response.json()
   if (data && data.layers) {
     console.log(`Creating WMS Layers for ${region.name}`)
-    
+
     // Sort layers by their ID to maintain the published order
     const sortedLayers = data.layers.sort((a, b) => a.id - b.id)
-    
+
     wmsLayers.value[region.name] = [] // Initialize the array
-    
+
     sortedLayers.forEach((layer) => {
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
@@ -372,15 +376,17 @@ async function createWMSLayers(region) {
         format: 'image/png',
         minZoom: MIN_WMS_ZOOM
       })
-      
+
       wmsLayer.name = `${layer.name}`
       wmsLayer.id = layer.id
       wmsLayer.order = layer.id // Store the order for reference
-      
+
       wmsLayers.value[region.name].push(wmsLayer)
-      console.log(`Created WMS layer: ${wmsLayer.name} (ID: ${layer.id}) for region: ${region.name}`)
+      console.log(
+        `Created WMS layer: ${wmsLayer.name} (ID: ${layer.id}) for region: ${region.name}`
+      )
     })
-    
+
     // Ensure the layers array is sorted by ID
     wmsLayers.value[region.name].sort((a, b) => a.id - b.id)
   } else {
@@ -405,13 +411,15 @@ function removeWMSLayers(regionName) {
 async function addWMSLayers(region) {
   // Remove any existing layers for this region first to prevent duplicates
   removeWMSLayers(region.name)
-  
+
   // Ensure layers are added in the correct order (lowest ID first)
   const sortedLayers = [...(wmsLayers.value[region.name] || [])].sort((a, b) => a.id - b.id)
-  
+
   for (let layer of sortedLayers) {
     layer.addTo(leaflet.value)
-    console.log(`Adding WMS layer: ${layer.name} (ID: ${layer.id}) to map for region: ${region.name}`)
+    console.log(
+      `Adding WMS layer: ${layer.name} (ID: ${layer.id}) to map for region: ${region.name}`
+    )
     control.value.addOverlay(layer, layer.name)
   }
 }
@@ -423,13 +431,12 @@ const toggleWMSLayers = async (region) => {
     Object.keys(wmsLayers.value).forEach((regionName) => {
       removeWMSLayers(regionName)
     })
-    
+
     // Now create and add layers for the current region
     if (!wmsLayers.value[region.name]) {
       await createWMSLayers(region)
     }
     addWMSLayers(region)
-    
   } catch (error) {
     console.error(`Error toggling WMS layers for region ${region.name}:`, error)
   }
@@ -562,7 +569,7 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
-    const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+    const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey
     if (isCtrlOrCmdClick && multiReachMode.value) {
       console.log('Multi-select enabled via Ctrl/Cmd key.')
       featureStore.mergeFeature(feature)

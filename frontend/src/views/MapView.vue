@@ -111,9 +111,7 @@
       </div>
     </div>
 
-    <v-row
-      :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
-    >
+    <v-row :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }">
       <v-col style="padding: 0px; margin: 0px; position: relative">
         <TheLeafletMap />
       </v-col>
@@ -221,6 +219,17 @@ watch(
   }
 )
 
+const trackHeapEvent = (eventName, properties = {}) => {
+  try {
+    if (typeof window !== 'undefined' && window.heap && typeof window.heap.track === 'function') {
+      window.heap.track(eventName, properties)
+    } else {
+      console.debug('Heap not available, event not sent:', eventName, properties)
+    }
+  } catch (error) {
+    console.error('Error tracking event:', error)
+  }
+}
 // Watch multi-reach mode changes
 watch(multiReachMode, (newValue) => {
   console.log('Multi-reach mode changed to:', newValue)
@@ -234,7 +243,14 @@ watch(multiReachMode, (newValue) => {
 })
 
 const toggle = async (component_name) => {
-  console.log('Toggling: ' + component_name)
+  trackHeapEvent(
+    component_name === 'historical' ? 'Historical Button Click' : 'Forecast Button Click',
+    {
+      hasActiveFeature: !!activeFeature.value,
+      reachId: activeFeature.value?.properties?.COMID ?? null,
+      reachName: featureStore.activeFeatureName ?? null
+    }
+  )
 
   // get the feature id from the active feature
   reach_id.value = activeFeature.value?.properties?.COMID ?? null
