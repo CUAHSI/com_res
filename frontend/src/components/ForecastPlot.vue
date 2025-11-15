@@ -225,6 +225,10 @@ const downJson = async () => {
   let filename = getFileName('json')
   await downloadBlob(blob, filename)
   downloading.value.json = false
+  trackEvent('Download Forecast JSON Button Clicked', {
+    reach_id: reach_id.value,
+    reach_name: reach_name.value
+  })
 }
 
 const downCSV = async () => {
@@ -239,6 +243,23 @@ const downCSV = async () => {
   let filename = getFileName('csv')
   await downloadBlob(blob, filename)
   downloading.value.csv = false
+
+  trackEvent('Download Forecast CSV Button Clicked', {
+    reach_id: reach_id.value,
+    reach_name: reach_name.value
+  })
+}
+
+const trackEvent = (eventName, eventData = {}) => {
+  try {
+    if (window.heap) {
+      window.heap.track(eventName, eventData)
+    } else {
+      console.warn('Heap is not available. Event not tracked:', eventName)
+    }
+  } catch (error) {
+    console.error('Error tracking event:', eventName, error)
+  }
 }
 
 const getFileName = (extension) => {
