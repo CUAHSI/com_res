@@ -28,15 +28,15 @@
           <p>
             <strong>FloodSavvy</strong> is a resource that pilots new ways to access and visualize
             information available from
-            <a href="https://water.noaa.gov" target="_blank" rel="noopener noreferrer">NOAA’s National Water Model</a>.
-            The web-based interface offers the ability to assess water-related risks, monitor streamflow,
-            and visualize flood inundation extents. It was developed in partnership with six communities  
-            across <strong>Vermont</strong> and <strong>Missouri</strong>.
-            In Missouri: City of De Soto, City of Springfield–Greene County, Roaring River State Park.  
-            In Vermont:
-            <a href="https://www.marcvt.org/" target="_blank">Mt. Ascutney</a>,
-            <a href="https://www.trorc.org/" target="_blank">Two Rivers–Ottauquechee</a>,
-            and Windham.
+            <a href="https://water.noaa.gov" target="_blank" rel="noopener noreferrer"
+              >NOAA’s National Water Model</a
+            >. The web-based interface offers the ability to assess water-related risks, monitor
+            streamflow, and visualize flood inundation extents. It was developed in partnership with
+            six communities across <strong>Vermont</strong> and <strong>Missouri</strong>. In
+            Missouri: City of De Soto, City of Springfield–Greene County, Roaring River State Park.
+            In Vermont: <a href="https://www.marcvt.org/" target="_blank">Mt. Ascutney</a>,
+            <a href="https://www.trorc.org/" target="_blank">Two Rivers–Ottauquechee</a>, and
+            Windham.
           </p>
         </v-sheet>
       </v-col>
@@ -45,14 +45,16 @@
     <!-- === Regions Section === -->
     <v-sheet class="regions-section mx-auto my-8" max-width="1200" rounded>
       <h3 class="section-title">Choose Your Region</h3>
-      
+
       <!-- Missouri -->
       <h4 class="subregion-title">Missouri Regions</h4>
       <v-row class="mt-2 mb-6" justify="center">
         <v-col
           v-for="region in regionsStore.regions.slice(0, 3)"
           :key="region.text"
-          cols="12" sm="6" md="4"
+          cols="12"
+          sm="6"
+          md="4"
           class="d-flex justify-center"
         >
           <v-card class="region-card" elevation="2" @click="handleCardClick(region)">
@@ -69,7 +71,9 @@
         <v-col
           v-for="region in regionsStore.regions.slice(3, 6)"
           :key="region.text"
-          cols="12" sm="6" md="4"
+          cols="12"
+          sm="6"
+          md="4"
           class="d-flex justify-center"
         >
           <v-card class="region-card" elevation="2" @click="handleCardClick(region)">
@@ -89,12 +93,13 @@
         <v-col v-for="step in steps" :key="step.id" cols="12" md="6">
           <v-card class="start-card" elevation="1">
             <v-card-title class="start-step-title">{{ step.title }}</v-card-title>
-            <v-card-text v-html="step.text"></v-card-text>
+            <v-card-text>
+              <span v-html="step.text"></span>
+            </v-card-text>
           </v-card>
         </v-col>
       </v-row>
     </v-sheet>
-
   </v-container>
 </template>
 
@@ -115,9 +120,18 @@ import img2 from '@/assets/Feature2-plots.png'
 import img3 from '@/assets/Feature3-flood-maps.png'
 
 const slides = [
-  { image: img1, text: 'Easy Site Selection with a tailored map interface that helps you navigate regions.' },
-  { image: img2, text: 'Monitor Streamflow through interactive graphs that show historical conditions and forecasts.' },
-  { image: img3, text: 'Visualize Flood Scenarios using pre-computed flood maps to assess local impacts.' }
+  {
+    image: img1,
+    text: 'Easy Site Selection with a tailored map interface that helps you navigate regions.'
+  },
+  {
+    image: img2,
+    text: 'Monitor Streamflow through interactive graphs that show historical conditions and forecasts.'
+  },
+  {
+    image: img3,
+    text: 'Visualize Flood Scenarios using pre-computed flood maps to assess local impacts.'
+  }
 ]
 
 const steps = [
@@ -158,17 +172,18 @@ const steps = [
       website, please visit the <a href="https://floodsavvy.cuahsi.io/#/contact" target="_blank" rel="noopener noreferrer">CONTACT</a> page.`
   }
 ]
-
 </script>
 
 <style scoped>
 /* === Reset minimal === */
-p { margin: 0; }
+p {
+  margin: 0;
+}
 .section-title {
   font-size: 1.6rem;
   margin-bottom: 24px;
   font-weight: 700;
-  color: #020202;  
+  color: #020202;
 }
 
 /* === Banner === */
@@ -189,7 +204,7 @@ p { margin: 0; }
   overflow: hidden;
   border-radius: 16px;
   background: #fff;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
 }
 .slideshow-image {
   border-bottom: 1px solid #ddd;
@@ -222,7 +237,7 @@ p { margin: 0; }
 }
 .region-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
 }
 
 /* === Getting Started === */
