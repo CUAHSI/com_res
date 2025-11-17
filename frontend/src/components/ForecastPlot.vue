@@ -277,29 +277,40 @@ const fetchIQRData = async (reach_id) => {
             x: timestamp,
             y: data.mean[index]
           })),
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          fill: false
+          borderColor: 'rgba(0, 0, 0, 1)', // Black line for mean forecast
+          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          fill: false,
+          tension: 0.4, // Smooth line like the original streamflow
+          pointRadius: 0, // turn off points
+          borderWidth: 2,
         },
         {
-          label: 'IQR (25th-75th Percentile)',
-          data: data.timestamp.map((timestamp, index) => ({
-            x: timestamp,
-            y: data.q25[index]
-          })),
-          borderColor: 'rgba(75, 192, 192, 0.5)',
-          backgroundColor: 'rgba(75, 192, 192, 0.1)',
-          fill: '+1' // Fill to the next dataset (q75)
-        },
-        {
-          label: '', // Empty label for the upper bound
+          label: '75th Percentile',
           data: data.timestamp.map((timestamp, index) => ({
             x: timestamp,
             y: data.q75[index]
           })),
-          borderColor: 'rgba(75, 192, 192, 0.5)',
-          backgroundColor: 'rgba(75, 192, 192, 0.1)',
-          fill: false
+          borderColor: 'rgba(70, 130, 180, 0.8)',
+          backgroundColor: 'rgba(128, 128, 128, 0.1)',
+          fill: false,
+          pointRadius: 0, // turn off points
+          tension: 0.1, // Less smooth for bounds
+          borderDash: [5, 5],
+          borderWidth: 1,
+        },
+        {
+          label: '25th Percentile', 
+          data: data.timestamp.map((timestamp, index) => ({
+            x: timestamp,
+            y: data.q25[index]
+          })),
+          borderColor: 'rgba(165, 42, 42, 0.8)',
+          backgroundColor: 'rgba(128, 128, 128, 0.1)',
+          fill: '-1', // Fill to the previous dataset (q75)
+          pointRadius: 0, // turn off points
+          tension: 0.1, // Less smooth for bounds
+          borderDash: [2, 2],
+          borderWidth: 1,
         }
       ]
     }

@@ -58,8 +58,18 @@ const hasIQR = computed(() => props.iqr && props.iqr.length > 0)
 // Only use log scale when explicitly requested AND quantiles are present (not for IQR)
 const shouldUseLogScale = computed(() => props.useLogScale && hasQuantiles.value && !hasIQR.value)
 
-// Calculate x-axis min and max from the streamflow data only
+// Calculate x-axis min and max from the appropriate data source
 const xAxisRange = computed(() => {
+  // When IQR is shown, use IQR data for x-axis range
+  if (hasIQR.value && props.iqr[0] && props.iqr[0].data) {
+    const dates = props.iqr[0].data.map(item => new Date(item.x).getTime())
+    return {
+      min: new Date(Math.min(...dates)),
+      max: new Date(Math.max(...dates))
+    }
+  }
+  
+  // Otherwise use streamflow data
   if (!props.timeseries || props.timeseries.length === 0) {
     return { min: null, max: null }
   }
@@ -72,31 +82,26 @@ const xAxisRange = computed(() => {
 })
 
 const chartData = computed(() => {
-  const datasets = [
-    {
+  const datasets = []
+
+  // Only show original streamflow when IQR is NOT shown
+  if (!hasIQR.value) {
+    datasets.push({
       label: 'Streamflow (cms)',
       data: props.timeseries,
-      fill: !hasQuantiles.value && !hasIQR.value, // Only fill when neither quantiles nor IQR are shown
+      fill: !hasQuantiles.value, // Only fill when quantiles are NOT shown
       backgroundColor: 'rgba(0, 0, 0, 0.2)', // black with transparency
       borderColor: 'rgba(0, 0, 0, 1)', // solid black
       tension: 0.4, // makes the line smooth
       pointRadius: 0, // turn off points
       pointHoverRadius: 6,
       order: 3 // Ensure main streamflow line is on top of everything
-    }
-  ]
+    })
+  }
 
-  // Add IQR datasets if provided (before quantiles so they appear behind them)
+  // Add IQR datasets if provided
   if (hasIQR.value) {
-    datasets.unshift(...props.iqr.map((iqrDataset, index) => ({
-      ...iqrDataset,
-      tension: 0.1, // Less smooth for IQR lines
-      pointRadius: 0, // turn off points
-      pointHoverRadius: 3,
-      borderWidth: index === 0 ? 2 : 1, // Thicker line for mean
-      borderDash: index === 0 ? [] : [5, 5], // Dashed lines for IQR bounds
-      order: index === 0 ? 2 : 1 // Mean above IQR area, IQR area at bottom
-    })))
+    datasets.push(...props.iqr)
   }
 
   // Add quantiles datasets if provided (at the very bottom)
@@ -129,7 +134,7 @@ const chartOptions = computed(() => ({
       grid: {
         color: '#eee'
       },
-      // Force x-axis to use streamflow data range only
+      // Force x-axis to use the appropriate data range
       min: xAxisRange.value.min,
       max: xAxisRange.value.max
     },
@@ -163,7 +168,6 @@ const chartOptions = computed(() => ({
       },
       // Configure logarithmic scale behavior - only when explicitly requested for quantiles
       ...(shouldUseLogScale.value && {
-        // min: 0.01, // minimum for log scale
         afterBuildTicks: function(axis) {
           // Customize ticks for better readability on log scale
           const ticks = []
