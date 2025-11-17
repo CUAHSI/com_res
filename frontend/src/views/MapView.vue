@@ -144,7 +144,7 @@
             ? multiReachStageData.stages_ft
             : activeFeatureFimCogData.stages_ft
         "
-        :flows="activeFeatureFimCogData.flows_cms"
+        :flows="activeFeatureFimCogData.flows_cfs"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"

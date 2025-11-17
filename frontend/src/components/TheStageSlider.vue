@@ -156,19 +156,19 @@ const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow
 const tooltipText = computed(() =>
   multiReachMode.value
     ? 'This slider controls water stage levels. Drag the handle to adjust stage values. The color gradient indicates intensity levels.'
-    : 'This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels.'
+    : 'This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels.'
 )
 
 const handleLabel = computed(() =>
-  multiReachMode.value ? `${props.modelValue} m` : `${flowFromStage(props.modelValue)} cms`
+  multiReachMode.value ? `${props.modelValue} ft` : `${flowFromStage(props.modelValue)} cfs`
 )
 
-const footerLabel = computed(() => (multiReachMode.value ? 'Stage (m)' : 'Stage (m)'))
+const footerLabel = computed(() => (multiReachMode.value ? 'Stage (ft)' : 'Stage (ft)'))
 
 const footerTooltip = computed(() =>
   multiReachMode.value
     ? 'Stage values represent water height measurements. Adjust the slider to change the water stage level.'
-    : 'Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cms).'
+    : 'Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs).'
 )
 
 // Calculate which stages to show based on available space
