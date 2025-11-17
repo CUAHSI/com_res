@@ -576,7 +576,7 @@ defineExpose({
   left: 0;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 999999;
+  z-index: var(--z-index-plots) !important;
   margin: 0;
   max-width: none !important;
   max-height: none !important;
@@ -586,6 +586,7 @@ defineExpose({
   flex: 1;
   min-height: 0;
   position: relative;
+  z-index: var(--z-index-plots) !important;
 }
 
 .card-actions {

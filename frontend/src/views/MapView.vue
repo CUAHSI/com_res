@@ -11,7 +11,7 @@
         <div class="left-column">
           <!-- Region Selector -->
           <div class="control-section">
-            <TheRegionSelector :z-index="999999" />
+            <TheRegionSelector />
           </div>
 
           <!-- Multi-reach Mode Toggle -->
@@ -89,7 +89,6 @@
                   text="Display forecasted streamflow data for selected river or stream in a graph,
                   showing hourly values in cubic feet per second (cfs)."
                   style="margin-left: 5px"
-                  z-index="999999"
                   class="tooltip-icon"
                 />
               </v-btn>
@@ -417,7 +416,7 @@ const handleStageChange = () => {
   position: absolute;
   top: 10px;
   left: 15px;
-  z-index: 999999;
+  z-index: var(--z-index-map-controls);
   width: 500px; /* Increased width to accommodate two columns */
 }
 
@@ -425,7 +424,7 @@ const handleStageChange = () => {
   position: absolute;
   top: 10px;
   left: 15px;
-  z-index: 999999;
+  z-index: var(--z-index-map-controls);
   width: 200px;
 }
 
@@ -500,7 +499,7 @@ const handleStageChange = () => {
   height: calc(100vh - 270px);
   position: fixed;
   top: 280px;
-  z-index: 99999;
+  z-index: var(--z-index-plots);
 }
 
 .mobile-map-container {
@@ -519,7 +518,7 @@ const handleStageChange = () => {
   position: absolute;
   right: 15px;
   top: 230px;
-  z-index: 99999;
+  z-index: var(--z-index-map-controls);
   pointer-events: none;
 }
 
