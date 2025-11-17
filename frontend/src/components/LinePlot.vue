@@ -22,7 +22,17 @@ import {
   LogarithmicScale
 } from 'chart.js'
 
-ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler, LogarithmicScale)
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  LinearScale,
+  TimeScale,
+  Filler,
+  LogarithmicScale
+)
 
 // Define the chart data to be rendered in the component
 const props = defineProps({
@@ -62,19 +72,19 @@ const shouldUseLogScale = computed(() => props.useLogScale && hasQuantiles.value
 const xAxisRange = computed(() => {
   // When IQR is shown, use IQR data for x-axis range
   if (hasIQR.value && props.iqr[0] && props.iqr[0].data) {
-    const dates = props.iqr[0].data.map(item => new Date(item.x).getTime())
+    const dates = props.iqr[0].data.map((item) => new Date(item.x).getTime())
     return {
       min: new Date(Math.min(...dates)),
       max: new Date(Math.max(...dates))
     }
   }
-  
+
   // Otherwise use streamflow data
   if (!props.timeseries || props.timeseries.length === 0) {
     return { min: null, max: null }
   }
-  
-  const dates = props.timeseries.map(item => new Date(item.x).getTime())
+
+  const dates = props.timeseries.map((item) => new Date(item.x).getTime())
   return {
     min: new Date(Math.min(...dates)),
     max: new Date(Math.max(...dates))
@@ -106,14 +116,16 @@ const chartData = computed(() => {
 
   // Add quantiles datasets if provided (at the very bottom)
   if (hasQuantiles.value) {
-    datasets.unshift(...props.quantiles.map(quantileDataset => ({
-      ...quantileDataset,
-      tension: 0.1, // Less smooth for quantile lines
-      pointRadius: 0, // turn off points
-      pointHoverRadius: 3,
-      borderWidth: 1,
-      order: 0 // Ensure quantiles are at the very bottom
-    })))
+    datasets.unshift(
+      ...props.quantiles.map((quantileDataset) => ({
+        ...quantileDataset,
+        tension: 0.1, // Less smooth for quantile lines
+        pointRadius: 0, // turn off points
+        pointHoverRadius: 3,
+        borderWidth: 1,
+        order: 0 // Ensure quantiles are at the very bottom
+      }))
+    )
   }
 
   return { datasets }
@@ -146,7 +158,7 @@ const chartOptions = computed(() => ({
       },
       ticks: {
         color: '#555',
-        callback: function(value) {
+        callback: function (value) {
           // Format tick labels for logarithmic scale
           if (shouldUseLogScale.value) {
             return Number(value.toString()) // Convert to number and back to string to avoid scientific notation
@@ -168,12 +180,12 @@ const chartOptions = computed(() => ({
       },
       // Configure logarithmic scale behavior - only when explicitly requested for quantiles
       ...(shouldUseLogScale.value && {
-        afterBuildTicks: function(axis) {
+        afterBuildTicks: function (axis) {
           // Customize ticks for better readability on log scale
           const ticks = []
           const min = Math.pow(10, Math.floor(Math.log10(axis.min)))
           const max = Math.pow(10, Math.ceil(Math.log10(axis.max)))
-          
+
           for (let i = Math.floor(Math.log10(min)); i <= Math.ceil(Math.log10(max)); i++) {
             ticks.push(Math.pow(10, i))
           }
@@ -196,7 +208,7 @@ const chartOptions = computed(() => ({
           weight: 'normal'
         },
         // Filter out hidden datasets from legend
-        filter: function(item) {
+        filter: function (item) {
           return !item.text || item.text.length > 0 // Only show items with labels
         }
       },
@@ -213,13 +225,13 @@ const chartOptions = computed(() => ({
     tooltip: {
       mode: 'nearest',
       intersect: false,
-      
-      filter: function(tooltipItem) {
+
+      filter: function (tooltipItem) {
         // Skip datasets without labels (like Q0 or empty IQR bounds)
         return tooltipItem.dataset.label && tooltipItem.dataset.label.length > 0
       },
       callbacks: {
-        label: function(context) {
+        label: function (context) {
           let label = context.dataset.label || ''
           if (label) {
             label += ': '
@@ -230,7 +242,7 @@ const chartOptions = computed(() => ({
           return label
         },
         // Custom title to show the date
-        title: function(items) {
+        title: function (items) {
           if (items.length > 0 && items[0].parsed.x) {
             const date = new Date(items[0].parsed.x)
             return date.toLocaleDateString()

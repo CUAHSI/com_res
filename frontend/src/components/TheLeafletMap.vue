@@ -2,9 +2,7 @@
   <div v-show="$route.meta.showMap" id="mapContainer"></div>
   <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
 
-  <TheMultiSelectIndicator
-    v-if="ctrlActive && multiReachMode"
-  />
+  <TheMultiSelectIndicator v-if="ctrlActive && multiReachMode" />
 
   <ContextMenu
     v-if="contextMenu.show"

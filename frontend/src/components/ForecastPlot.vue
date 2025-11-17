@@ -214,7 +214,7 @@ const setShowQuantiles = async (value, reach_id) => {
     showIQR.value = false
     iqrData.value = []
   }
-  
+
   showQuantiles.value = value
   quantilesFailed.value = false
   if (value && quantilesData.value.length === 0) {
@@ -232,15 +232,15 @@ const toggleQuantiles = (reach_id) => {
 // Toggle IQR display
 const toggleIQR = async (reach_id) => {
   const newValue = !showIQR.value
-  
+
   // If turning on IQR, turn off quantiles
   if (newValue) {
     showQuantiles.value = false
     quantilesData.value = []
   }
-  
+
   showIQR.value = newValue
-  
+
   if (newValue && iqrData.value.length === 0) {
     await fetchIQRData(reach_id)
   } else if (!newValue) {
@@ -257,15 +257,17 @@ const fetchIQRData = async (reach_id) => {
       date_time: datetime.value.toISOString().split('T')[0],
       forecast: forecast_mode.value
     })
-    
-    const response = await fetch(`${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`)
-    
+
+    const response = await fetch(
+      `${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`
+    )
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    
+
     const data = await response.json()
-    
+
     // Transform the data to match the expected format for LinePlot
     if (data.timestamp && data.mean && data.q25 && data.q75) {
       iqrData.value = [
@@ -280,7 +282,7 @@ const fetchIQRData = async (reach_id) => {
           fill: false,
           tension: 0.4, // Smooth line like the original streamflow
           pointRadius: 0, // turn off points
-          borderWidth: 2,
+          borderWidth: 2
         },
         {
           label: '75th Percentile',
@@ -294,10 +296,10 @@ const fetchIQRData = async (reach_id) => {
           pointRadius: 0, // turn off points
           tension: 0.1, // Less smooth for bounds
           borderDash: [5, 5],
-          borderWidth: 1,
+          borderWidth: 1
         },
         {
-          label: '25th Percentile', 
+          label: '25th Percentile',
           data: data.timestamp.map((timestamp, index) => ({
             x: timestamp,
             y: data.q25[index]
@@ -308,7 +310,7 @@ const fetchIQRData = async (reach_id) => {
           pointRadius: 0, // turn off points
           tension: 0.1, // Less smooth for bounds
           borderDash: [2, 2],
-          borderWidth: 1,
+          borderWidth: 1
         }
       ]
     }
@@ -395,7 +397,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
       quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value))
     }
     loadingQuantiles.value = false
-    
+
     // Fetch new IQR data when reach ID changes
     if (showIQR.value) {
       await fetchIQRData(reach_id.value)
