@@ -237,7 +237,7 @@ const chartOptions = computed(() => ({
             label += ': '
           }
           if (context.parsed.y !== null) {
-            label += context.parsed.y.toFixed(2) + ' cms'
+            label += context.parsed.y.toFixed(2) + ' cfs'
           }
           return label
         },
