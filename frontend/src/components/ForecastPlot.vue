@@ -98,7 +98,7 @@
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
             :color="showQuantiles ? 'primary' : 'default'"
-            :disabled="quantilesFailed || showIQR"
+            :disabled="quantilesFailed"
             :loading="loadingQuantiles"
             @click="toggleQuantiles(reach_id)"
             icon
@@ -123,7 +123,6 @@
           <v-btn
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            color="primary"
             :disabled="downloading.csv"
             :loading="downloading.csv"
             @click="downCSV"
@@ -143,13 +142,12 @@
         <span>Download CSV</span>
       </v-tooltip>
 
-      <!-- JSON Download Button (existing) -->
+      <!-- JSON Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            color="primary"
             :disabled="downloading.json"
             :loading="downloading.json"
             @click="downJson"
