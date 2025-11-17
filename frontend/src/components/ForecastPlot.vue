@@ -51,7 +51,7 @@
         :show-legend="showLegend"
       />
     </div>
-    <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+    <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
       <!-- Legend Toggle Button -->
       <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
@@ -578,6 +578,12 @@ defineExpose({
   flex: 1;
   min-height: 0;
   position: relative;
+}
+
+.card-actions {
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 20px;
 }
 
 /* When in full screen, ensure body doesn't scroll */
