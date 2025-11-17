@@ -91,6 +91,12 @@ export const useRegionsStore = defineStore('regions', () => {
   const setRegion = async (regionName) => {
     const featureStore = useFeaturesStore()
     console.log('Setting region to:', regionName)
+
+    // first check to see if the region is already set correctly
+    if (currentRegion.value && currentRegion.value.name === regionName) {
+      console.log('Region is already set to:', regionName)
+      return
+    }
     const region = regions.value.find((region) => region.name === regionName)
     if (!region) {
       console.error(`Region ${regionName} not found`)
