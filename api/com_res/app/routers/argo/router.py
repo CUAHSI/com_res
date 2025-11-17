@@ -11,15 +11,10 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from app.db import Submission, User
-from app.models import (
-    ExtractMetadataRequestBody,
-    LogsResponseModel,
-    NWMVersionEnum,
-    SubmissionResponseModel,
-    UrlResponseModel,
-    UserSubmissionsResponseModel,
-    WorkflowDep,
-)
+from app.models import (ExtractMetadataRequestBody, LogsResponseModel,
+                        NWMVersionEnum, SubmissionResponseModel,
+                        UrlResponseModel, UserSubmissionsResponseModel,
+                        WorkflowDep)
 from app.users import current_active_user
 from config import get_minio_client, get_settings
 

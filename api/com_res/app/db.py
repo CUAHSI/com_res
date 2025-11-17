@@ -6,7 +6,8 @@ from typing import List, Optional, Tuple
 import httpx
 import motor.motor_asyncio
 from beanie import Document
-from fastapi_users.db import BaseOAuthAccount, BeanieBaseUser, BeanieUserDatabase
+from fastapi_users.db import (BaseOAuthAccount, BeanieBaseUser,
+                              BeanieUserDatabase)
 from pydantic import BaseModel, Field
 
 from config import get_settings
