@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+  <v-card v-if="show" :class="['mx-auto', { 'full-screen': isFullScreen }]" elevation="8" style="height: calc(30vh); width: 100%">
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
@@ -217,6 +217,22 @@
           </v-list>
         </v-sheet>
       </v-menu>
+      <!-- Full Screen Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            @click="toggleFullScreen"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen"></v-icon>
+          </v-btn>
+        </template>
+        <span>{{ isFullScreen ? 'Exit' : 'Enter' }} Full Screen</span>
+      </v-tooltip>
     </v-card-actions>
   </v-card>
 </template>
@@ -225,9 +241,8 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
-import { mdiCalendarExpandHorizontal, mdiChartAreaspline, mdiEye, mdiEyeOff } from '@mdi/js'
+import { mdiCalendarExpandHorizontal, mdiChartAreaspline, mdiEye, mdiEyeOff, mdiCodeJson, mdiFileDelimited, mdiFullscreen, mdiFullscreenExit } from '@mdi/js'
 import { API_BASE } from '@/constants'
-import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '../components/InfoTooltip.vue'
 import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
@@ -250,6 +265,10 @@ const showQuantiles = ref(false)
 const loadingQuantiles = ref(false)
 const quantilesFailed = ref(false)
 const showLegend = ref(false)
+const isFullScreen = ref(false)
+
+// Define emits
+const emit = defineEmits(['toggleFullScreen'])
 
 const showLegendToggle = computed(() => {
   return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
@@ -346,6 +365,11 @@ const formattedEndDate = computed({
   }
 })
 
+const toggleFullScreen = () => {
+  isFullScreen.value = !isFullScreen.value
+  emit('toggleFullScreen', isFullScreen.value)
+}
+
 const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
@@ -421,6 +445,16 @@ watch(timeSelectionMenu, (isOpen) => {
   if (isOpen) {
     tempStartDate.value = startDate.value
     tempEndDate.value = endDate.value
+  }
+})
+
+// Watch for full screen changes and adjust styling if needed
+watch(isFullScreen, (newValue) => {
+  if (newValue) {
+    // Optional: Add full screen styles or logic
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
   }
 })
 
@@ -504,5 +538,20 @@ onMounted(() => {
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
+}
+
+.v-card {
+  transition: all 0.3s ease;
+}
+
+.v-card.full-screen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10000 !important;
+  margin: 0 !important;
+  max-width: none !important;
 }
 </style>
