@@ -16,28 +16,19 @@
 
           <!-- Multi-reach Mode Toggle -->
           <div class="control-section">
-            <v-card
-              variant="flat"
-              class="multi-reach-toggle-card"
-            >
-              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px;">Selection Mode</v-card-title>
+            <v-card variant="flat" class="multi-reach-toggle-card">
+              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px"
+                >Selection Mode</v-card-title
+              >
               <v-radio-group
                 v-model="multiReachMode"
                 density="compact"
                 hide-details
                 inline
-                style="padding: 0px 12px 8px 12px;"
+                style="padding: 0px 12px 8px 12px"
               >
-                <v-radio
-                  label="Single Reach"
-                  :value="false"
-                  color="primary"
-                ></v-radio>
-                <v-radio
-                  label="Multi-reach Mode"
-                  :value="true"
-                  color="primary"
-                >
+                <v-radio label="Single Reach" :value="false" color="primary"></v-radio>
+                <v-radio label="Multi-reach Mode" :value="true" color="primary">
                   <template v-slot:label>
                     <span>Multi-reach</span>
                     <InfoTooltip
@@ -57,10 +48,7 @@
         <div class="right-column">
           <!-- Action Buttons -->
           <div v-if="activeFeature" class="control-section">
-            <v-card
-              variant="flat"
-              class="action-buttons-card"
-            >
+            <v-card variant="flat" class="action-buttons-card">
               <v-btn
                 id="btn-show-stage-slider"
                 @click="toggle('stage')"
@@ -142,15 +130,20 @@
         :show="showForecast"
       />
     </div>
-    <div
-      v-if="showStageSlider"
-      class='desktop-stage-slider-container'
-    >
+    <div v-if="showStageSlider" class="desktop-stage-slider-container">
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
         min="0"
-        :max="multiReachMode && multiReachStageData ? multiReachStageData.max : activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]"
-        :stages="multiReachMode && multiReachStageData ? multiReachStageData.stages_m : activeFeatureFimCogData.stages_m"
+        :max="
+          multiReachMode && multiReachStageData
+            ? multiReachStageData.max
+            : activeFeatureFimCogData.stages_m[activeFeatureFimCogData.stages_m.length - 1]
+        "
+        :stages="
+          multiReachMode && multiReachStageData
+            ? multiReachStageData.stages_m
+            : activeFeatureFimCogData.stages_m
+        "
         :flows="activeFeatureFimCogData.flows_cms"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
@@ -184,7 +177,8 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } = storeToRefs(featureStore)
+const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } =
+  storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -307,35 +301,31 @@ const activeFeatureFimCogData = computed(() => {
 // New computed property for multi-reach stage data
 const multiReachStageData = computed(() => {
   if (selectedFeatures.value.length === 0) return null
-  
+
   // Collect all fimCogData from selected features
   const allFimCogData = selectedFeatures.value
-    .map(feature => feature.properties?.fimCogData)
-    .filter(data => data && data.stages_m && data.stages_m.length > 0)
-  
+    .map((feature) => feature.properties?.fimCogData)
+    .filter((data) => data && data.stages_m && data.stages_m.length > 0)
+
   if (allFimCogData.length === 0) return null
-  
+
   // Find the minimum of all maximum stage values
-  const maxStages = allFimCogData.map(data => 
-    data.stages_m[data.stages_m.length - 1]
-  )
+  const maxStages = allFimCogData.map((data) => data.stages_m[data.stages_m.length - 1])
   const minMaxStage = Math.min(...maxStages)
-  
+
   // Find the maximum of all minimum stage values
-  const minStages = allFimCogData.map(data => data.stages_m[0])
+  const minStages = allFimCogData.map((data) => data.stages_m[0])
   const maxMinStage = Math.max(...minStages)
-  
+
   // Get all unique stages within the common range
   const allStages = Array.from(
     new Set(
-      allFimCogData.flatMap(data => 
-        data.stages_m.filter(stage => 
-          stage >= maxMinStage && stage <= minMaxStage
-        )
+      allFimCogData.flatMap((data) =>
+        data.stages_m.filter((stage) => stage >= maxMinStage && stage <= minMaxStage)
       )
     )
   ).sort((a, b) => a - b)
-  
+
   return {
     stages_m: allStages,
     min: maxMinStage,
@@ -346,8 +336,8 @@ const multiReachStageData = computed(() => {
 
 const showStageSlider = computed(() => {
   // Check if any selected feature has data
-  const hasData = selectedFeatures.value.some(feature => 
-    feature.properties?.fimCogData?.stages_m?.length > 0
+  const hasData = selectedFeatures.value.some(
+    (feature) => feature.properties?.fimCogData?.stages_m?.length > 0
   )
   return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
 })
@@ -356,28 +346,26 @@ const handleStageChange = () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
   mapHelpers.clearCogsFromMap()
   let addedCogs = false
-  
+
   // Get the features to process based on mode
   const featuresToProcess = multiReachMode.value ? selectedFeatures.value : [activeFeature.value]
-  
+
   for (const feature of featuresToProcess) {
     if (!feature?.properties?.fimCogData) continue
-    
+
     console.log('Processing feature for COGs:', feature)
     const fimCogData = feature.properties.fimCogData
     console.log('FIM COG Data:', fimCogData)
-    
+
     if (fimCogData) {
       // In multi-reach mode, use the common stages range
       let targetStage = mapHelpers.stageValue.value
-      
+
       if (multiReachMode.value && multiReachStageData.value) {
         // Ensure the stage is within the common range and snap if needed
         if (!multiReachStageData.value.stages_m.includes(targetStage)) {
           const nearestStage = multiReachStageData.value.stages_m.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage)
-              ? curr
-              : prev
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
           })
           targetStage = nearestStage
           console.log('Snapped to nearest common stage:', nearestStage)
@@ -386,31 +374,26 @@ const handleStageChange = () => {
         // Single reach mode - use original snapping logic
         if (!fimCogData.stages_m.includes(targetStage)) {
           const nearestStage = fimCogData.stages_m.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage)
-              ? curr
-              : prev
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
           })
           targetStage = nearestStage
           console.log('Snapped to nearest stage:', nearestStage)
         }
       }
-      
+
       // Update the stage value if it was snapped
       if (targetStage !== mapHelpers.stageValue.value) {
         mapHelpers.stageValue.value = targetStage
       }
-      
-      const cogUrls = mapHelpers.determineCogsForStage(
-        fimCogData.files,
-        fimCogData.stages_m
-      )
+
+      const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_m)
       if (cogUrls.length > 0) {
         addedCogs = true
         mapHelpers.addCogsToMap(cogUrls)
       }
     }
   }
-  
+
   if (!addedCogs) {
     alertStore.displayAlert({
       title: 'No Data Available',

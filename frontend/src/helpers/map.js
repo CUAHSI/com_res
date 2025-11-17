@@ -1,4 +1,4 @@
-import { nextTick, ref, shallowRef } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import L, { canvas } from 'leaflet'
 import 'proj4leaflet'
@@ -223,7 +223,6 @@ const addCogsToMap = async (cogs) => {
       // The structure is [band][rows] where all rows are Float32Arrays
       const pixelData = georaster.values[0] // First band
 
-      const noDataValue = georaster.noDataValue ?? -9999
       let inundatedPixels = 0
 
       // Optimized rendering for binary data (1 = inundated, NaN = not inundated)
@@ -368,6 +367,10 @@ async function createWMSLayers(region) {
     wmsLayers.value[region.name] = [] // Initialize the array
 
     sortedLayers.forEach((layer) => {
+      if (layer.name.includes('NHDPlus Flowlines')) {
+        console.log(`Intentionally skipping WMS creation for: ${layer.name} (ID: ${layer.id})`)
+        return
+      }
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
         pane: 'overlayPane',
