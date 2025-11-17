@@ -77,14 +77,14 @@ async def get_fim(
 
         query_job = client.query(query, job_config=job_config)
 
-        results = dict(files=[], flows_cms=[], stages_m=[])
+        results = dict(files=[], flows_cfs=[], stages_ft=[])
 
         for row in query_job:
             # TODO fix the "public_url listing in bigQuery"
             # https://cuahsi.atlassian.net/browse/CAM-797
             results['files'].append(row['asset_url'])
-            results['stages_m'].append(row['stage'])
-            results['flows_cms'].append(row['flow'])
+            results['stages_ft'].append(row['stage'])
+            results['flows_cfs'].append(row['flow'])
 
         # replace the "gs://" prefix with "https://storage.googleapis.com/"
         results['files'] = [url.replace("gs://", "https://storage.googleapis.com/") for url in results['files']]

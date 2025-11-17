@@ -97,7 +97,7 @@ const chartData = computed(() => {
   // Only show original streamflow when IQR is NOT shown
   if (!hasIQR.value) {
     datasets.push({
-      label: 'Streamflow (cms)',
+      label: 'Streamflow (cfs)',
       data: props.timeseries,
       fill: !hasQuantiles.value, // Only fill when quantiles are NOT shown
       backgroundColor: 'rgba(0, 0, 0, 0.2)', // black with transparency
@@ -154,7 +154,7 @@ const chartOptions = computed(() => ({
       type: shouldUseLogScale.value ? 'logarithmic' : 'linear', // Only use log scale for quantiles, not IQR
       title: {
         display: true,
-        text: 'Streamflow (cms)'
+        text: 'Streamflow (cfs)'
       },
       ticks: {
         color: '#555',
