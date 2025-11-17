@@ -32,15 +32,16 @@
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading historical data...</span>
     </v-row>
-    <LinePlot
-      v-if="!isLoading"
-      :timeseries="plot_timeseries"
-      :quantiles="showQuantiles ? quantilesData : []"
-      :title="plot_title"
-      :style="plot_style"
-      :use-log-scale="showQuantiles"
-      :show-legend="showLegend"
-    />
+    <div class="plot-container" :style="plotContainerStyle">
+      <LinePlot
+        v-if="!isLoading"
+        :timeseries="plot_timeseries"
+        :quantiles="showQuantiles ? quantilesData : []"
+        :title="plot_title"
+        :use-log-scale="showQuantiles"
+        :show-legend="showLegend"
+      />
+    </div>
 
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
       <!-- Legend Toggle Button -->
@@ -365,6 +366,20 @@ const cardStyle = computed(() => {
   }
 })
 
+const plotContainerStyle = computed(() => {
+  if (isFullScreen.value) {
+    return {
+      height: 'calc(100vh)', // Adjust based on your header/footer height
+      width: '100%'
+    }
+  } else {
+    return {
+      height: 'calc(23vh)',
+      width: '100%'
+    }
+  }
+})
+
 // Formatted display values
 const formattedStartDate = computed({
   get() {
@@ -563,6 +578,8 @@ onMounted(() => {
   transition: all 0.3s ease;
   height: calc(30vh);
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .plot-card.full-screen {
@@ -571,29 +588,16 @@ onMounted(() => {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 10000 !important;
+  z-index: 100000 !important;
   margin: 0 !important;
   max-width: none !important;
   max-height: none !important;
 }
 
-/* Ensure the chart inside also expands */
-.plot-card.full-screen :deep(.line-plot-container) {
-  height: calc(100vh - 80px) !important; /* Adjust based on your card header/footer height */
-  width: 100% !important;
-}
-
-.menu-content {
-  z-index: 5000 !important;
-}
-
-.chart-tooltip {
-  z-index: 99999 !important;
-}
-
-.chart-tooltip span {
-  white-space: normal;
-  word-break: normal;
+.plot-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
 
 /* When in full screen, ensure body doesn't scroll */

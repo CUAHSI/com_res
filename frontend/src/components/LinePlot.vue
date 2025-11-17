@@ -1,8 +1,6 @@
 <template>
   <h5>{{ props.title }}</h5>
-  <div style="height: calc(23vh); width: 100%">
     <Line :data="chartData" :options="chartOptions" />
-  </div>
 </template>
 
 <script setup>

@@ -1,5 +1,10 @@
 <template>
-  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+  <v-card 
+    v-if="show" 
+    class="mx-auto plot-card" 
+    :class="{ 'full-screen': isFullScreen }"
+    elevation="8" 
+  >
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
@@ -35,17 +40,17 @@
     <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
       <span class="ml-3">No forecasted data available.</span>
     </v-row>
-    <LinePlot
-      v-if="!isLoading && hasData"
-      :timeseries="plot_timeseries"
-      :quantiles="showQuantiles ? quantilesData : []"
-      :iqr="showIQR ? iqrData : []"
-      :title="plot_title"
-      :style="plot_style"
-      :use-log-scale="showQuantiles"
-      :show-legend="showLegend"
-    />
-
+    <div class="plot-container" :style="plotContainerStyle">
+      <LinePlot
+        v-if="!isLoading && hasData"
+        :timeseries="plot_timeseries"
+        :quantiles="showQuantiles ? quantilesData : []"
+        :iqr="showIQR ? iqrData : []"
+        :title="plot_title"
+        :use-log-scale="showQuantiles"
+        :show-legend="showLegend"
+      />
+    </div>
     <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
       <!-- Legend Toggle Button -->
       <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
@@ -198,6 +203,7 @@ const showQuantiles = ref(false)
 const loadingQuantiles = ref(false)
 const quantilesFailed = ref(false)
 const showLegend = ref(false)
+const isFullScreen = ref(false)
 
 // New IQR state
 const showIQR = ref(false)
@@ -206,6 +212,20 @@ const iqrData = ref([])
 
 const showLegendToggle = computed(() => {
   return (showQuantiles.value || showIQR.value) && !loadingQuantiles.value && !loadingIQR.value
+})
+
+const plotContainerStyle = computed(() => {
+  if (isFullScreen.value) {
+    return {
+      height: 'calc(100vh - 80px)',
+      width: '100%'
+    }
+  } else {
+    return {
+      height: 'calc(23vh)',
+      width: '100%'
+    }
+  }
 })
 
 const setShowQuantiles = async (value, reach_id) => {
@@ -510,5 +530,36 @@ defineExpose({
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
+}
+
+.plot-card {
+  transition: all 0.3s ease;
+  height: calc(30vh);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.plot-card.full-screen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 100000 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.plot-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* When in full screen, ensure body doesn't scroll */
+body.no-scroll {
+  overflow: hidden;
 }
 </style>
