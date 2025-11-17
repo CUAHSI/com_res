@@ -245,6 +245,7 @@ const stopDrag = () => {
 
 <style scoped>
 .slider-wrapper {
+  height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -262,6 +263,7 @@ const stopDrag = () => {
   pointer-events: none;
   box-sizing: border-box;
   width: 100%;
+  height: 400px !important; /* Explicitly set the height */
   margin: 5px 0;
 }
 
