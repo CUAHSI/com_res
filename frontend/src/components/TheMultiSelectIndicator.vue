@@ -25,7 +25,7 @@ const { canSelectMoreFeatures } = storeToRefs(featureStore)
   border-radius: 25px;
   font-size: 14px;
   font-weight: bold;
-  z-index: 10000;
+  z-index: var(--z-index-multi-select-indicator);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: 2px solid white;
   animation: pulse 2s infinite;

@@ -70,7 +70,7 @@ const canAddMoreFeatures = computed(() => {
 <style scoped>
 .context-menu-container {
   position: fixed;
-  z-index: 10000;
+  z-index: var(--z-index-context-menu);
   background: white;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
