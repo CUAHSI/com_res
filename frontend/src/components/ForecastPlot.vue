@@ -282,7 +282,6 @@ const toggleIQR = async (reach_id) => {
   // If turning on IQR, turn off quantiles
   if (newValue) {
     showQuantiles.value = false
-    quantilesData.value = []
   }
 
   showIQR.value = newValue
