@@ -568,7 +568,7 @@ defineExpose({
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 100000 !important;
+  z-index: 999999 !important;
   margin: 0 !important;
   max-width: none !important;
   max-height: none !important;
