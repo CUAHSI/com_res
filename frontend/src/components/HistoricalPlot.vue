@@ -1,9 +1,9 @@
 <template>
-  <v-card 
-    v-if="show" 
-    class="mx-auto" 
+  <v-card
+    v-if="show"
+    class="mx-auto"
     :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
-    elevation="8" 
+    elevation="8"
   >
     <v-skeleton-loader
       v-if="isLoading"
@@ -247,7 +247,16 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
-import { mdiCalendarExpandHorizontal, mdiChartAreaspline, mdiEye, mdiEyeOff, mdiCodeJson, mdiFileDelimited, mdiFullscreen, mdiFullscreenExit } from '@mdi/js'
+import {
+  mdiCalendarExpandHorizontal,
+  mdiChartAreaspline,
+  mdiEye,
+  mdiEyeOff,
+  mdiCodeJson,
+  mdiFileDelimited,
+  mdiFullscreen,
+  mdiFullscreenExit
+} from '@mdi/js'
 import { API_BASE } from '@/constants'
 import InfoTooltip from '../components/InfoTooltip.vue'
 import { useQuantilesStore } from '@/stores/quantilesStore'
@@ -351,20 +360,6 @@ const initializeDates = () => {
   startDate.value = initialStart
   endDate.value = today
 }
-
-const cardStyle = computed(() => {
-  if (isFullScreen.value) {
-    return {
-      // We'll handle most styling via CSS classes
-      zIndex: '10000'
-    }
-  } else {
-    return {
-      height: 'calc(30vh)',
-      width: '100%'
-    }
-  }
-})
 
 const plotContainerStyle = computed(() => {
   if (isFullScreen.value) {

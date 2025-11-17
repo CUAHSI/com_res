@@ -1,9 +1,9 @@
 <template>
-  <v-card 
-    v-if="show" 
-    class="mx-auto" 
+  <v-card
+    v-if="show"
+    class="mx-auto"
     :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
-    elevation="8" 
+    elevation="8"
   >
     <v-skeleton-loader
       v-if="isLoading"
@@ -194,7 +194,16 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, watch, toRef, computed } from 'vue'
-import { mdiChartAreaspline, mdiEye, mdiEyeOff, mdiChartBox, mdiCodeJson, mdiFileDelimited, mdiFullscreenExit, mdiFullscreen } from '@mdi/js'
+import {
+  mdiChartAreaspline,
+  mdiEye,
+  mdiEyeOff,
+  mdiChartBox,
+  mdiCodeJson,
+  mdiFileDelimited,
+  mdiFullscreenExit,
+  mdiFullscreen
+} from '@mdi/js'
 import { API_BASE } from '@/constants'
 import InfoTooltip from '@/components/InfoTooltip.vue'
 import { useQuantilesStore } from '@/stores/quantilesStore'
