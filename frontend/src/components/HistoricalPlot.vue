@@ -88,7 +88,6 @@
           <v-btn
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            color="primary"
             :disabled="downloading.csv"
             :loading="downloading.csv"
             @click="downCSV"
@@ -114,7 +113,6 @@
           <v-btn
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            color="primary"
             :disabled="downloading.json"
             :loading="downloading.json"
             @click="downJson"
@@ -152,7 +150,7 @@
                 v-bind="{ ...menuProps, ...tooltipProps }"
                 icon
               >
-                <v-icon color="primary">{{ mdiCalendarExpandHorizontal }}</v-icon>
+                <v-icon>{{ mdiCalendarExpandHorizontal }}</v-icon>
               </v-btn>
             </template>
           </v-tooltip>
