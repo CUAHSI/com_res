@@ -39,6 +39,7 @@
       v-if="!isLoading && hasData"
       :timeseries="plot_timeseries"
       :quantiles="showQuantiles ? quantilesData : []"
+      :iqr="showIQR ? iqrData : []"
       :title="plot_title"
       :style="plot_style"
       :use-log-scale="showQuantiles"
@@ -51,9 +52,9 @@
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
-            v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
+            v-if="plot_timeseries.length > 0 && !isLoading && (showQuantiles || showIQR)"
             :color="showLegend ? 'primary' : 'default'"
-            @click="quantilesStore.toggleLegend"
+            @click="toggleLegend"
             icon
             size="small"
             class="mr-1"
@@ -62,6 +63,32 @@
           </v-btn>
         </template>
         <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
+      </v-tooltip>
+
+      <!-- IQR Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :color="showIQR ? 'primary' : 'default'"
+            :disabled="loadingIQR"
+            :loading="loadingIQR"
+            @click="toggleIQR(reach_id)"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="mdiChartBox"></v-icon>
+            <v-progress-circular
+              v-if="loadingIQR"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>{{ showIQR ? 'Hide' : 'Show' }} Forecast IQR</span>
       </v-tooltip>
 
       <!-- Quantiles Toggle Button -->
@@ -73,7 +100,7 @@
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="quantilesFailed"
             :loading="loadingQuantiles"
-            @click="quantilesStore.toggleQuantiles(reach_id)"
+            @click="toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
@@ -96,7 +123,6 @@
           <v-btn
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            color="primary"
             :disabled="downloading.csv"
             :loading="downloading.csv"
             @click="downCSV"
@@ -116,13 +142,12 @@
         <span>Download CSV</span>
       </v-tooltip>
 
-      <!-- JSON Download Button (existing) -->
+      <!-- JSON Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            color="primary"
             :disabled="downloading.json"
             :loading="downloading.json"
             @click="downJson"
@@ -147,8 +172,8 @@
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose, watch, toRef } from 'vue'
-import { mdiChartAreaspline, mdiEye, mdiEyeOff } from '@mdi/js'
+import { ref, defineExpose, watch, toRef, computed } from 'vue'
+import { mdiChartAreaspline, mdiEye, mdiEyeOff, mdiChartBox } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '@/components/InfoTooltip.vue'
@@ -168,7 +193,139 @@ import { storeToRefs } from 'pinia'
 
 // Use Pinia store
 const quantilesStore = useQuantilesStore()
-const { showQuantiles, quantilesData, loadingQuantiles, quantilesFailed, showLegend, showLegendToggle } = storeToRefs(quantilesStore)
+const { quantilesData } = storeToRefs(quantilesStore)
+const showQuantiles = ref(false)
+const loadingQuantiles = ref(false)
+const quantilesFailed = ref(false)
+const showLegend = ref(false)
+
+// New IQR state
+const showIQR = ref(false)
+const loadingIQR = ref(false)
+const iqrData = ref([])
+
+const showLegendToggle = computed(() => {
+  return (showQuantiles.value || showIQR.value) && !loadingQuantiles.value && !loadingIQR.value
+})
+
+const setShowQuantiles = async (value, reach_id) => {
+  // If turning on quantiles, turn off IQR
+  if (value) {
+    showIQR.value = false
+    iqrData.value = []
+  }
+
+  showQuantiles.value = value
+  quantilesFailed.value = false
+  if (value && quantilesData.value.length === 0) {
+    loadingQuantiles.value = true
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+  }
+  loadingQuantiles.value = false
+}
+
+// Toggle quantiles display - uses the shared store so both plots stay synchronized
+const toggleQuantiles = (reach_id) => {
+  setShowQuantiles(!showQuantiles.value, reach_id)
+}
+
+// Toggle IQR display
+const toggleIQR = async (reach_id) => {
+  const newValue = !showIQR.value
+
+  // If turning on IQR, turn off quantiles
+  if (newValue) {
+    showQuantiles.value = false
+    quantilesData.value = []
+  }
+
+  showIQR.value = newValue
+
+  if (newValue && iqrData.value.length === 0) {
+    await fetchIQRData(reach_id)
+  } else if (!newValue) {
+    iqrData.value = []
+  }
+}
+
+// Fetch IQR data from the summarized forecast endpoint
+const fetchIQRData = async (reach_id) => {
+  try {
+    loadingIQR.value = true
+    const params = new URLSearchParams({
+      reach_id: reach_id,
+      date_time: datetime.value.toISOString().split('T')[0],
+      forecast: forecast_mode.value
+    })
+
+    const response = await fetch(
+      `${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    // Transform the data to match the expected format for LinePlot
+    if (data.timestamp && data.mean && data.q25 && data.q75) {
+      iqrData.value = [
+        {
+          label: 'Mean Forecast',
+          data: data.timestamp.map((timestamp, index) => ({
+            x: timestamp,
+            y: data.mean[index]
+          })),
+          borderColor: 'rgba(0, 0, 0, 1)', // Black line for mean forecast
+          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          fill: false,
+          tension: 0.4, // Smooth line like the original streamflow
+          pointRadius: 0, // turn off points
+          borderWidth: 2
+        },
+        {
+          label: '75th Percentile',
+          data: data.timestamp.map((timestamp, index) => ({
+            x: timestamp,
+            y: data.q75[index]
+          })),
+          borderColor: 'rgba(70, 130, 180, 0.8)',
+          backgroundColor: 'rgba(128, 128, 128, 0.1)',
+          fill: false,
+          pointRadius: 0, // turn off points
+          tension: 0.1, // Less smooth for bounds
+          borderDash: [5, 5],
+          borderWidth: 1
+        },
+        {
+          label: '25th Percentile',
+          data: data.timestamp.map((timestamp, index) => ({
+            x: timestamp,
+            y: data.q25[index]
+          })),
+          borderColor: 'rgba(165, 42, 42, 0.8)',
+          backgroundColor: 'rgba(128, 128, 128, 0.1)',
+          fill: '-1', // Fill to the previous dataset (q75)
+          pointRadius: 0, // turn off points
+          tension: 0.1, // Less smooth for bounds
+          borderDash: [2, 2],
+          borderWidth: 1
+        }
+      ]
+    }
+  } catch (err) {
+    console.error('Failed to fetch IQR data:', err)
+    showIQR.value = false
+  } finally {
+    loadingIQR.value = false
+  }
+}
+
+// Toggle legend visibility
+const toggleLegend = () => {
+  showLegend.value = !showLegend.value
+}
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
@@ -211,6 +368,9 @@ const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
   plot_style.value = {}
+  iqrData.value = []
+  showIQR.value = false
+  showQuantiles.value = false
 }
 
 watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
@@ -230,8 +390,18 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
       ensemble.value
     )
     // Fetch new quantiles when reach ID changes
-    await quantilesStore.setQuantilesData([])
-    quantilesStore.getQuantilesData(reach_id.value)
+    loadingQuantiles.value = true
+    quantilesFailed.value = false
+    if (showQuantiles.value) {
+      await quantilesStore.setQuantilesData([])
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value))
+    }
+    loadingQuantiles.value = false
+
+    // Fetch new IQR data when reach ID changes
+    if (showIQR.value) {
+      await fetchIQRData(reach_id.value)
+    }
   }
 })
 

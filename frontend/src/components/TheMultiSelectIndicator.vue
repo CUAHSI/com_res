@@ -1,11 +1,9 @@
 <template>
-    <div class="multi-select-indicator" :class="{ 'has-too-many-features': !canSelectMoreFeatures }">
+  <div class="multi-select-indicator" :class="{ 'has-too-many-features': !canSelectMoreFeatures }">
     <template v-if="canSelectMoreFeatures">
       🖱️ Multi-select Mode Active - Click features to select multiple
     </template>
-    <template v-else>
-      ⚠️ Maximum features selected
-    </template>
+    <template v-else> ⚠️ Maximum features selected </template>
   </div>
 </template>
 

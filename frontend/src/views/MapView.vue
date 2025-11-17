@@ -16,28 +16,19 @@
 
           <!-- Multi-reach Mode Toggle -->
           <div class="control-section">
-            <v-card
-              variant="flat"
-              class="multi-reach-toggle-card"
-            >
-              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px;">Selection Mode</v-card-title>
+            <v-card variant="flat" class="multi-reach-toggle-card">
+              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px"
+                >Selection Mode</v-card-title
+              >
               <v-radio-group
                 v-model="multiReachMode"
                 density="compact"
                 hide-details
                 inline
-                style="padding: 0px 12px 8px 12px;"
+                style="padding: 0px 12px 8px 12px"
               >
-                <v-radio
-                  label="Single Reach"
-                  :value="false"
-                  color="primary"
-                ></v-radio>
-                <v-radio
-                  label="Multi-reach Mode"
-                  :value="true"
-                  color="primary"
-                >
+                <v-radio label="Single Reach" :value="false" color="primary"></v-radio>
+                <v-radio label="Multi-reach Mode" :value="true" color="primary">
                   <template v-slot:label>
                     <span>Multi-reach</span>
                     <InfoTooltip
@@ -57,10 +48,7 @@
         <div class="right-column">
           <!-- Action Buttons -->
           <div v-if="activeFeature" class="control-section">
-            <v-card
-              variant="flat"
-              class="action-buttons-card"
-            >
+            <v-card variant="flat" class="action-buttons-card">
               <v-btn
                 id="btn-show-stage-slider"
                 @click="toggle('stage')"
@@ -111,9 +99,7 @@
       </div>
     </div>
 
-    <v-row
-      :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }"
-    >
+    <v-row :class="{ 'desktop-map-container': !mdAndDown, 'mobile-map-container': mdAndDown }">
       <v-col style="padding: 0px; margin: 0px; position: relative">
         <TheLeafletMap />
       </v-col>
@@ -144,17 +130,10 @@
         :show="showForecast"
       />
     </div>
-    <div
-      v-if="showStageSlider"
-      class='desktop-stage-slider-container'
-    >
+    <div v-if="showStageSlider" class="desktop-stage-slider-container">
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.min
-            : activeFeatureFimCogData.stages_ft[0]
-        "
+        :min="0"
         :max="
           multiReachMode && multiReachStageData
             ? multiReachStageData.max
@@ -198,7 +177,8 @@ const showForecast = ref(false)
 const historicalPlotRef = ref(null)
 const forecastPlotRef = ref(null)
 
-const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } = storeToRefs(featureStore)
+const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } =
+  storeToRefs(featureStore)
 
 const reach_name = ref(null)
 const reach_id = ref(null)
@@ -219,6 +199,13 @@ watch(
 
       reach_id.value = newVal
       reach_name.value = featureStore.activeFeatureName
+
+      // if the new id is null, clear the plots
+      if (reach_id.value === null || reach_id.value === undefined) {
+        showHistorical.value = false
+        showForecast.value = false
+        return
+      }
 
       console.log('Active feature COMID changed, setting reach_id to: ', reach_id.value)
       console.log('Active feature Name: ' + reach_name.value)
@@ -296,22 +283,22 @@ const activeFeatureFimCogData = computed(() => {
 // New computed property for multi-reach stage data
 const multiReachStageData = computed(() => {
   if (selectedFeatures.value.length === 0) return null
-  
+
   // Collect all fimCogData from selected features
   const allFimCogData = selectedFeatures.value
     .map((feature) => feature.properties?.fimCogData)
     .filter((data) => data && data.stages_ft && data.stages_ft.length > 0)
 
   if (allFimCogData.length === 0) return null
-  
+
   // Find the minimum of all maximum stage values
   const maxStages = allFimCogData.map((data) => data.stages_ft[data.stages_ft.length - 1])
   const minMaxStage = Math.min(...maxStages)
-  
+
   // Find the maximum of all minimum stage values
   const minStages = allFimCogData.map((data) => data.stages_ft[0])
   const maxMinStage = Math.max(...minStages)
-  
+
   // Get all unique stages within the common range
   const allStages = Array.from(
     new Set(
@@ -320,7 +307,7 @@ const multiReachStageData = computed(() => {
       )
     )
   ).sort((a, b) => a - b)
-  
+
   return {
     stages_ft: allStages,
     min: maxMinStage,
@@ -341,21 +328,21 @@ const handleStageChange = () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
   mapHelpers.clearCogsFromMap()
   let addedCogs = false
-  
+
   // Get the features to process based on mode
   const featuresToProcess = multiReachMode.value ? selectedFeatures.value : [activeFeature.value]
-  
+
   for (const feature of featuresToProcess) {
     if (!feature?.properties?.fimCogData) continue
-    
+
     console.log('Processing feature for COGs:', feature)
     const fimCogData = feature.properties.fimCogData
     console.log('FIM COG Data:', fimCogData)
-    
+
     if (fimCogData) {
       // In multi-reach mode, use the common stages range
       let targetStage = mapHelpers.stageValue.value
-      
+
       if (multiReachMode.value && multiReachStageData.value) {
         // Ensure the stage is within the common range and snap if needed
         if (!multiReachStageData.value.stages_ft.includes(targetStage)) {
@@ -375,7 +362,7 @@ const handleStageChange = () => {
           console.log('Snapped to nearest stage:', nearestStage)
         }
       }
-      
+
       // Update the stage value if it was snapped
       if (targetStage !== mapHelpers.stageValue.value) {
         mapHelpers.stageValue.value = targetStage
@@ -388,7 +375,7 @@ const handleStageChange = () => {
       }
     }
   }
-  
+
   if (!addedCogs) {
     alertStore.displayAlert({
       title: 'No Data Available',

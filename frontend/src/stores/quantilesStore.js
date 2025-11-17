@@ -1,34 +1,14 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { API_BASE } from '@/constants'
 
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
 export const useQuantilesStore = defineStore('quantiles', () => {
-  const showQuantiles = ref(false)
   const quantilesData = ref([])
-  const loadingQuantiles = ref(false)
-  const quantilesFailed = ref(false)
-  const showLegend = ref(true)
-
-  const showLegendToggle = computed(() => {
-    return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
-  })
 
   // Cache for quantiles data by reach_id
   const quantilesCache = ref(new Map())
-
-  const setShowQuantiles = async (value, reach_id) => {
-    showQuantiles.value = value
-
-    if (!value) {
-      quantilesData.value = []
-    }else{
-      if (quantilesData.value.length === 0) {
-        await getQuantilesData(reach_id)
-      }
-    }
-  }
 
   const setQuantilesData = async (data) => {
     quantilesData.value = data
@@ -44,19 +24,19 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const getCachedQuantilesData = (reachId, maxAge = MAX_CACHE_AGE) => {
     const cached = quantilesCache.value.get(reachId)
     if (!cached) return null
-    
+
     // Check if cache is still valid
     if (Date.now() - cached.timestamp > maxAge) {
       quantilesCache.value.delete(reachId)
       return null
     }
-    
+
     return cached.data
   }
 
   const hasCachedQuantilesData = (reachId, maxAge = MAX_CACHE_AGE) => {
     const cached = quantilesCache.value.get(reachId)
-    return cached && (Date.now() - cached.timestamp <= maxAge)
+    return cached && Date.now() - cached.timestamp <= maxAge
   }
 
   // Clear cache if needed (optional - for memory management)
@@ -72,42 +52,39 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   // Fetch quantiles data from the FastAPI endpoint
   const getQuantilesData = async (reach_id) => {
     if (!reach_id) return
-    loadingQuantiles.value = true
-    quantilesFailed.value = false
 
     // Check if we have cached data for this reach_id
     if (hasCachedQuantilesData(reach_id)) {
       const cachedData = getCachedQuantilesData(reach_id)
       setQuantilesData(cachedData)
-      loadingQuantiles.value = false
-      return
+      return true
     }
-    
+
     try {
-      const response = await fetch(`${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id}`)
+      const response = await fetch(
+        `${API_BASE}/timeseries/historical-quantiles?feature_id=${reach_id}`
+      )
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
+
       const data = await response.json()
 
       // if the data is empty, return
       if (!data || data.length === 0) {
-        loadingQuantiles.value = false
-        quantilesFailed.value = true
-        return
+        return false
       }
-      
+
       // Get current year for date alignment
       const currentYear = new Date().getFullYear()
-      
+
       // Create the base Q0 data (hidden from legend and tooltips)
-      const q0Data = data.map(item => {
+      const q0Data = data.map((item) => {
         const date = new Date(currentYear, 0)
         date.setDate(item.doy)
         return { x: date.toISOString().split('T')[0], y: item.q0 }
       })
-      
+
       // Transform the quantiles data for the chart - use actual dates for current year
       const transformedQuantiles = [
         {
@@ -129,7 +106,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Much Below Normal',
-          data: data.map(item => {
+          data: data.map((item) => {
             const date = new Date(currentYear, 0)
             date.setDate(item.doy)
             return { x: date.toISOString().split('T')[0], y: item.q10 }
@@ -147,7 +124,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Below Normal',
-          data: data.map(item => {
+          data: data.map((item) => {
             const date = new Date(currentYear, 0)
             date.setDate(item.doy)
             return { x: date.toISOString().split('T')[0], y: item.q25 }
@@ -165,7 +142,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Normal',
-          data: data.map(item => {
+          data: data.map((item) => {
             const date = new Date(currentYear, 0)
             date.setDate(item.doy)
             return { x: date.toISOString().split('T')[0], y: item.q75 }
@@ -183,7 +160,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Above Normal',
-          data: data.map(item => {
+          data: data.map((item) => {
             const date = new Date(currentYear, 0)
             date.setDate(item.doy)
             return { x: date.toISOString().split('T')[0], y: item.q90 }
@@ -200,47 +177,28 @@ export const useQuantilesStore = defineStore('quantiles', () => {
           tension: 0.1
         }
       ]
-      
+
       // Cache the data for future use
       cacheQuantilesData(reach_id, transformedQuantiles)
-      
+
       // Set the shared quantiles data in Pinia store
       setQuantilesData(transformedQuantiles)
-
     } catch (err) {
       console.error('Failed to load quantiles data:', err)
-    } finally {
-      loadingQuantiles.value = false
+      return false
     }
-  }
-
-  // Toggle quantiles display - uses the shared store so both plots stay synchronized
-  const toggleQuantiles = (reach_id) => {
-    setShowQuantiles(!showQuantiles.value, reach_id)
-  }
-
-  // Toggle legend visibility
-  const toggleLegend = () => {
-    showLegend.value = !showLegend.value
+    return true
   }
 
   return {
-    loadingQuantiles,
-    quantilesFailed,
-    showQuantiles,
     quantilesData,
     quantilesCache,
-    showLegend,
-    showLegendToggle,
     getQuantilesData,
-    setShowQuantiles,
     setQuantilesData,
     cacheQuantilesData,
     getCachedQuantilesData,
     hasCachedQuantilesData,
     clearCache,
-    clearCacheForReach,
-    toggleLegend,
-    toggleQuantiles,
+    clearCacheForReach
   }
 })
