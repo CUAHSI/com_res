@@ -19,7 +19,7 @@ const props = defineProps({
 <style scoped>
 .zlert {
   position: fixed;
-  z-index: 9999;
+  z-index: var(--z-index-alerts);
   width: 100vw;
 }
 </style>

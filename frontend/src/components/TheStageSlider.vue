@@ -2,11 +2,8 @@
   <v-card class="slider-wrapper">
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
-      <h3>Stage-Flow</h3>
-      <InfoTooltip
-        text="This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels."
-        size="x-small"
-      />
+      <h3>{{ headerTitle }}</h3>
+      <InfoTooltip iconSize="x-small" :text="tooltipText" />
     </div>
 
     <div class="thermometer-slider-container" :style="containerStyle">
@@ -16,24 +13,40 @@
 
         <!-- Grabbable handle -->
         <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-          <div class="handle-label">{{ flowFromStage(modelValue) }} cfs</div>
+          <div class="handle-label">{{ handleLabel }}</div>
         </div>
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
-        <v-slider v-model="modelValue" vertical :max="max" :min="min" :step="step" hide-details class="slider-input"
-          @update:modelValue="$emit('update:modelValue', modelValue)"></v-slider>
+        <v-slider
+          v-model="modelValue"
+          vertical
+          :max="max"
+          :min="min"
+          :step="step"
+          hide-details
+          class="slider-input"
+          @update:modelValue="$emit('update:modelValue', modelValue)"
+        ></v-slider>
 
         <!-- Tick marks -->
         <div class="ticks">
-          <div v-for="(_, index) in ticks" :key="index" class="tick"
+          <div
+            v-for="(_, index) in ticks"
+            :key="index"
+            class="tick"
             :class="{ 'major-tick': index % majorTickInterval === 0 }"
-            :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"></div>
+            :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
+          ></div>
         </div>
 
         <!-- Labels inside thermometer -->
         <div class="labels-inside">
-          <div v-for="(stage, index) in visibleStages" :key="index" class="label-inside"
-            :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }">
+          <div
+            v-for="(stage, index) in visibleStages"
+            :key="index"
+            class="label-inside"
+            :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
+          >
             {{ stage }}
           </div>
         </div>
@@ -42,16 +55,21 @@
 
     <!-- Footer with additional info -->
     <div class="slider-footer">
-      <span>Stage (ft)</span>
-      <InfoTooltip
-        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs)." />
+      <span>{{ footerLabel }}</span>
+      <InfoTooltip :text="footerTooltip" />
     </div>
   </v-card>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import InfoTooltip from './InfoTooltip.vue' // Make sure to import the InfoTooltip
+import { debounce } from 'lodash'
+import InfoTooltip from './InfoTooltip.vue'
+import { useFeaturesStore } from '@/stores/features'
+import { storeToRefs } from 'pinia'
+
+const featureStore = useFeaturesStore()
+const { multiReachMode } = storeToRefs(featureStore)
 
 const props = defineProps({
   modelValue: {
@@ -102,15 +120,56 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const trackSliderChange = debounce((value) => {
+  try {
+    if (window.heap) {
+      window.heap.track('Slider Value Changed', {
+        newValue: value,
+        min: props.min,
+        max: props.max,
+        step: props.step
+      })
+    } else {
+      console.warn('Heap is not available. Slider change event not tracked.')
+    }
+  } catch (error) {
+    console.warn('Error tracking slider change event:', error)
+  }
+}, 300)
+
 const modelValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => {
+    emit('update:modelValue', value)
+    trackSliderChange(value)
+  }
 })
 
 const ticks = Array(props.tickCount).fill(0)
 const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
+
+// Computed properties for dynamic text based on multiReachMode
+const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
+
+const tooltipText = computed(() =>
+  multiReachMode.value
+    ? 'This slider controls water stage levels. Drag the handle to adjust stage values. The color gradient indicates intensity levels.'
+    : 'This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels.'
+)
+
+const handleLabel = computed(() =>
+  multiReachMode.value ? `${props.modelValue} ft` : `${flowFromStage(props.modelValue)} cfs`
+)
+
+const footerLabel = computed(() => (multiReachMode.value ? 'Stage (ft)' : 'Stage (ft)'))
+
+const footerTooltip = computed(() =>
+  multiReachMode.value
+    ? 'Stage values represent water height measurements. Adjust the slider to change the water stage level.'
+    : 'Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs).'
+)
 
 // Calculate which stages to show based on available space
 const visibleStages = computed(() => {
@@ -135,7 +194,7 @@ const containerStyle = computed(() => ({
 
 const mercuryStyle = computed(() => ({
   height: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
-  backgroundColor: mercuryColor.value,
+  backgroundColor: 'blue',
   margin: '0 10px' // Add horizontal padding
 }))
 
@@ -143,19 +202,6 @@ const handleStyle = computed(() => ({
   bottom: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
   cursor: isDragging.value ? 'grabbing' : 'grab'
 }))
-
-const mercuryColor = computed(() => {
-  const percent = (props.modelValue - props.min) / (props.max - props.min)
-  if (percent < 0.5) {
-    const subPercent = percent * 2
-    const hue = 200 + (280 - 200) * subPercent
-    return `hsl(${hue}, 80%, ${70 - subPercent * 20}%)`
-  } else {
-    const subPercent = (percent - 0.5) * 2
-    const hue = 280 + (360 - 280) * subPercent
-    return `hsl(${hue > 360 ? hue - 360 : hue}, 80%, ${50 - subPercent * 10}%)`
-  }
-})
 
 const flowFromStage = (stage) => {
   const index = props.stages.indexOf(stage)
@@ -259,8 +305,8 @@ const stopDrag = () => {
 }
 
 /* Ensure tooltips have high z-index */
-.slider-header>>>.v-overlay__content,
-.slider-footer>>>.v-overlay__content {
+.slider-header >>> .v-overlay__content,
+.slider-footer >>> .v-overlay__content {
   z-index: 1002 !important;
   max-width: 200px;
   white-space: normal;

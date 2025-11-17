@@ -23,7 +23,7 @@
         rel="stylesheet"
       />
       <SnackBar />
-      <TheFooter />
+      <TheFooter v-if="!isMapsRoute" />
     </v-main>
   </v-app>
 </template>
@@ -35,7 +35,7 @@ import TheMobileNavDrawer from '@/components/TheMobileNavDrawer.vue'
 import AlertPopup from './components/AlertPopup.vue'
 import SnackBar from './components/SnackBar.vue'
 import TheFooter from './components/TheFooter.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useAlertStore } from './stores/alerts'
 import { useRegionsStore } from './stores/regions'
 import DisclaimerDialog from './components/DisclaimerDialog.vue'
@@ -81,6 +81,11 @@ const paths = [
   }
 ]
 
+// Computed property to check if current route is /maps
+const isMapsRoute = computed(() => {
+  return router.currentRoute.value.path === '/maps'
+})
+
 function toggleMobileNav() {
   showMobileNavigation.value = !showMobileNavigation.value
 }
@@ -94,17 +99,36 @@ watch(
         regionsStore.setRegion(region)
       }
       if (!newNeedDisclaimer && !currentRegion.value) {
-        alertStore.displayAlert({
-          title: 'No Region Selected',
-          text: 'You must select a region to view its data.',
-          type: 'error',
-          closable: true,
-          duration: 2
-        })
+        console.log('No Region Selected, you must select a region to view its data.')
       }
     }
   }
 )
+
+// Track page views using Vue Router's afterEach hook
+router.afterEach((to) => {
+  try {
+    switch (to.path) {
+      case '/':
+        window.heap.track('Homepage View')
+        break
+      case '/maps':
+        window.heap.track('Regional Map Page View', { region: to.query.region || 'Unknown' })
+        break
+      case '/resources':
+        window.heap.track('Resources Page View')
+        break
+      case '/about':
+        window.heap.track('About Page View')
+        break
+      default:
+        // Optionally track other pages
+        break
+    }
+  } catch (error) {
+    console.warn('Heap tracking error:', error)
+  }
+})
 </script>
 
 <style scoped>

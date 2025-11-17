@@ -68,6 +68,35 @@ Push the image:
 You can see the image in the repository here:
 [Artifact Registry](https://console.cloud.google.com/artifacts/docker/com-res/us-central1/cuahsi/fimserv?inv=1&invt=Ab1J9A&project=com-res)
 
+To create the job using the yaml:
+```
+gcloud beta run jobs create fimserv \
+  --region=us-central1 \
+  --project=com-res \
+  --image=us-central1-docker.pkg.dev/com-res/cuahsi/fimserv:latest \
+  --tasks=1 \
+  --max-retries=0 \
+  --task-timeout=600s \
+  --cpu=8 \
+  --memory=32Gi \
+  --args="reachfim_interval" \
+  --args="11010001" \
+  --args="8585030" \
+  --args="10" \
+  --args="1" \
+  --service-account=451087111407-compute@developer.gserviceaccount.com \
+  --add-volume=name=com-res-fim-output,type=cloud-storage,bucket=com_res_fim_output \
+  --add-volume-mount=volume=com-res-fim-output,mount-path=/home/output
+```
+
+To update the job
+```
+gcloud run jobs update fimserv \
+  --region=us-central1 \
+  --project=com-res \
+  --source=cloudrun.yaml
+```
+
 The cloud run job can be found here:
 [fimserv cloud run job](https://console.cloud.google.com/run/jobs/details/us-central1/fimserv/executions?inv=1&invt=Ab1KKQ&project=com-res)
 

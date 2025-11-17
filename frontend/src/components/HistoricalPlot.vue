@@ -1,34 +1,243 @@
 <template>
-  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
-    <v-skeleton-loader v-if="isLoading" type="heading, image " :loading="isLoading" class="mx-auto"></v-skeleton-loader>
+  <v-card
+    v-if="show"
+    class="mx-auto"
+    :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
+    elevation="8"
+  >
+    <v-skeleton-loader
+      v-if="isLoading"
+      type="heading, image "
+      :loading="isLoading"
+      class="mx-auto"
+    ></v-skeleton-loader>
+    <div v-if="!isLoading" class="position-absolute" style="top: 6px; right: 8px; z-index: 2">
+      <InfoTooltip
+        content-class="plot-info-tooltip"
+        :z-index="200000"
+        :max-width="420"
+        iconSize="x-small"
+        style="margin-left: 4px"
+        text="This graph shows streamflow (in cubic feet per second) for the past 90 days. 
+        You can explore a different timeframe by clicking the button in the bottom-right 
+        corner and adjusting the start and end dates. This data is sourced from the analysis
+        and assimilation simulation of the National Water Model, which combines observed data 
+        with model simulations to generate the most accurate estimates of current conditions. 
+        To learn more about how this information is modeled or how to access and retrieve the data, 
+        please visit: 
+        https://www.sciencedirect.com/science/article/pii/S1364815224001841"
+      />
+    </div>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
       <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
       <span class="ml-3">Loading historical data...</span>
     </v-row>
-    <LinePlot v-if="!isLoading" :timeseries="plot_timeseries" :title="plot_title" :style="plot_style" />
-    <v-card-actions class="position-relative">
+    <div class="plot-container" :style="plotContainerStyle">
+      <LinePlot
+        v-if="!isLoading"
+        :timeseries="plot_timeseries"
+        :quantiles="showQuantiles ? quantilesData : []"
+        :title="plot_title"
+        :use-log-scale="showQuantiles"
+        :show-legend="showLegend"
+      />
+    </div>
+
+    <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
+      <!-- Legend Toggle Button -->
+      <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
+            :color="showLegend ? 'primary' : 'default'"
+            @click="toggleLegend"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
+          </v-btn>
+        </template>
+        <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
+      </v-tooltip>
+
+      <!-- Quantiles Toggle Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :color="showQuantiles ? 'primary' : 'default'"
+            :disabled="quantilesFailed"
+            :loading="loadingQuantiles"
+            @click="toggleQuantiles(reach_id)"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="mdiChartAreaspline"></v-icon>
+            <v-progress-circular
+              v-if="loadingQuantiles"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
+          </v-btn>
+        </template>
+        <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
+      </v-tooltip>
+
       <!-- CSV Download Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
-          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
-            :disabled="downloading.csv" :loading="downloading.csv" @click="downCSV" icon size="small" class="mr-1">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :disabled="downloading.csv"
+            :loading="downloading.csv"
+            @click="downCSV"
+            icon
+            size="small"
+            class="mr-1"
+          >
             <v-icon :icon="mdiFileDelimited"></v-icon>
-            <v-progress-circular v-if="downloading.csv" indeterminate color="white" size="20"></v-progress-circular>
+            <v-progress-circular
+              v-if="downloading.csv"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
           </v-btn>
         </template>
         <span>Download CSV</span>
       </v-tooltip>
-      
+
       <!-- JSON Download Button (existing) -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
-          <v-btn v-bind="props" v-if="plot_timeseries.length > 0 && !isLoading" color="primary"
-            :disabled="downloading.json" :loading="downloading.json" @click="downJson" icon size="small">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            :disabled="downloading.json"
+            :loading="downloading.json"
+            @click="downJson"
+            icon
+            size="small"
+          >
             <v-icon :icon="mdiCodeJson"></v-icon>
-            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20"></v-progress-circular>
+            <v-progress-circular
+              v-if="downloading.json"
+              indeterminate
+              color="white"
+              size="20"
+            ></v-progress-circular>
           </v-btn>
         </template>
         <span>Download JSON</span>
+      </v-tooltip>
+
+      <!-- Date Adjustment Button -->
+      <v-menu
+        v-model="timeSelectionMenu"
+        location="top left"
+        :offset="[-50, -60]"
+        content-class="menu-content"
+        attach="body"
+        :close-on-content-click="false"
+        :persistent="true"
+        :retain-focus="false"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-tooltip text="Adjust Start and End Dates" location="right">
+            <template #activator="{ props: tooltipProps }">
+              <v-btn
+                v-if="plot_timeseries.length > 0 && !isLoading"
+                v-bind="{ ...menuProps, ...tooltipProps }"
+                icon
+              >
+                <v-icon>{{ mdiCalendarExpandHorizontal }}</v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
+        </template>
+
+        <v-sheet style="margin-left: 16px; min-width: 300px">
+          <v-list>
+            <v-list-item>
+              <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedStartDate"
+                    label="Start Date"
+                    readonly
+                    density="compact"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="tempStartDate"
+                  :min="'2016-01-01'"
+                  :max="
+                    tempEndDate
+                      ? new Date(new Date(tempEndDate).setDate(new Date(tempEndDate).getDate() - 1))
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (startMenu = false)"
+                ></v-date-picker>
+              </v-menu>
+            </v-list-item>
+
+            <v-list-item>
+              <v-menu v-model="endMenu" :close-on-content-click="false" offset-y min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedEndDate"
+                    label="End Date"
+                    readonly
+                    density="compact"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="tempEndDate"
+                  :min="
+                    tempStartDate
+                      ? new Date(
+                          new Date(tempStartDate).setDate(new Date(tempStartDate).getDate() + 1)
+                        )
+                          .toISOString()
+                          .split('T')[0]
+                      : '2099-12-31'
+                  "
+                  @update:modelValue="() => (endMenu = false)"
+                ></v-date-picker>
+              </v-menu>
+            </v-list-item>
+
+            <v-list-item class="d-flex justify-end">
+              <v-btn class="mt-2" color="primary" @click="onTimeSelectionClose">Apply</v-btn>
+            </v-list-item>
+          </v-list>
+        </v-sheet>
+      </v-menu>
+      <!-- Full Screen Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            @click="toggleFullScreen"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen"></v-icon>
+          </v-btn>
+        </template>
+        <span>{{ isFullScreen ? 'Exit' : 'Enter' }} Full Screen</span>
       </v-tooltip>
     </v-card-actions>
   </v-card>
@@ -37,9 +246,20 @@
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose } from 'vue'
+import { ref, defineExpose, computed, onMounted, watch, toRef } from 'vue'
+import {
+  mdiCalendarExpandHorizontal,
+  mdiChartAreaspline,
+  mdiEye,
+  mdiEyeOff,
+  mdiCodeJson,
+  mdiFileDelimited,
+  mdiFullscreen,
+  mdiFullscreenExit
+} from '@mdi/js'
 import { API_BASE } from '@/constants'
-import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
+import InfoTooltip from '../components/InfoTooltip.vue'
+import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
   Chart as ChartJS,
   Title,
@@ -51,8 +271,56 @@ import {
   TimeScale,
   Filler
 } from 'chart.js'
+import { storeToRefs } from 'pinia'
+
+// Use Pinia store
+const quantilesStore = useQuantilesStore()
+const { quantilesData } = storeToRefs(quantilesStore)
+const showQuantiles = ref(false)
+const loadingQuantiles = ref(false)
+const quantilesFailed = ref(false)
+const showLegend = ref(false)
+const isFullScreen = ref(false)
+
+const emit = defineEmits(['toggleFullScreen'])
+
+const showLegendToggle = computed(() => {
+  return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
+})
+
+const setShowQuantiles = async (value, reach_id) => {
+  showQuantiles.value = value
+  quantilesFailed.value = false
+  if (value && quantilesData.value.length === 0) {
+    loadingQuantiles.value = true
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+  }
+  loadingQuantiles.value = false
+}
+
+// Toggle quantiles display - uses the shared store so both plots stay synchronized
+const toggleQuantiles = (reach_id) => {
+  setShowQuantiles(!showQuantiles.value, reach_id)
+}
+
+// Toggle legend visibility
+const toggleLegend = () => {
+  showLegend.value = !showLegend.value
+}
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
+
+// define properties that can be passed to this component
+const props = defineProps({
+  reachid: Number,
+  reachname: String,
+  show: {
+    type: Boolean,
+    required: true
+  }
+})
+const reach_id = toRef(props, 'reachid') // make this property reactive to it triggers watch()
+const reach_name = toRef(props, 'reachname') // make this property reactive to it triggers watch()
 
 const plot_timeseries = ref([])
 const plot_title = ref()
@@ -61,23 +329,109 @@ const isLoading = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
+// objects to hold the date values
+// these are the raw date values used in the date picker
+const startDate = ref(null)
+const endDate = ref(null)
+const tempStartDate = ref(null)
+const tempEndDate = ref(null)
+
+// bool that shows/hides the date picker menus
+// true = visible, false = hidden
+const startMenu = ref(false)
+const endMenu = ref(false)
+const timeSelectionMenu = ref(false)
+
+// helper function to convert Date objects to ISO date strings
+const toIsoDate = (date) => date.toISOString().split('T')[0]
+
+// Function to initialize startDate and endDate.
+// This is only called once when the component is mounted.
+const initializeDates = () => {
+  // Set the initial state for the time ranges
+  // used in the historical plot.
+
+  // start date is 90 days before the current date
+  const today = new Date()
+  const initialStart = new Date(today)
+  initialStart.setDate(today.getDate() - 90)
+
+  startDate.value = initialStart
+  endDate.value = today
+}
+
+const plotContainerStyle = computed(() => {
+  if (isFullScreen.value) {
+    return {
+      height: 'calc(100vh)',
+      width: '100%'
+    }
+  } else {
+    return {
+      height: 'calc(23vh)',
+      width: '100%'
+    }
+  }
+})
+
+// Formatted display values
+const formattedStartDate = computed({
+  get() {
+    return tempStartDate.value ? new Date(tempStartDate.value).toLocaleDateString() : ''
+  },
+  set(value) {
+    tempStartDate.value = value ? toIsoDate(new Date(value)) : null
+  }
+})
+
+const formattedEndDate = computed({
+  get() {
+    return tempEndDate.value ? new Date(tempEndDate.value).toLocaleDateString() : ''
+  },
+  set(value) {
+    tempEndDate.value = value ? toIsoDate(new Date(value)) : null
+  }
+})
+
+const toggleFullScreen = () => {
+  isFullScreen.value = !isFullScreen.value
+  emit('toggleFullScreen', isFullScreen.value)
+}
+
 const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
   plot_style.value = {}
+  quantilesStore.setQuantilesData([])
 }
 
-const getHistoricalData = async (reach_id, name, start_date, end_date) => {
+// function to handle the closing of the date selection menu,
+// this function is called when the user clicks the "Apply" button.
+// This is necessary to ensure that nested v-menus close properly.
+function onTimeSelectionClose() {
+  // Close the date selection menu
+  timeSelectionMenu.value = false
+
+  // Trigger data fetch with updated dates,
+  // which will trigger the watch function that
+  // updates the lineplot.
+  startDate.value = tempStartDate.value
+  endDate.value = tempEndDate.value
+}
+
+// Collects historical plot data from the CIROH NWM API
+const getHistoricalData = async () => {
   try {
     isLoading.value = true
     error.value = null
 
     const params = new URLSearchParams({
-      reach_id: reach_id,
-      start_date: start_date.toISOString().split('T')[0],
-      end_date: end_date.toISOString().split('T')[0],
+      reach_id: reach_id.value,
+      start_date: toIsoDate(startDate.value),
+      end_date: toIsoDate(endDate.value),
       offset: 3
     })
+
     const response = await fetch(`${API_BASE}/timeseries/nwm-historical?${params.toString()}`)
 
     if (!response.ok) {
@@ -93,8 +447,43 @@ const getHistoricalData = async (reach_id, name, start_date, end_date) => {
     isLoading.value = false
   }
 
-  plot_title.value = 'Historical Streamflow - ' + name
+  plot_title.value = 'Historical Streamflow - ' + reach_name.value
 }
+
+// Re-collects historical plot data whenever the
+// startDate, endDate, or reachID change
+watch([startDate, endDate, reach_id], async () => {
+  if (startDate.value && endDate.value && reach_id.value) {
+    await getHistoricalData()
+    // Fetch new quantiles when reach ID changes
+    loadingQuantiles.value = true
+    quantilesFailed.value = false
+    if (showQuantiles.value) {
+      await quantilesStore.setQuantilesData([])
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value))
+    }
+    loadingQuantiles.value = false
+  }
+})
+
+// sync temp dates and actual dates when the menu opens
+// this is to ensure that the date pickers show the
+// actual dates in the lineplot when the menu is initially  opened
+watch(timeSelectionMenu, (isOpen) => {
+  if (isOpen) {
+    tempStartDate.value = startDate.value
+    tempEndDate.value = endDate.value
+  }
+})
+
+// Watch for full screen changes and adjust styling if needed
+watch(isFullScreen, (newValue) => {
+  if (newValue) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
 
 async function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
@@ -112,22 +501,40 @@ const downJson = async () => {
   let filename = getFileName('json')
   await downloadBlob(blob, filename)
   downloading.value.json = false
+  trackEvent('Download Historical JSON Button Clicked', {
+    reach_id: reach_id.value,
+    reach_name: reach_name.value
+  })
 }
 
 const downCSV = async () => {
   downloading.value.csv = true
-  
+
   // Convert timeseries data to CSV format
   const headers = 'Date,Streamflow\n'
-  const csvRows = plot_timeseries.value.map(item => 
-    `"${item.x}","${item.y}"`
-  ).join('\n')
-  
+  const csvRows = plot_timeseries.value.map((item) => `"${item.x}","${item.y}"`).join('\n')
+
   const csvData = headers + csvRows
   const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
   let filename = getFileName('csv')
   await downloadBlob(blob, filename)
   downloading.value.csv = false
+  trackEvent('Download Historical CSV Button Clicked', {
+    reach_id: reach_id.value,
+    reach_name: reach_name.value
+  })
+}
+
+const trackEvent = (eventName, eventData = {}) => {
+  try {
+    if (window.heap) {
+      window.heap.track(eventName, eventData)
+    } else {
+      console.warn('Heap is not available. Event not tracked:', eventName)
+    }
+  } catch (error) {
+    console.error('Error tracking event:', eventName, error)
+  }
 }
 
 const getFileName = (extension) => {
@@ -141,15 +548,16 @@ defineExpose({
   clearPlot
 })
 
-defineProps({
-  show: {
-    type: Boolean,
-    required: true
-  }
+onMounted(() => {
+  // Call the initialization function on setup
+  initializeDates()
 })
 </script>
 
 <style scoped>
+.menu-content {
+  z-index: 5000 !important;
+}
 .chart-tooltip {
   z-index: 99999 !important;
 }
@@ -157,5 +565,42 @@ defineProps({
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
+}
+
+.plot-card {
+  transition: all 0.3s ease;
+  height: calc(30vh);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.plot-card.full-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+   z-index: var(--z-index-plots) !important;
+  margin: 0;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.plot-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.card-actions {
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 20px;
+}
+
+/* When in full screen, ensure body doesn't scroll */
+body.no-scroll {
+  overflow: hidden;
 }
 </style>

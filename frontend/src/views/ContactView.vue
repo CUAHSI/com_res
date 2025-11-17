@@ -1,5 +1,4 @@
 <template>
-  
   <v-container class="about">
     <v-sheet class="px-6 pt-6 pb-0 mx-auto" max-width="1200" rounded>
       <h3 class="mt-2 mb-2">Contact Information</h3>
