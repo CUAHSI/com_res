@@ -368,6 +368,10 @@ async function createWMSLayers(region) {
     wmsLayers.value[region.name] = [] // Initialize the array
 
     sortedLayers.forEach((layer) => {
+      if (layer.name.includes('NHDPlus Flowlines')) {
+        console.log(`Intentionally skipping WMS creation for: ${layer.name} (ID: ${layer.id})`)
+        return
+      }
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
         pane: 'overlayPane',

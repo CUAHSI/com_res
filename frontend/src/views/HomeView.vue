@@ -93,9 +93,8 @@
         <v-col v-for="step in steps" :key="step.id" cols="12" md="6">
           <v-card class="start-card" elevation="1">
             <v-card-title class="start-step-title">{{ step.title }}</v-card-title>
-            <v-card-text>
-              <span v-html="step.text"></span>
-            </v-card-text>
+            <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
+            <v-card-text v-html="step.text"></v-card-text>
           </v-card>
         </v-col>
       </v-row>
