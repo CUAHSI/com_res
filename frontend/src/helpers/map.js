@@ -223,6 +223,7 @@ const addCogsToMap = async (cogs) => {
       // The structure is [band][rows] where all rows are Float32Arrays
       const pixelData = georaster.values[0] // First band
 
+      // const noDataValue = georaster.noDataValue ?? -9999
       let inundatedPixels = 0
 
       // Optimized rendering for binary data (1 = inundated, NaN = not inundated)
