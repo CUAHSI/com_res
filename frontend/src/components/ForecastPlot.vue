@@ -170,6 +170,22 @@
         </template>
         <span>Download JSON</span>
       </v-tooltip>
+      <!-- Full Screen Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            @click="toggleFullScreen"
+            icon
+            size="small"
+            class="mr-1"
+          >
+            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen"></v-icon>
+          </v-btn>
+        </template>
+        <span>{{ isFullScreen ? 'Exit' : 'Enter' }} Full Screen</span>
+      </v-tooltip>
     </v-card-actions>
   </v-card>
 </template>
@@ -178,9 +194,8 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, watch, toRef, computed } from 'vue'
-import { mdiChartAreaspline, mdiEye, mdiEyeOff, mdiChartBox } from '@mdi/js'
+import { mdiChartAreaspline, mdiEye, mdiEyeOff, mdiChartBox, mdiCodeJson, mdiFileDelimited, mdiFullscreenExit, mdiFullscreen } from '@mdi/js'
 import { API_BASE } from '@/constants'
-import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '@/components/InfoTooltip.vue'
 import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
@@ -209,6 +224,8 @@ const isFullScreen = ref(false)
 const showIQR = ref(false)
 const loadingIQR = ref(false)
 const iqrData = ref([])
+
+const emit = defineEmits(['toggleFullScreen'])
 
 const showLegendToggle = computed(() => {
   return (showQuantiles.value || showIQR.value) && !loadingQuantiles.value && !loadingIQR.value
@@ -340,6 +357,11 @@ const fetchIQRData = async (reach_id) => {
   } finally {
     loadingIQR.value = false
   }
+}
+
+const toggleFullScreen = () => {
+  isFullScreen.value = !isFullScreen.value
+  emit('toggleFullScreen', isFullScreen.value)
 }
 
 // Toggle legend visibility
