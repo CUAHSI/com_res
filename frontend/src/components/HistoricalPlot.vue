@@ -1,5 +1,10 @@
 <template>
-  <v-card v-if="show" class="mx-auto" elevation="8" :style="cardStyle">
+  <v-card 
+    v-if="show" 
+    class="mx-auto plot-card" 
+    :class="{ 'full-screen': isFullScreen }"
+    elevation="8" 
+  >
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
@@ -349,14 +354,8 @@ const initializeDates = () => {
 const cardStyle = computed(() => {
   if (isFullScreen.value) {
     return {
-      position: 'fixed !important',
-      top: '0 !important',
-      left: '0 !important',
-      width: '100vw !important',
-      height: '100vh !important',
-      zIndex: '10000 !important',
-      margin: '0 !important',
-      maxWidth: 'none !important'
+      // We'll handle most styling via CSS classes
+      zIndex: '10000'
     }
   } else {
     return {
@@ -558,5 +557,47 @@ onMounted(() => {
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
+}
+
+.plot-card {
+  transition: all 0.3s ease;
+  height: calc(30vh);
+  width: 100%;
+}
+
+.plot-card.full-screen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10000 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Ensure the chart inside also expands */
+.plot-card.full-screen :deep(.line-plot-container) {
+  height: calc(100vh - 80px) !important; /* Adjust based on your card header/footer height */
+  width: 100% !important;
+}
+
+.menu-content {
+  z-index: 5000 !important;
+}
+
+.chart-tooltip {
+  z-index: 99999 !important;
+}
+
+.chart-tooltip span {
+  white-space: normal;
+  word-break: normal;
+}
+
+/* When in full screen, ensure body doesn't scroll */
+body.no-scroll {
+  overflow: hidden;
 }
 </style>
