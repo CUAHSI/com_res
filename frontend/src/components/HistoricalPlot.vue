@@ -583,13 +583,13 @@ onMounted(() => {
 }
 
 .plot-card.full-screen {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 999999 !important;
-  margin: 0 !important;
+  z-index: 999999;
+  margin: 0;
   max-width: none !important;
   max-height: none !important;
 }
