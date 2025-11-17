@@ -97,6 +97,12 @@ onMounted(() => {
     zoomDelta: 1,
     zoomControl: false
   }).setView([38.2, -96], 5)
+
+  leaflet.value.createPane('paneWaterbodies')
+  leaflet.value.getPane('paneWaterbodies').style.zIndex = 450
+  leaflet.value.createPane('panePOI')
+  leaflet.value.getPane('panePOI').style.zIndex = 500
+
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
