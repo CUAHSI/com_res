@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="show" :class="['mx-auto', { 'full-screen': isFullScreen }]" elevation="8" style="height: calc(30vh); width: 100%">
+  <v-card v-if="show" class="mx-auto" elevation="8" :style="cardStyle">
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
@@ -346,6 +346,26 @@ const initializeDates = () => {
   endDate.value = today
 }
 
+const cardStyle = computed(() => {
+  if (isFullScreen.value) {
+    return {
+      position: 'fixed !important',
+      top: '0 !important',
+      left: '0 !important',
+      width: '100vw !important',
+      height: '100vh !important',
+      zIndex: '10000 !important',
+      margin: '0 !important',
+      maxWidth: 'none !important'
+    }
+  } else {
+    return {
+      height: 'calc(30vh)',
+      width: '100%'
+    }
+  }
+})
+
 // Formatted display values
 const formattedStartDate = computed({
   get() {
@@ -538,20 +558,5 @@ onMounted(() => {
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
-}
-
-.v-card {
-  transition: all 0.3s ease;
-}
-
-.v-card.full-screen {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 10000 !important;
-  margin: 0 !important;
-  max-width: none !important;
 }
 </style>
