@@ -282,7 +282,6 @@ const quantilesFailed = ref(false)
 const showLegend = ref(false)
 const isFullScreen = ref(false)
 
-// Define emits
 const emit = defineEmits(['toggleFullScreen'])
 
 const showLegendToggle = computed(() => {
@@ -364,7 +363,7 @@ const initializeDates = () => {
 const plotContainerStyle = computed(() => {
   if (isFullScreen.value) {
     return {
-      height: 'calc(100vh)', // Adjust based on your header/footer height
+      height: 'calc(100vh)',
       width: '100%'
     }
   } else {
@@ -480,7 +479,6 @@ watch(timeSelectionMenu, (isOpen) => {
 // Watch for full screen changes and adjust styling if needed
 watch(isFullScreen, (newValue) => {
   if (newValue) {
-    // Optional: Add full screen styles or logic
     document.body.style.overflow = 'hidden'
   } else {
     document.body.style.overflow = ''
