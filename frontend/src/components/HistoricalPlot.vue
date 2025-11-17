@@ -1,8 +1,8 @@
 <template>
   <v-card 
     v-if="show" 
-    class="mx-auto plot-card" 
-    :class="{ 'full-screen': isFullScreen }"
+    class="mx-auto" 
+    :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
     elevation="8" 
   >
     <v-skeleton-loader
