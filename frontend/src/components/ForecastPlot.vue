@@ -467,16 +467,28 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
       ensemble: ensemble
     })
     console.log(reach_id, name, datetime, forecast_mode, ensemble)
-    const response = await fetch(`${API_BASE}/timeseries/nwm-forecast?${params.toString()}`)
+    // TODO: ideally we would cache this data so that we can use it when IQR is toggled on...
+    const response = await fetch(`${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`)
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const data = await response.json()
-    let formattedData = Object.entries(data).map(([x, y]) => ({ x, y }))
-    hasData.value = formattedData.length > 0
-    plot_timeseries.value = formattedData
+
+    // The get-summarized-nwm-forecast endpoint returns: {timestamp: [], mean: [], q25: [], q75: []}
+    // We want to use the mean values for the main forecast line
+    if (data.timestamp && data.mean) {
+      let formattedData = data.timestamp.map((timestamp, index) => ({
+        x: timestamp,
+        y: data.mean[index]
+      }))
+      hasData.value = formattedData.length > 0
+      plot_timeseries.value = formattedData
+    } else {
+      hasData.value = false
+      plot_timeseries.value = []
+    }
   } catch (err) {
     error.value = `Failed to load data: ${err.message}`
     console.error('API error:', err)
