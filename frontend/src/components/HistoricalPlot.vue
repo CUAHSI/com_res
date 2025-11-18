@@ -147,9 +147,10 @@
         :close-on-content-click="false"
         :persistent="true"
         :retain-focus="false"
+        class="date-select-menu"
       >
         <template #activator="{ props: menuProps }">
-          <v-tooltip text="Adjust Start and End Dates" location="right">
+          <v-tooltip text="Adjust Start and End Dates" location="bottom" class="chart-tooltip">
             <template #activator="{ props: tooltipProps }">
               <v-btn
                 v-if="plot_timeseries.length > 0 && !isLoading"
@@ -161,8 +162,7 @@
             </template>
           </v-tooltip>
         </template>
-
-        <v-sheet style="margin-left: 16px; min-width: 300px">
+        <v-sheet class="date-select-sheet">
           <v-list>
             <v-list-item>
               <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto">
@@ -565,6 +565,18 @@ onMounted(() => {
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
+}
+
+.date-select-sheet {
+  margin-left: 16px;
+  min-width: 300px;
+  z-index: calc(var(--z-index-plots) + 100) !important;
+  position: relative;
+}
+
+.date-select-menu {
+  z-index: calc(var(--z-index-plots) + 100) !important;
+  position: relative;
 }
 
 .plot-card {
