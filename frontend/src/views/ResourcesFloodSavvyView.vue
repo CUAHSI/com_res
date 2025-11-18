@@ -267,13 +267,6 @@ const scrollToSection = (id) => {
 </script>
 
 <style scoped>
-/* .toc-sticky {
-  position: sticky;
-  top: 80px;
-  height: fit-content;
-  align-self: flex-start;
-} */
-
 .paragraph {
   font-size: 1rem;
   color: #424242;

@@ -162,12 +162,6 @@ const tocItems = [
 .v-container, .v-row {
   overflow: visible !important;
 }
-/* .toc-sticky {
-  position: sticky;
-  top: 80px;
-  height: fit-content;
-  align-self: flex-start;
-} */
 
 .paragraph {
   font-size: 1rem;
