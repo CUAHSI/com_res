@@ -30,14 +30,14 @@
     "esri-leaflet": "^3.0.12",
     "esri-leaflet-geocoder": "^3.1.5",
     "georaster": "^1.6.0",
-    "georaster-layer-for-leaflet": "^3.10.0",
     "leaflet": "^1.9.4",
     "leaflet-easybutton": "^2.4.0",
     "loadash": "^1.0.0",
     "lorem-ipsum": "^2.0.8",
     "pinia": "^3.0.3",
-    "proj4": "^2.19.5",
+    "proj4": "^2.20.0",
     "proj4-fully-loaded": "^0.2.0",
+    "proj4leaflet": "^1.0.2",
     "swagger-ui": "^5.9.0",
     "vite-plugin-vuetify": "^2.1.1",
     "vue": "^3.3.4",
@@ -66,19 +66,6 @@
     "vite-plugin-vue-devtools": "^8.0.0"
   },
   "overrides": {
-    "georaster-layer-for-leaflet": {
-      "proj4-fully-loaded": "^0.2.0",
-      "reproject-bbox": {
-        "proj4-fully-loaded": "^0.2.0"
-      },
-      "geocanvas": {
-        "geomask": {
-          "reproject-geojson": {
-            "proj4-fully-loaded": "^0.2.0"
-          }
-        }
-      }
-    },
     "reproject-geojson": {
       "proj4-fully-loaded": "^0.2.0"
     },
