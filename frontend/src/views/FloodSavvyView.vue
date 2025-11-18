@@ -191,9 +191,9 @@ import ScenarioBox from "@/components/ScenarioBox.vue";
 import { ref, provide } from "vue";
 
 // Scenario Task PDF imports 
-import taskPdf1 from "@/assets/NWM_Tutorial_1020.pdf";
-import taskPdf2 from "@/assets/NWM_Tutorial_1020.pdf";
-import taskPdf3 from "@/assets/NWM_Tutorial_1020.pdf";
+import taskPdf1 from "@/assets/FloodSavvy_Scenario1.pdf";
+import taskPdf2 from "@/assets/FloodSavvy_Scenario2.pdf";
+import taskPdf3 from "@/assets/FloodSavvy_Scenario3.pdf";
 
 // Community Narratives Task PDF imports 
 import pdf1 from "@/assets/NWM_Tutorial_1020.pdf";
