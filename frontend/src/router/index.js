@@ -36,13 +36,13 @@ const router = createRouter({
       component: ApiView
     },
     {
-      path: '/floodsavvy',
-      name: 'floodsavvy',
+      path: '/resources-floodsavvy',
+      name: 'resources-floodsavvy',
       component: FloodSavvyView
     },
     {
-      path: '/nwps',
-      name: 'nwps',
+      path: '/resources-nwps',
+      name: 'resources-nwps',
       component: NWPSView
     },
     {

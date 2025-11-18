@@ -62,11 +62,11 @@ const paths = [
     label: 'Resources',
     children: [
       {
-        attrs: { to: '/floodsavvy' },
+        attrs: { to: '/resources-floodsavvy' },
         label: 'FloodSavvy Resources'
       },
       {
-        attrs: { to: '/nwps' },
+        attrs: { to: '/resources-nwps' },
         label: 'NWPS Resources'
       }
     ]
