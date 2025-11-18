@@ -20,8 +20,11 @@
             ></iframe>
           </div>
 
-          <v-card-text class="scenario-label pdf-label">
-            📄 View Task PDF
+          <v-card-text
+            class="text-center"
+            style="font-size: 0.9rem; color: #1976d2;"
+          >
+            {{ pdfLabel }}
           </v-card-text>
         </v-card>
       </v-col>
@@ -35,7 +38,10 @@
             </div>
           </div>
 
-          <v-card-text class="scenario-label">
+          <v-card-text
+            class="text-center"
+            style="font-size: 0.9rem; color: #424242;"
+          >
             Tutorial Video (Coming Soon)
           </v-card-text>
         </v-card>
@@ -50,7 +56,11 @@ const props = defineProps({
   title: String,
   description: String,
   taskPdf: String,
-  videoUrl: String
+  videoUrl: String,
+  pdfLabel: {
+    type: String,
+    default: "📋 View Task PDF"
+  }
 })
 
 const openTaskPdf = () => {

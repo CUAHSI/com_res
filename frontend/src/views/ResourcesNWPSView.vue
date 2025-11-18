@@ -39,53 +39,23 @@
               </div>
           </div>
 
-          <!-- PDF Tutorial -->
-          <v-card class="overflow-hidden mb-8">
-            <iframe
-              :src="pdfUrl "
-              title="Tutorial PDF"
-              style="width: 100%; height: 500px; border: none; border-radius: 6px;"
-            ></iframe>
-            
-            <v-card-text>
-              
-              <div class="d-flex gap-2 mt-3">
-                <v-btn variant="outlined" size="small" :href="pdfUrl" target="_blank" rel="noopener noreferrer">
-                  Open in Tab
-                  <v-icon end icon="mdi-open-in-new" size="16" />
-                </v-btn>
-                <v-btn variant="outlined" size="small" :href="pdfUrl" download>
-                  Download
-                  <v-icon end icon="mdi-download" size="16" />
-                </v-btn>
-              </div>
-            </v-card-text>
-          </v-card>
-
-          <!-- Video Walkthrough -->
-          <div class="text-left mb-12" id="video">
-            <h3 class="ma-2">Quick Start Video</h3>
+          <!-- Tutorial Box -->
+          <div id="tutorial-box" class="text-left mb-12">
+            <h3 class="ma-2">NWM Tutorial & Quick Start</h3>
             <p class="paragraph">
-              Watch this quick video walkthrough to complement the PDF guide and 
-              get familiar with the NWPS interface.
+              Use this tutorial and walkthrough video to become familiar with key elements of the
+              National Water Model (NWM) and the National Water Prediction Service.
             </p>
-          </div>
 
-          <v-card class="overflow-hidden mb-8">
-            <iframe
-              width="100%"
-              height="400"
-              src="https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv"
-              title="YouTube Video Player"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              style="border-radius: 6px;"
-            ></iframe>
-            <v-card-text>
-              <p class="paragraph">Watch the walkthrough video of the tutorial above.</p>
-            </v-card-text>
-          </v-card>
+            <ScenarioBox
+              id="tutorial"
+              title="NWM 101: User Guide & Quick Start Video"
+              description="This tutorial introduces the National Water Model and provides a walkthrough of the NWPS interface."
+              :taskPdf="pdfUrl"
+              videoUrl="coming-soon"
+              pdfLabel="📄 View PDF"
+            />
+          </div>
 
           <!-- Additional Resources -->
           <div class="text-left mb-12" id="resources">
@@ -136,6 +106,8 @@
 <script setup>
 import pdfFile from "@/assets/NWM_Tutorial_1020.pdf";
 import TableOfContents from "@/components/TableOfContents.vue";
+import ScenarioBox from "@/components/ScenarioBox.vue";
+
 
 const pdfUrl = pdfFile;
 
