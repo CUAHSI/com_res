@@ -27,7 +27,7 @@ const featureOptions = ref({
 })
 const mapLoaded = ref(false)
 const isMapMoving = ref(false) // Track if the map is currently moving
-const stageValue = ref(5) // Default stage value for the slider
+const stageValue = ref(1) // Default stage value for the slider
 
 const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
