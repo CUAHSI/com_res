@@ -396,7 +396,7 @@ const handleStageChange = () => {
   if (!addedCogs) {
     alertStore.displayAlert({
       title: 'No Data Available',
-      text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}m.`,
+      text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}ft.`,
       type: 'warning',
       closable: true,
       duration: 5
