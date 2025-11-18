@@ -223,8 +223,13 @@ const handleStyle = computed(() => ({
 }))
 
 const flowFromStage = (stage) => {
-  const index = props.stages.indexOf(stage)
-  return index >= 0 ? props.flows[index] : null
+  // Find the closest stage in the stages array
+  const closestStage = props.stages.reduce((prev, curr) => {
+    return Math.abs(curr - stage) < Math.abs(prev - stage) ? curr : prev
+  })
+  
+  const index = props.stages.indexOf(closestStage)
+  return index >= 0 ? props.flows[index] : props.flows[0] || 0
 }
 
 const startDrag = (e) => {
