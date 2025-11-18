@@ -417,11 +417,13 @@ const stopDrag = () => {
   text-align: right;
   padding-right: 8px;
   z-index: 1;
-  text-shadow:
-    -1px -1px 0 white,
-    1px -1px 0 white,
-    -1px 1px 0 white,
-    1px 1px 0 white;
+  /* Remove the problematic text-shadow */
+  text-shadow: none;
+  /* Add a semi-transparent background for better readability */
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin-right: -4px;
 }
 
 /* Make sure mercury doesn't obscure labels */
