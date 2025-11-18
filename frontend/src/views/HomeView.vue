@@ -116,7 +116,6 @@ const handleCardClick = (region) => {
       region: region.name
     }
   })
-  regionsStore.setRegion(region.name)
 }
 
 import img1 from '@/assets/Feature1-map-selection.png'
