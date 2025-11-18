@@ -110,7 +110,7 @@ const router = useRouter()
 const regionsStore = useRegionsStore()
 
 const handleCardClick = (region) => {
-    router.push({
+  router.push({
     name: 'maps',
     query: {
       region: region.name
