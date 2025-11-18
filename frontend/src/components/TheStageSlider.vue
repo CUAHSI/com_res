@@ -34,7 +34,10 @@
             v-for="(_, index) in ticks"
             :key="index"
             class="tick"
-            :class="{ 'major-tick': index % majorTickInterval === 0 }"
+            :class="{ 
+              'major-tick': index % majorTickInterval === 0,
+              'covered': isTickCovered(index)
+            }"
             :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
           ></div>
         </div>
@@ -146,14 +149,17 @@ const modelValue = computed({
   }
 })
 
-const coveredLabels = computed(() => {
-  return props.stages.map(stage => stage <= props.modelValue)
-})
-
 const ticks = Array(props.tickCount).fill(0)
 const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
+
+// Check if a tick is covered by mercury
+const isTickCovered = (index) => {
+  const tickPosition = (index / (props.tickCount - 1)) * 100
+  const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
+  return tickPosition <= mercuryHeight
+}
 
 // Computed properties for dynamic text based on multiReachMode
 const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
@@ -398,11 +404,20 @@ const stopDrag = () => {
   height: 1px;
   background-color: #333;
   transform: translateX(100%);
+  transition: background-color 0.2s ease;
+}
+
+.tick.covered {
+  background-color: white; /* White ticks when covered by mercury */
 }
 
 .major-tick {
   width: 10px;
   height: 2px;
+}
+
+.major-tick.covered {
+  background-color: white; /* White major ticks when covered by mercury */
 }
 
 .labels-inside {
