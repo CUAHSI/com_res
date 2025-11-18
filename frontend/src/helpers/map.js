@@ -593,7 +593,7 @@ function createFeatureLayerProvider(region) {
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayerProvider = esriLeafletGeocoder.featureLayerProvider({
     url: url,
-    searchFields: ['PopupTitle'],
+    searchFields: ['PopupTitle', 'REACHCODE'],
     label: `${region.name} Flowlines`,
     //bufferRadius: 5000,
     formatSuggestion: function (feature) {
