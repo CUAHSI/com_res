@@ -225,7 +225,6 @@ const addCogsToMap = async (cogs) => {
 
       let inundatedPixels = 0
 
-      // Make inundated pixels fully opaque in the canvas
       for (let y = 0; y < georaster.height; y++) {
         const row = pixelData[y]
 
@@ -235,15 +234,18 @@ const addCogsToMap = async (cogs) => {
 
           // Check if it's an inundated pixel (value === 1)
           if (pixelValue === 1) {
-            // Blue color for inundated areas - FULLY OPAQUE in canvas
-            imageData.data[index] = 0 // R
-            imageData.data[index + 1] = 100 // G
+            // Pure blue for inundated areas - FULLY OPAQUE in canvas
+            imageData.data[index] = 0      // R
+            imageData.data[index + 1] = 0  // G
             imageData.data[index + 2] = 255 // B
-            imageData.data[index + 3] = 255 // A - FULLY OPAQUE
+            imageData.data[index + 3] = 255 // A - FULLY OPAQUE (255)
             inundatedPixels++
           } else {
-            // Fully transparent for non-inundated areas
-            imageData.data[index + 3] = 0
+            // NaN or any other value - make fully transparent
+            imageData.data[index] = 0      // R
+            imageData.data[index + 1] = 0  // G
+            imageData.data[index + 2] = 0  // B
+            imageData.data[index + 3] = 0  // A - FULLY TRANSPARENT (0)
           }
         }
       }
@@ -265,7 +267,7 @@ const addCogsToMap = async (cogs) => {
       const leafletBounds = L.latLngBounds(geographicBounds)
 
       const overlay = L.imageOverlay(dataURL, leafletBounds, {
-        opacity: 0.3,
+        opacity: 0.4,
         interactive: false,
         zIndex: 100000
       }).addTo(leaflet.value)
@@ -310,7 +312,7 @@ function reprojectEPSG5070ToWGS84(georaster) {
   return bounds
 }
 
-const clearCogsFromMap = () => {
+const clearCogsFromMap = async () => {
   console.log('Clearing all COG overlays from map')
   if (window.cogOverlays) {
     window.cogOverlays.forEach((overlay) => {
