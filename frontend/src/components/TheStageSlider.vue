@@ -45,6 +45,7 @@
             v-for="(stage, index) in visibleStages"
             :key="index"
             class="label-inside"
+            :class="{ 'covered': stage <= modelValue }"
             :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
           >
             {{ stage }}
@@ -143,6 +144,10 @@ const modelValue = computed({
     emit('update:modelValue', value)
     trackSliderChange(value)
   }
+})
+
+const coveredLabels = computed(() => {
+  return props.stages.map(stage => stage <= props.modelValue)
 })
 
 const ticks = Array(props.tickCount).fill(0)
@@ -413,17 +418,16 @@ const stopDrag = () => {
   position: absolute;
   transform: translateY(50%);
   font-size: 10px;
-  color: #333;
   text-align: right;
   padding-right: 8px;
   z-index: 1;
-  /* Remove the problematic text-shadow */
-  text-shadow: none;
-  /* Add a semi-transparent background for better readability */
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 2px;
-  padding: 1px 4px;
-  margin-right: -4px;
+  color: #333; /* Default color for uncovered labels */
+  transition: color 0.2s ease;
+}
+
+.label-inside.covered {
+  color: white; /* White text when covered by mercury */
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
 }
 
 /* Make sure mercury doesn't obscure labels */
