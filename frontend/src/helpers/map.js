@@ -223,10 +223,8 @@ const addCogsToMap = async (cogs) => {
       // The structure is [band][rows] where all rows are Float32Arrays
       const pixelData = georaster.values[0] // First band
 
-      // const noDataValue = georaster.noDataValue ?? -9999
       let inundatedPixels = 0
 
-      // Optimized rendering for binary data (1 = inundated, NaN = not inundated)
       for (let y = 0; y < georaster.height; y++) {
         const row = pixelData[y]
 
@@ -236,15 +234,18 @@ const addCogsToMap = async (cogs) => {
 
           // Check if it's an inundated pixel (value === 1)
           if (pixelValue === 1) {
-            // Blue color for inundated areas
-            imageData.data[index] = 0 // R
-            imageData.data[index + 1] = 100 // G (slight green for better visibility)
+            // Pure blue for inundated areas - FULLY OPAQUE in canvas
+            imageData.data[index] = 0      // R
+            imageData.data[index + 1] = 0  // G
             imageData.data[index + 2] = 255 // B
-            imageData.data[index + 3] = 180 // A (semi-transparent)
+            imageData.data[index + 3] = 255 // A - FULLY OPAQUE (255)
             inundatedPixels++
           } else {
-            // Transparent for non-inundated areas (NaN, noDataValue, or other values)
-            imageData.data[index + 3] = 0
+            // NaN or any other value - make fully transparent
+            imageData.data[index] = 0      // R
+            imageData.data[index + 1] = 0  // G
+            imageData.data[index + 2] = 0  // B
+            imageData.data[index + 3] = 0  // A - FULLY TRANSPARENT (0)
           }
         }
       }
@@ -266,7 +267,7 @@ const addCogsToMap = async (cogs) => {
       const leafletBounds = L.latLngBounds(geographicBounds)
 
       const overlay = L.imageOverlay(dataURL, leafletBounds, {
-        opacity: 0.6,
+        opacity: 0.4,
         interactive: false,
         zIndex: 100000
       }).addTo(leaflet.value)
@@ -311,7 +312,7 @@ function reprojectEPSG5070ToWGS84(georaster) {
   return bounds
 }
 
-const clearCogsFromMap = () => {
+const clearCogsFromMap = async () => {
   console.log('Clearing all COG overlays from map')
   if (window.cogOverlays) {
     window.cogOverlays.forEach((overlay) => {

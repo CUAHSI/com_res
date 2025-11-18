@@ -153,8 +153,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick } from 'vue'
+import { ref, watch, computed, nextTick, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
+import { debounce } from 'lodash'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
 import TheStageSlider from '@/components/TheStageSlider.vue'
@@ -341,9 +342,8 @@ const showStageSlider = computed(() => {
   return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
 })
 
-const handleStageChange = () => {
+const handleStageChange = debounce(async () => {
   console.log('Stage value changed:', mapHelpers.stageValue.value)
-  mapHelpers.clearCogsFromMap()
   let addedCogs = false
 
   // Get the features to process based on mode
@@ -387,6 +387,7 @@ const handleStageChange = () => {
 
       const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
       if (cogUrls.length > 0) {
+        await mapHelpers.clearCogsFromMap()
         addedCogs = true
         mapHelpers.addCogsToMap(cogUrls)
       }
@@ -403,7 +404,11 @@ const handleStageChange = () => {
     })
     return
   }
-}
+}, 100) // 100ms debounce delay
+
+onUnmounted(() => {
+  handleStageChange.cancel()
+})
 </script>
 <style scoped>
 .map-view-container {
