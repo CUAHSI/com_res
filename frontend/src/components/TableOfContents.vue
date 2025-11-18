@@ -52,10 +52,12 @@ const scrollToSection = (id) => {
 <style scoped>
 .toc {
   position: sticky;
-  top: 120px;               /* keeps TOC itself visible */
+  top: calc(var(--app-bar-height, 96px) + 12px);
   align-self: flex-start;
+  z-index: 10;
+  background: white;
   padding-right: 1rem;
-  border-right: 1px solid #ada8a8; /* vertical separator */
+  border-right: 1px solid #ada8a8;
 }
 
 /* Title */
