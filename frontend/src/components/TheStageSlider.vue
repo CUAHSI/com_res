@@ -29,7 +29,7 @@
         ></v-slider>
 
         <!-- Tick marks -->
-        <div class="ticks">
+        <div class="ticks" :style="ticksStyle">
           <div
             v-for="(_, index) in ticks"
             :key="index"
@@ -160,6 +160,14 @@ const isTickCovered = (index) => {
   const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
   return tickPosition <= mercuryHeight
 }
+
+// Computed style for the vertical line with gradient
+const ticksStyle = computed(() => {
+  const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
+  return {
+    background: `linear-gradient(to top, white 0%, white ${mercuryHeight}%, #333 ${mercuryHeight}%, #333 100%)`
+  }
+})
 
 // Computed properties for dynamic text based on multiReachMode
 const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
@@ -394,7 +402,7 @@ const stopDrag = () => {
   top: 10px;
   bottom: 10px;
   width: 2px;
-  background-color: #333;
+  transition: background 0.2s ease;
 }
 
 .tick {
