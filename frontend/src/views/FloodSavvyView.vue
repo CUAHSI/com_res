@@ -81,17 +81,26 @@
             </p>
           </div>
 
-          <!-- Grid of PDF placeholders -->
-          <v-row class="mb-12">
-            <v-col cols="12" md="4" v-for="(pdf, i) in communityPdfs" :key="i">
-              <v-card class="overflow-hidden" style="border-radius: 6px; cursor: pointer;" @click="openPdf(pdf)">
-                <iframe
-                  :src="pdf.src + '#page=1&view=fitH&toolbar=0'"
-                  :title="pdf.title"
-                  style="width: 100%; height: 300px; border: none;"
-                ></iframe>
-                <v-card-text class="text-center" style="font-size: 0.9rem; color: #1976d2;">
-                  {{ pdf.title }}
+          <!-- Grid of Community Narrative PDFs -->
+          <v-row class="mb-12" justify="center">
+            <v-col
+              cols="12"
+              sm="6"
+              md="6"
+              v-for="(item, i) in communityNarratives"
+              :key="i"
+            >
+              <v-card
+                class="narrative-card"
+                @click="openLink(item.url)"
+                elevation="2"
+              >
+                <div class="narrative-img-wrapper">
+                  <img :src="item.img" :alt="item.title" class="narrative-img" />
+                </div>
+
+                <v-card-text class="narrative-title">
+                  {{ item.title }}
                 </v-card-text>
               </v-card>
             </v-col>
@@ -195,22 +204,26 @@ import taskPdf1 from "@/assets/FloodSavvy_Scenario1.pdf";
 import taskPdf2 from "@/assets/FloodSavvy_Scenario2.pdf";
 import taskPdf3 from "@/assets/FloodSavvy_Scenario3.pdf";
 
-// Community Narratives Task PDF imports 
-import pdf1 from "@/assets/NWM_Tutorial_1020.pdf";
-import pdf2 from "@/assets/NWM_Tutorial_1020.pdf";
-import pdf3 from "@/assets/NWM_Tutorial_1020.pdf";
-import pdf4 from "@/assets/NWM_Tutorial_1020.pdf";
-import pdf5 from "@/assets/NWM_Tutorial_1020.pdf";
-import pdf6 from "@/assets/NWM_Tutorial_1020.pdf";
+// Community Narratives   
+import img1 from "@/assets/RoaringRiver.jpg"
+import img2 from "@/assets/DeSoto.jpeg"
+import img3 from "@/assets/Springfield.jpg"
+import img4 from "@/assets/MARC.jpg"
+import img5 from "@/assets/TROC.jpg"
+import img6 from "@/assets/WRC.jpeg"
 
-const communityPdfs = [
-  { title: "Community 1 Narrative", src: pdf1 },
-  { title: "Community 2 Narrative", src: pdf2 },
-  { title: "Community 3 Narrative", src: pdf3 },
-  { title: "Community 4 Narrative", src: pdf4 },
-  { title: "Community 5 Narrative", src: pdf5 },
-  { title: "Community 6 Narrative", src: pdf6 },
-];
+const communityNarratives = [
+  { title: "Roaring River State Park: Harnessing Flood Map Visualizations for Scenario Planning & New Staff Training", img: img1, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Roaring-river_CN1110.pdf" },
+  { title: "DeSoto Community: Expanding Access to Hydrological Data for Improved Flood Forecasting", img: img2, url: "hhttps://globalresilience.northeastern.edu/wp-content/uploads/2024/04/DeSoto_CN1110.pdf" },
+  { title: "Springfield-Greene County: Beyond Floodplain: Communicating Flood Risks to Community Members", img: img3, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Springfirld_CN1110.pdf" },
+  { title: "Mt Ascutney Community: Enhancing Forecasting Fidelity for Local Emergency Management Directors", img: img4, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Mt-Ascutney_CN1110.pdf" },
+  { title: "Two Rivers-Ottauquechee Community: Accessing Hydrological Data to Support Flood Forecasting & Mitigation Project Prioritrization", img: img5, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Two-rivers_CN1110.pdf" },
+  { title: "Windham Region: Contextualizing Flood Risk in Ungaged Rivers to Strengthen Local Knowledge and Planning", img: img6, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Windham_CN1110.pdf" },
+]
+
+const openLink = (url) => {
+  window.open(url, "_blank");
+}
 
 // Scenario video URL
 const video1 = "https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv";
@@ -308,4 +321,38 @@ const scrollToSection = (id) => {
 [id] {
   scroll-margin-top: 120px; 
 }
+
+.narrative-card {
+  height: 280px;             
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.narrative-card:hover {
+  transform: scale(1.02);
+}
+
+.narrative-img-wrapper {
+  height: 70%;              
+  overflow: hidden;
+  border-radius: 10px 10px 0 0;
+}
+
+.narrative-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;         
+}
+
+.narrative-title {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding-top: 8px;
+}
+
 </style>
