@@ -1,15 +1,25 @@
+import json
+import logging
 from datetime import date, datetime
 
+import pandas
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
+from google.cloud import bigquery
+
+from app.routers.fim.router import get_bigquery_client
 
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
+from . import unit_conversions as units
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.get("/timeseries/nwm-historical")
+@router.get("/nwm-historical")
 async def get_historical_nwm(
     reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     start_date: date = Query(
@@ -59,7 +69,7 @@ async def get_historical_nwm(
     return JSONResponse(content=data)
 
 
-@router.get("/timeseries/nwm-forecast")
+@router.get("/nwm-forecast")
 async def get_forecast_nwm(
     reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
     date_time: datetime = Query(
@@ -74,7 +84,7 @@ async def get_forecast_nwm(
     ),
     ensemble: str = Query(
         0,
-        description="The model ensemble for which to collect data, acceptable values are dependent on the model forecast : short_range =[0], medium_range=[0, 1, 2, 3, 4, 5], long_range=[0, 1, 2, 3] (default: 0)",
+        description="The model ensemble for which to collect data, acceptable values are dependent on the model forecast : short_range =0, medium_range=0, 1, 2, 3, 4, 5, long_range=0, 1, 2, 3 (default: 0)",
         example="3",
     ),
 ) -> JSONResponse:
@@ -98,6 +108,7 @@ async def get_forecast_nwm(
     fdata = Forecasts()
     dt = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
+    # get the forecast type and ensure it's valid
     try:
         ftype = ForecastTypes(forecast)
     except ValueError:
@@ -109,7 +120,9 @@ async def get_forecast_nwm(
             status_code=404,
         )
 
-    valid_ensemble = fdata.filter_forecast_ensembles(ftype, [int(ensemble)])
+    # get the ensemble and ensure it's valid
+    ensembles = [int(e.strip()) for e in ensemble.split(",")]
+    valid_ensemble = fdata.filter_forecast_ensembles(ftype, ensembles)
     if len(valid_ensemble) == 0:
         all_valid_ensembles = fdata.filter_forecast_ensembles(ftype)
         error_message = (
@@ -120,6 +133,7 @@ async def get_forecast_nwm(
             status_code=404,
         )
 
+    # query the forecast data from the CIROH-hosted API
     try:
         fdata.collect_forecasts([reach_id], ftype, [dt], valid_ensemble)
     except Exception as e:
@@ -128,9 +142,172 @@ async def get_forecast_nwm(
             status_code=404,
         )
 
-    data = {
-        time.strftime("%Y-%m-%d %H:%M:%S"): streamflow
-        for time, streamflow in zip(fdata.df["time"], fdata.df["streamflow"])
-    }
+    # group the data by ensemble and format for output
+    if len(ensembles) > 1:
+        data = {}
+        for grp, df in fdata.df.groupby("ensemble"):
+            data[grp] = {
+                time.strftime("%Y-%m-%d %H:%M:%S"): streamflow for time, streamflow in zip(df["time"], df["streamflow"])
+            }
+    else:
+        data = {
+            time.strftime("%Y-%m-%d %H:%M:%S"): streamflow
+            for time, streamflow in zip(fdata.df["time"], fdata.df["streamflow"])
+        }
 
     return JSONResponse(content=data)
+
+
+@router.get("/get-summarized-nwm-forecast")
+async def get_summarized_nwm_forecast(
+    reach_id: str = Query(..., description="The unique NWM reach identifier.", example="5984765"),
+    date_time: datetime = Query(
+        ...,
+        description="The date and time to collect forecast data for in UTC, in theYYYY-MM-DD HH:MM:SS format.",
+        example="2023-11-25 06:00:00",
+    ),
+    forecast: str = Query(
+        ...,
+        description="The forecast simulation to collect data for. Acceptable values include 'short_range', 'medium_range, or 'long_range'",
+        example="medium_range",
+    ),
+) -> JSONResponse:
+    """
+    Collects all forecasted NWM data ensembles for a given reach ID,
+    initialization time, and forecast type, then computes and returns
+    the mean, 25 percentile, and 75 percentile of the ensembles.
+
+    Arguments:
+    ==========
+    reach_id: str - the NWM reach ID for which to collect data.
+    date_time: datetime - the initialization date and time of the desired forecast.
+    forecast: str - the forecast simulation for which to collect data.
+
+    Returns:
+    ========
+    JSONResponse: a dictionary containing three timeseries of data: mean streamflow,
+                  the 25 percentile streamflow, and the 75 percentile streamflow in
+                  the format: {date: <date time series>
+                               mean: <mean streamflow series>,
+                               q25: <25 percentile streamflow series>,
+                               q75: <75 percentile streamflow series>}
+    """
+
+    # Get all the ensembles for the given forecast type
+    fdata = Forecasts()
+    try:
+        ftype = ForecastTypes(forecast)
+    except ValueError:
+        error_message = (
+            f'Invalid forecast type: {forecast}. Valid options are "short_range", "medium_range", or "long_range".'
+        )
+        return HTMLResponse(
+            content=f"<h1>Error 404</h1><p>{error_message}</p>",
+            status_code=404,
+        )
+    all_ensembles = fdata.filter_forecast_ensembles(ftype)
+    str_ensembles = ",".join([str(ensemble) for ensemble in all_ensembles])
+
+    # collect data from the CIROH-hosted API
+    data = await get_forecast_nwm(reach_id, date_time, forecast, str_ensembles)
+
+    # decode the forecast response and load it as JSON
+    data = json.loads(data.body.decode("utf-8"))
+
+    # load the data into pandas dataframe and keep only data
+    # where all sensembles overlap, i.e. drop timestamps with NaN values
+    df = pandas.DataFrame(data)
+    df = df.dropna(how="any")
+
+    # compute IQR and mean
+    q25 = df.quantile(0.25, axis=1)
+    q75 = df.quantile(0.75, axis=1)
+    ave = df.mean(axis=1)
+
+    stats_df = pandas.concat([q25, q75, ave], axis=1)
+    stats_df.columns = ["q25", "q75", "mean"]
+    stats_df = stats_df.reset_index().rename(columns={"index": "timestamp"})
+
+    #    json_ready = stats_df_reset.to_dict(orient="records")
+    return JSONResponse(content=stats_df.to_dict(orient="list"))
+
+
+@router.get("/historical-quantiles")
+async def get_quantiles(
+    feature_id: int = Query(
+        ...,
+        description="The unique NWM feature identifier.",
+        example=3627071,
+    ),
+    si_units: bool = False
+) -> JSONResponse:
+    """
+    Get quantiles data for a given feature ID.
+
+    Arguments:
+    ==========
+    feature_id: int - the NWM feature ID for which to collect quantiles data.
+    si_units: bool - if False, convert streamflow from CMS to CFS (default: False)
+
+    Returns:
+    ========
+    JSONResponse:
+    a dictionary containing the quantiles data for the specified feature ID.
+
+    Raises:
+    =======
+    HTTPException:
+    if the BigQuery operation fails or if the feature ID is not found.
+    """
+    try:
+        client = get_bigquery_client()
+
+        query = """
+        SELECT *
+        FROM `com-res.flood_data.quantiles_catalog`
+        WHERE feature_id = @feature_id
+        ORDER BY doy ASC
+        """
+
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("feature_id", "INT64", feature_id),
+            ]
+        )
+
+        query_job = client.query(query, job_config=job_config)
+
+        # Convert the query results to a list of dictionaries first
+        results = []
+        for row in query_job:
+            result_row = {
+                "feature_id": row["feature_id"],
+                "doy": row["doy"],
+                "q0": row["q0"],
+                "q5": row["q5"],
+                "q10": row["q10"],
+                "q25": row["q25"],
+                "q75": row["q75"],
+                "q90": row["q90"],
+                "q100": row["q100"],
+            }
+            results.append(result_row)
+
+        # Convert to pandas DataFrame for unit conversion
+        df = pandas.DataFrame(results)
+
+        # Convert the units to cfs if necessary
+        if not si_units:
+            # convert all quantile columns from cms to cfs
+            quantile_columns = ["q0", "q5", "q10", "q25", "q75", "q90", "q100"]
+            for col in quantile_columns:
+                df[col] = df[col].apply(units.cms_to_cfs)
+
+        # Convert back to list of dictionaries for JSON response
+        final_results = df.to_dict('records')
+
+    except Exception as e:
+        logging.error(f"Quantiles query failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"BigQuery operation failed: {str(e)}")
+
+    return JSONResponse(content=jsonable_encoder(final_results))

@@ -11,6 +11,16 @@
         </v-btn>
       </div>
       <v-list density="compact">
+        <v-list-item
+          v-if="multiReachMode"
+          :disabled="!canAddMoreFeatures"
+          @click="$emit('select-additional-feature')"
+        >
+          <v-list-item-title>
+            <v-icon color="warning" v-if="!canAddMoreFeatures">{{ mdiAlert }}</v-icon>
+            Select Additional Feature
+          </v-list-item-title>
+        </v-list-item>
         <v-list-item @click="$emit('zoom-to-feature')">
           <v-list-item-title>Zoom to Feature</v-list-item-title>
         </v-list-item>
@@ -34,15 +44,33 @@ defineProps({
   }
 })
 
-defineEmits(['close', 'zoom-to-feature', 'select-feature', 'show-feature-info', 'dismiss'])
+defineEmits([
+  'close',
+  'zoom-to-feature',
+  'select-feature',
+  'select-additional-feature',
+  'show-feature-info',
+  'dismiss'
+])
 
 import { mdiClose } from '@mdi/js'
+import { useFeaturesStore } from '@/stores/features'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import { mdiAlert } from '@mdi/js'
+
+const featureStore = useFeaturesStore()
+const { multiReachMode } = storeToRefs(featureStore)
+
+const canAddMoreFeatures = computed(() => {
+  return featureStore.canSelectMoreFeatures && multiReachMode.value
+})
 </script>
 
 <style scoped>
 .context-menu-container {
   position: fixed;
-  z-index: 10000;
+  z-index: var(--z-index-context-menu);
   background: white;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);

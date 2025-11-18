@@ -2,11 +2,8 @@
   <v-card class="slider-wrapper">
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
-      <h3>Stage-Flow</h3>
-      <InfoTooltip
-        iconSize="x-small"
-        text="This slider controls water stage levels and their corresponding flow rates (cms). Drag the handle to adjust values. The color gradient indicates intensity levels."
-      />
+      <h3>{{ headerTitle }}</h3>
+      <InfoTooltip iconSize="x-small" :text="tooltipText" />
     </div>
 
     <div class="thermometer-slider-container" :style="containerStyle">
@@ -16,7 +13,7 @@
 
         <!-- Grabbable handle -->
         <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-          <div class="handle-label">{{ flowFromStage(modelValue) }} cms</div>
+          <div class="handle-label">{{ handleLabel }}</div>
         </div>
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
@@ -32,12 +29,15 @@
         ></v-slider>
 
         <!-- Tick marks -->
-        <div class="ticks">
+        <div class="ticks" :style="ticksStyle">
           <div
             v-for="(_, index) in ticks"
             :key="index"
             class="tick"
-            :class="{ 'major-tick': index % majorTickInterval === 0 }"
+            :class="{ 
+              'major-tick': index % majorTickInterval === 0,
+              'covered': isTickCovered(index)
+            }"
             :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
           ></div>
         </div>
@@ -48,6 +48,7 @@
             v-for="(stage, index) in visibleStages"
             :key="index"
             class="label-inside"
+            :class="{ 'covered': stage <= modelValue }"
             :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
           >
             {{ stage }}
@@ -58,17 +59,21 @@
 
     <!-- Footer with additional info -->
     <div class="slider-footer">
-      <span>Stage (m)</span>
-      <InfoTooltip
-        text="Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cms)."
-      />
+      <span>{{ footerLabel }}</span>
+      <InfoTooltip :text="footerTooltip" />
     </div>
   </v-card>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import InfoTooltip from './InfoTooltip.vue' // Make sure to import the InfoTooltip
+import { debounce } from 'lodash'
+import InfoTooltip from './InfoTooltip.vue'
+import { useFeaturesStore } from '@/stores/features'
+import { storeToRefs } from 'pinia'
+
+const featureStore = useFeaturesStore()
+const { multiReachMode } = storeToRefs(featureStore)
 
 const props = defineProps({
   modelValue: {
@@ -119,15 +124,71 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const trackSliderChange = debounce((value) => {
+  try {
+    if (window.heap) {
+      window.heap.track('Slider Value Changed', {
+        newValue: value,
+        min: props.min,
+        max: props.max,
+        step: props.step
+      })
+    } else {
+      console.warn('Heap is not available. Slider change event not tracked.')
+    }
+  } catch (error) {
+    console.warn('Error tracking slider change event:', error)
+  }
+}, 300)
+
 const modelValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => {
+    emit('update:modelValue', value)
+    trackSliderChange(value)
+  }
 })
 
 const ticks = Array(props.tickCount).fill(0)
 const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
+
+// Check if a tick is covered by mercury
+const isTickCovered = (index) => {
+  const tickPosition = (index / (props.tickCount - 1)) * 100
+  const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
+  return tickPosition <= mercuryHeight
+}
+
+// Computed style for the vertical line with gradient
+const ticksStyle = computed(() => {
+  const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
+  return {
+    background: `linear-gradient(to top, white 0%, white ${mercuryHeight}%, #333 ${mercuryHeight}%, #333 100%)`
+  }
+})
+
+// Computed properties for dynamic text based on multiReachMode
+const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
+
+const tooltipText = computed(() =>
+  multiReachMode.value
+    ? 'This slider controls water stage levels. Drag the handle to adjust stage values. The color gradient indicates intensity levels.'
+    : 'This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels.'
+)
+
+const handleLabel = computed(() =>
+  multiReachMode.value ? `${props.modelValue} ft` : `${flowFromStage(props.modelValue)} cfs`
+)
+
+const footerLabel = computed(() => (multiReachMode.value ? 'Stage (ft)' : 'Stage (ft)'))
+
+const footerTooltip = computed(() =>
+  multiReachMode.value
+    ? 'Stage values represent water height measurements. Adjust the slider to change the water stage level.'
+    : 'Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs).'
+)
 
 // Calculate which stages to show based on available space
 const visibleStages = computed(() => {
@@ -152,7 +213,7 @@ const containerStyle = computed(() => ({
 
 const mercuryStyle = computed(() => ({
   height: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
-  backgroundColor: mercuryColor.value,
+  backgroundColor: 'blue',
   margin: '0 10px' // Add horizontal padding
 }))
 
@@ -160,19 +221,6 @@ const handleStyle = computed(() => ({
   bottom: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
   cursor: isDragging.value ? 'grabbing' : 'grab'
 }))
-
-const mercuryColor = computed(() => {
-  const percent = (props.modelValue - props.min) / (props.max - props.min)
-  if (percent < 0.5) {
-    const subPercent = percent * 2
-    const hue = 200 + (280 - 200) * subPercent
-    return `hsl(${hue}, 80%, ${70 - subPercent * 20}%)`
-  } else {
-    const subPercent = (percent - 0.5) * 2
-    const hue = 280 + (360 - 280) * subPercent
-    return `hsl(${hue > 360 ? hue - 360 : hue}, 80%, ${50 - subPercent * 10}%)`
-  }
-})
 
 const flowFromStage = (stage) => {
   const index = props.stages.indexOf(stage)
@@ -354,7 +402,7 @@ const stopDrag = () => {
   top: 10px;
   bottom: 10px;
   width: 2px;
-  background-color: #333;
+  transition: background 0.2s ease;
 }
 
 .tick {
@@ -364,11 +412,20 @@ const stopDrag = () => {
   height: 1px;
   background-color: #333;
   transform: translateX(100%);
+  transition: background-color 0.2s ease;
+}
+
+.tick.covered {
+  background-color: white; /* White ticks when covered by mercury */
 }
 
 .major-tick {
   width: 10px;
   height: 2px;
+}
+
+.major-tick.covered {
+  background-color: white; /* White major ticks when covered by mercury */
 }
 
 .labels-inside {
@@ -384,15 +441,16 @@ const stopDrag = () => {
   position: absolute;
   transform: translateY(50%);
   font-size: 10px;
-  color: #333;
   text-align: right;
   padding-right: 8px;
   z-index: 1;
-  text-shadow:
-    -1px -1px 0 white,
-    1px -1px 0 white,
-    -1px 1px 0 white,
-    1px 1px 0 white;
+  color: #333; /* Default color for uncovered labels */
+  transition: color 0.2s ease;
+}
+
+.label-inside.covered {
+  color: white; /* White text when covered by mercury */
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
 }
 
 /* Make sure mercury doesn't obscure labels */

@@ -59,8 +59,17 @@ const paths = [
     label: 'Maps'
   },
   {
-    attrs: { to: '/resources' },
-    label: 'Resources'
+    label: 'Resources',
+    children: [
+      {
+        attrs: { to: '/resources-floodsavvy' },
+        label: 'FloodSavvy Resources'
+      },
+      {
+        attrs: { to: '/resources-nwps' },
+        label: 'NWPS Resources'
+      }
+    ]
   },
   {
     attrs: { to: '/about' },
@@ -95,6 +104,31 @@ watch(
     }
   }
 )
+
+// Track page views using Vue Router's afterEach hook
+router.afterEach((to) => {
+  try {
+    switch (to.path) {
+      case '/':
+        window.heap.track('Homepage View')
+        break
+      case '/maps':
+        window.heap.track('Regional Map Page View', { region: to.query.region || 'Unknown' })
+        break
+      case '/resources':
+        window.heap.track('Resources Page View')
+        break
+      case '/about':
+        window.heap.track('About Page View')
+        break
+      default:
+        // Optionally track other pages
+        break
+    }
+  } catch (error) {
+    console.warn('Heap tracking error:', error)
+  }
+})
 </script>
 
 <style scoped>

@@ -40,6 +40,7 @@ app.add_middleware(
 app.include_router(
     timeseries_router,
     tags=["timeseries"],
+    prefix="/timeseries",
 )
 
 app.include_router(
