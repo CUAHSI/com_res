@@ -374,12 +374,11 @@ async function createWMSLayers(region) {
       }
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
-        pane:
-          layer.name.includes("Points of Interest")
-            ? "panePOI"
-            : layer.name.includes("Waterbodies")
-            ? "paneWaterbodies"
-            : "overlayPane",
+        pane: layer.name.includes('Points of Interest')
+          ? 'panePOI'
+          : layer.name.includes('Waterbodies')
+            ? 'paneWaterbodies'
+            : 'overlayPane',
         layers: [layer.id],
         transparent: true,
         format: 'image/png',

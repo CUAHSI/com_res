@@ -581,7 +581,7 @@ onMounted(() => {
   left: 0;
   width: 100vw !important;
   height: 100vh !important;
-   z-index: var(--z-index-plots) !important;
+  z-index: var(--z-index-plots) !important;
   margin: 0;
   max-width: none !important;
   max-height: none !important;
