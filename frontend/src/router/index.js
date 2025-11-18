@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import FloodSavvyView from '../views/FloodSavvyView.vue'
-import NWPSView from '../views/NWPSView.vue'
+import FloodSavvyView from '../views/ResourcesFloodSavvyView.vue'
+import NWPSView from '../views/ResourcesNWPSView.vue'
 import ContactView from '../views/ContactView.vue'
 import MapView from '../views/MapView.vue'
 import ApiView from '../views/ApiView.vue'
