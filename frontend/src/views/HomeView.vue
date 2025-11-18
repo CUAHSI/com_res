@@ -110,8 +110,13 @@ const router = useRouter()
 const regionsStore = useRegionsStore()
 
 const handleCardClick = (region) => {
-  router.push({ name: 'maps', query: { region: region.name } })
-  regionsStore.currentRegion = region
+  router.push({
+    name: 'maps',
+    query: {
+      region: region.name
+    }
+  })
+  regionsStore.setRegion(region.name)
 }
 
 import img1 from '@/assets/Feature1-map-selection.png'
