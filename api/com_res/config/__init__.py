@@ -9,9 +9,6 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    argo_host: str
-    argo_namespace: str
-    argo_bearer_token: str
 
     mongo_url: str
     mongo_database: str
