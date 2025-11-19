@@ -611,6 +611,9 @@ const toggleFeatureLayer = async (region) => {
     const flowlines = createFlowlinesFeatureLayer(region)
     flowlinesFeatureLayers.value.push(flowlines)
     const provider = createFeatureLayerProvider(region)
+    // TODO CAM-938: we push the provider for each region, 
+    // but we never refresh the esriLeafletGeocoder
+    // .geosearch control to use the new providers.
     featureLayerProviders.value.push(provider)
     region.flowlinesLayer = flowlines
   }
