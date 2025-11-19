@@ -127,6 +127,17 @@ watch(() => props.modelValue, (newValue) => {
   internalValue.value = newValue
 })
 
+// Watch for changes in selected features and adjust internalValue if needed
+watch([() => props.selectedFeatures, () => props.multiReachMode], () => {
+  // If the current internalValue exceeds the new max, clamp it to the new max
+  if (internalValue.value > stageSliderMax.value) {
+    internalValue.value = stageSliderMax.value
+    emit('update:modelValue', stageSliderMax.value)
+    // Trigger stage change to update COGs
+    handleStageChange()
+  }
+}, { deep: true })
+
 // Computed properties for stage slider data
 const activeFeatureFimCogData = computed(() => {
   if (!props.activeFeature || !props.activeFeature.properties) return null
@@ -186,6 +197,19 @@ const stageSliderStages = computed(() => {
 
 const stageSliderFlows = computed(() => {
   return activeFeatureFimCogData.value?.flows_cfs || []
+})
+
+// Safe mercury height calculation to prevent overflow
+const safeMercuryHeight = computed(() => {
+  const max = stageSliderMax.value
+  const min = stageSliderMin.value
+  const value = internalValue.value
+  
+  if (max <= min) return 0
+  if (value <= min) return 0
+  if (value >= max) return 100
+  
+  return ((value - min) / (max - min)) * 100
 })
 
 const ticks = Array(props.tickCount).fill(0)
@@ -269,13 +293,12 @@ const handleSliderChange = (value) => {
 // Check if a tick is covered by mercury
 const isTickCovered = (index) => {
   const tickPosition = (index / (props.tickCount - 1)) * 100
-  const mercuryHeight = ((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
-  return tickPosition <= mercuryHeight
+  return tickPosition <= safeMercuryHeight.value
 }
 
 // Computed style for the vertical line with gradient
 const ticksStyle = computed(() => {
-  const mercuryHeight = ((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
+  const mercuryHeight = safeMercuryHeight.value
   return {
     background: `linear-gradient(to top, white 0%, white ${mercuryHeight}%, #333 ${mercuryHeight}%, #333 100%)`
   }
@@ -324,13 +347,13 @@ const containerStyle = computed(() => ({
 }))
 
 const mercuryStyle = computed(() => ({
-  height: `${((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
+  height: `${safeMercuryHeight.value}%`,
   backgroundColor: 'blue',
   margin: '0 10px'
 }))
 
 const handleStyle = computed(() => ({
-  bottom: `${((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
+  bottom: `${safeMercuryHeight.value}%`,
   cursor: isDragging.value ? 'grabbing' : 'grab'
 }))
 
