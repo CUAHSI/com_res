@@ -132,10 +132,9 @@
     <div v-if="showStageSlider" class="desktop-stage-slider-container">
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="stageSliderMin"
-        :max="stageSliderMax"
-        :stages="stageSliderStages"
-        :flows="stageSliderFlows"
+        :multi-reach-mode="multiReachMode"
+        :selected-features="selectedFeatures"
+        :active-feature="activeFeature"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"
@@ -174,9 +173,17 @@ const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } =
 
 const reach_name = ref(null)
 const reach_id = ref(null)
-const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000)) // default: yesterday
+const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000))
 const forecastMode = ref('medium_range')
 const forecastEnsemble = ref('3')
+
+const showStageSlider = computed(() => {
+  // Check if any selected feature has data
+  const hasData = selectedFeatures.value.some(
+    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
+  )
+  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
+})
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -285,11 +292,6 @@ const toggle = async (component_name) => {
   }
 }
 
-const activeFeatureFimCogData = computed(() => {
-  if (!activeFeature.value || !activeFeature.value.properties) return null
-  return activeFeature.value.properties.fimCogData || null
-})
-
 const multiReachStageData = computed(() => {
   if (selectedFeatures.value.length === 0) return null
 
@@ -323,34 +325,6 @@ const multiReachStageData = computed(() => {
     max: minMaxStage,
     allFimCogData: allFimCogData
   }
-})
-
-const stageSliderMin = computed(() => 0)
-
-const stageSliderMax = computed(() => {
-  if (multiReachMode.value && multiReachStageData.value) {
-    return multiReachStageData.value.max
-  }
-  return activeFeatureFimCogData.value?.stages_ft?.[activeFeatureFimCogData.value.stages_ft.length - 1] || 0
-})
-
-const stageSliderStages = computed(() => {
-  if (multiReachMode.value && multiReachStageData.value) {
-    return multiReachStageData.value.stages_ft
-  }
-  return activeFeatureFimCogData.value?.stages_ft || []
-})
-
-const stageSliderFlows = computed(() => {
-  return activeFeatureFimCogData.value?.flows_cfs || []
-})
-
-const showStageSlider = computed(() => {
-  // Check if any selected feature has data
-  const hasData = selectedFeatures.value.some(
-    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
-  )
-  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
 })
 
 const handleStageChange = debounce(async () => {
