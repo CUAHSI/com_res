@@ -18,7 +18,7 @@
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
         <v-slider
-          v-model="modelValue"
+          v-model="internalValue"
           vertical
           :max="stageSliderMax"
           :min="stageSliderMin"
@@ -48,7 +48,7 @@
             v-for="(stage, index) in visibleStages"
             :key="index"
             class="label-inside"
-            :class="{ 'covered': stage <= modelValue }"
+            :class="{ 'covered': stage <= internalValue }"
             :style="{ bottom: `${((stage - stageSliderMin) / (stageSliderMax - stageSliderMin)) * 100}%` }"
           >
             {{ stage }}
@@ -66,7 +66,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onUnmounted } from 'vue'
+import { computed, ref, onUnmounted, watch } from 'vue'
 import { debounce } from 'lodash'
 import InfoTooltip from './InfoTooltip.vue'
 import * as mapHelpers from '@/helpers/map'
@@ -118,6 +118,14 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+// Use internal value to manage local state
+const internalValue = ref(props.modelValue)
+
+// Watch for external changes to modelValue
+watch(() => props.modelValue, (newValue) => {
+  internalValue.value = newValue
+})
 
 // Computed properties for stage slider data
 const activeFeatureFimCogData = computed(() => {
@@ -180,32 +188,6 @@ const stageSliderFlows = computed(() => {
   return activeFeatureFimCogData.value?.flows_cfs || []
 })
 
-const trackSliderChange = debounce((value) => {
-  try {
-    if (window.heap) {
-      window.heap.track('Slider Value Changed', {
-        newValue: value,
-        min: stageSliderMin.value,
-        max: stageSliderMax.value,
-        step: props.step,
-        multiReachMode: props.multiReachMode
-      })
-    } else {
-      console.warn('Heap is not available. Slider change event not tracked.')
-    }
-  } catch (error) {
-    console.warn('Error tracking slider change event:', error)
-  }
-}, 300)
-
-const modelValue = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    emit('update:modelValue', value)
-    trackSliderChange(value)
-  }
-})
-
 const ticks = Array(props.tickCount).fill(0)
 const isDragging = ref(false)
 const startY = ref(0)
@@ -213,7 +195,7 @@ const startValue = ref(0)
 
 // Main stage change handler with COG loading logic
 const handleStageChange = debounce(async () => {
-  console.log('Stage value changed:', props.modelValue)
+  console.log('Stage value changed:', internalValue.value)
   let addedCogs = false
 
   // Get the features to process based on mode
@@ -228,7 +210,7 @@ const handleStageChange = debounce(async () => {
 
     if (fimCogData) {
       // In multi-reach mode, use the common stages range
-      let targetStage = props.modelValue
+      let targetStage = internalValue.value
 
       if (props.multiReachMode && multiReachStageData.value) {
         // Ensure the stage is within the common range and snap if needed
@@ -251,7 +233,8 @@ const handleStageChange = debounce(async () => {
       }
 
       // Update the stage value if it was snapped
-      if (targetStage !== props.modelValue) {
+      if (targetStage !== internalValue.value) {
+        internalValue.value = targetStage
         emit('update:modelValue', targetStage)
       }
 
@@ -267,7 +250,7 @@ const handleStageChange = debounce(async () => {
   if (!addedCogs) {
     alertStore.displayAlert({
       title: 'No Data Available',
-      text: `There are no COGs available for the selected stage: ${props.modelValue}ft.`,
+      text: `There are no COGs available for the selected stage: ${internalValue.value}ft.`,
       type: 'warning',
       closable: true,
       duration: 5
@@ -278,20 +261,21 @@ const handleStageChange = debounce(async () => {
 
 // Combined handler for slider changes
 const handleSliderChange = (value) => {
-  modelValue.value = value
+  internalValue.value = value
+  emit('update:modelValue', value)
   handleStageChange()
 }
 
 // Check if a tick is covered by mercury
 const isTickCovered = (index) => {
   const tickPosition = (index / (props.tickCount - 1)) * 100
-  const mercuryHeight = ((props.modelValue - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
+  const mercuryHeight = ((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
   return tickPosition <= mercuryHeight
 }
 
 // Computed style for the vertical line with gradient
 const ticksStyle = computed(() => {
-  const mercuryHeight = ((props.modelValue - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
+  const mercuryHeight = ((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
   return {
     background: `linear-gradient(to top, white 0%, white ${mercuryHeight}%, #333 ${mercuryHeight}%, #333 100%)`
   }
@@ -307,7 +291,7 @@ const tooltipText = computed(() =>
 )
 
 const handleLabel = computed(() =>
-  props.multiReachMode ? `${props.modelValue} ft` : `${flowFromStage(props.modelValue)} cfs`
+  props.multiReachMode ? `${internalValue.value} ft` : `${flowFromStage(internalValue.value)} cfs`
 )
 
 const footerLabel = computed(() => (props.multiReachMode ? 'Stage (ft)' : 'Stage (ft)'))
@@ -340,13 +324,13 @@ const containerStyle = computed(() => ({
 }))
 
 const mercuryStyle = computed(() => ({
-  height: `${((props.modelValue - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
+  height: `${((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
   backgroundColor: 'blue',
   margin: '0 10px'
 }))
 
 const handleStyle = computed(() => ({
-  bottom: `${((props.modelValue - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
+  bottom: `${((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
   cursor: isDragging.value ? 'grabbing' : 'grab'
 }))
 
@@ -363,7 +347,7 @@ const flowFromStage = (stage) => {
 const startDrag = (e) => {
   isDragging.value = true
   startY.value = e.clientY || e.touches[0].clientY
-  startValue.value = props.modelValue
+  startValue.value = internalValue.value
 
   document.addEventListener('mousemove', handleDrag)
   document.addEventListener('touchmove', handleDrag, { passive: false })
@@ -383,7 +367,12 @@ const handleDrag = (e) => {
   position = Math.max(0, Math.min(1, position))
   const range = stageSliderMax.value - stageSliderMin.value
   const newValue = stageSliderMin.value + position * range
-  modelValue.value = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
+  const steppedValue = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
+  
+  // Update internal value and emit the change
+  internalValue.value = steppedValue
+  emit('update:modelValue', steppedValue)
+  handleStageChange()
 }
 
 const stopDrag = () => {
