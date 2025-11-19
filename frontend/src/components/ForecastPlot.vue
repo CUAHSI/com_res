@@ -370,15 +370,21 @@ const fetchIQRData = async (reach_id) => {
 }
 
 const toggleFullScreen = async () => {
+  // remove the quantiles
+  const originalShowQuantiles = showQuantiles.value
+  showQuantiles.value = false
+  await nextTick()
   isFullScreen.value = !isFullScreen.value
   emit('toggleFullScreen', isFullScreen.value)
   
-  // Wait for the DOM to update
   await nextTick()
-  
-  // Force chart to re-render with new dimensions
-  if (linePlotRef.value) {
+    if (linePlotRef.value) {
     linePlotRef.value.refreshChart()
+  }
+  await nextTick()
+  // now add the quantiles back if they were on
+  if (originalShowQuantiles) {
+    showQuantiles.value = true
   }
 }
 
