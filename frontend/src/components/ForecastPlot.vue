@@ -374,17 +374,12 @@ const toggleFullScreen = async () => {
   setShowQuantiles(false, reach_id.value)
   isFullScreen.value = !isFullScreen.value
   emit('toggleFullScreen', isFullScreen.value)
-  
   setTimeout(() => {
     if (linePlotRef.value) {
       linePlotRef.value.refreshChart()
-      console.log('Chart refreshed after fullscreen transition')
     }
-    
-    setTimeout(() => {
-      setShowQuantiles(originalShowQuantiles, reach_id.value)
-    }, 50)
-  }, 100)
+    setShowQuantiles(originalShowQuantiles, reach_id.value)
+  }, 200) // 200ms delay for fullscreen transition to complete
 }
 
 // Toggle legend visibility
