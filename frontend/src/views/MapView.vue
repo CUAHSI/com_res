@@ -132,21 +132,11 @@
     <div v-if="showStageSlider" class="desktop-stage-slider-container">
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="0"
-        :max="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.max
-            : activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]
-        "
-        :stages="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.stages_ft
-            : activeFeatureFimCogData.stages_ft
-        "
-        :flows="activeFeatureFimCogData.flows_cfs"
+        :multi-reach-mode="multiReachMode"
+        :selected-features="selectedFeatures"
+        :active-feature="activeFeature"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
-        @update:modelValue="handleStageChange"
       />
     </div>
   </v-container>
@@ -155,7 +145,6 @@
 <script setup>
 import { ref, watch, computed, nextTick, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
 import TheStageSlider from '@/components/TheStageSlider.vue'
@@ -182,9 +171,17 @@ const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } =
 
 const reach_name = ref(null)
 const reach_id = ref(null)
-const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000)) // default: yesterday
+const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000))
 const forecastMode = ref('medium_range')
 const forecastEnsemble = ref('3')
+
+const showStageSlider = computed(() => {
+  // Check if any selected feature has data
+  const hasData = selectedFeatures.value.some(
+    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
+  )
+  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
+})
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -288,127 +285,10 @@ const toggle = async (component_name) => {
       mapHelpers.clearCogsFromMap()
     } else {
       toggledStageSlider.value = true
-      handleStageChange()
     }
   }
 }
 
-const activeFeatureFimCogData = computed(() => {
-  if (!activeFeature.value || !activeFeature.value.properties) return null
-  return activeFeature.value.properties.fimCogData || null
-})
-
-// New computed property for multi-reach stage data
-const multiReachStageData = computed(() => {
-  if (selectedFeatures.value.length === 0) return null
-
-  // Collect all fimCogData from selected features
-  const allFimCogData = selectedFeatures.value
-    .map((feature) => feature.properties?.fimCogData)
-    .filter((data) => data && data.stages_ft && data.stages_ft.length > 0)
-
-  if (allFimCogData.length === 0) return null
-
-  // Find the minimum of all maximum stage values
-  const maxStages = allFimCogData.map((data) => data.stages_ft[data.stages_ft.length - 1])
-  const minMaxStage = Math.min(...maxStages)
-
-  // Find the maximum of all minimum stage values
-  const minStages = allFimCogData.map((data) => data.stages_ft[0])
-  const maxMinStage = Math.max(...minStages)
-
-  // Get all unique stages within the common range
-  const allStages = Array.from(
-    new Set(
-      allFimCogData.flatMap((data) =>
-        data.stages_ft.filter((stage) => stage >= maxMinStage && stage <= minMaxStage)
-      )
-    )
-  ).sort((a, b) => a - b)
-
-  return {
-    stages_ft: allStages,
-    min: maxMinStage,
-    max: minMaxStage,
-    allFimCogData: allFimCogData
-  }
-})
-
-const showStageSlider = computed(() => {
-  // Check if any selected feature has data
-  const hasData = selectedFeatures.value.some(
-    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
-  )
-  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
-})
-
-const handleStageChange = debounce(async () => {
-  console.log('Stage value changed:', mapHelpers.stageValue.value)
-  let addedCogs = false
-
-  // Get the features to process based on mode
-  const featuresToProcess = multiReachMode.value ? selectedFeatures.value : [activeFeature.value]
-
-  for (const feature of featuresToProcess) {
-    if (!feature?.properties?.fimCogData) continue
-
-    console.log('Processing feature for COGs:', feature)
-    const fimCogData = feature.properties.fimCogData
-    console.log('FIM COG Data:', fimCogData)
-
-    if (fimCogData) {
-      // In multi-reach mode, use the common stages range
-      let targetStage = mapHelpers.stageValue.value
-
-      if (multiReachMode.value && multiReachStageData.value) {
-        // Ensure the stage is within the common range and snap if needed
-        if (!multiReachStageData.value.stages_ft.includes(targetStage)) {
-          const nearestStage = multiReachStageData.value.stages_ft.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
-          })
-          targetStage = nearestStage
-          console.log('Snapped to nearest common stage:', nearestStage)
-        }
-      } else {
-        // Single reach mode - use original snapping logic
-        if (!fimCogData.stages_ft.includes(targetStage)) {
-          const nearestStage = fimCogData.stages_ft.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
-          })
-          targetStage = nearestStage
-          console.log('Snapped to nearest stage:', nearestStage)
-        }
-      }
-
-      // Update the stage value if it was snapped
-      if (targetStage !== mapHelpers.stageValue.value) {
-        mapHelpers.stageValue.value = targetStage
-      }
-
-      const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
-      if (cogUrls.length > 0) {
-        await mapHelpers.clearCogsFromMap()
-        addedCogs = true
-        mapHelpers.addCogsToMap(cogUrls)
-      }
-    }
-  }
-
-  if (!addedCogs) {
-    alertStore.displayAlert({
-      title: 'No Data Available',
-      text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}ft.`,
-      type: 'warning',
-      closable: true,
-      duration: 5
-    })
-    return
-  }
-}, 100) // 100ms debounce delay
-
-onUnmounted(() => {
-  handleStageChange.cancel()
-})
 </script>
 <style scoped>
 .map-view-container {

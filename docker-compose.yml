@@ -3,20 +3,6 @@ volumes:
     driver: local
 
 services:
-  caddy:
-    image: caddy
-    build:
-      dockerfile: Dockerfile
-      context: ./caddy/
-    volumes:
-      - ./caddy:/etc/caddy
-    ports:
-      - 443:443
-      - 80:80
-    depends_on:
-      - api
-    restart: unless-stopped
-
   api:
     image: api
     ports:

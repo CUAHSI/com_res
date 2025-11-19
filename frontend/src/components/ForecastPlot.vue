@@ -49,6 +49,7 @@
         :title="plot_title"
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
+        ref="linePlotRef"
       />
     </div>
     <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
@@ -193,7 +194,7 @@
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose, watch, toRef, computed } from 'vue'
+import { ref, defineExpose, watch, toRef, computed, nextTick } from 'vue'
 import {
   mdiChartAreaspline,
   mdiEye,
@@ -228,6 +229,7 @@ const loadingQuantiles = ref(false)
 const quantilesFailed = ref(false)
 const showLegend = ref(false)
 const isFullScreen = ref(false)
+const linePlotRef = ref(null)
 
 // New IQR state
 const showIQR = ref(false)
@@ -367,9 +369,17 @@ const fetchIQRData = async (reach_id) => {
   }
 }
 
-const toggleFullScreen = () => {
+const toggleFullScreen = async () => {
+  const originalShowQuantiles = showQuantiles.value
+  setShowQuantiles(false, reach_id.value)
   isFullScreen.value = !isFullScreen.value
   emit('toggleFullScreen', isFullScreen.value)
+  setTimeout(() => {
+    if (linePlotRef.value) {
+      linePlotRef.value.refreshChart()
+    }
+    setShowQuantiles(originalShowQuantiles, reach_id.value)
+  }, 200) // 200ms delay for fullscreen transition to complete
 }
 
 // Toggle legend visibility
