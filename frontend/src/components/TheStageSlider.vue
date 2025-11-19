@@ -25,7 +25,7 @@
           :step="step"
           hide-details
           class="slider-input"
-          @update:modelValue="$emit('update:modelValue', modelValue)"
+          @update:modelValue="handleSliderChange"
         ></v-slider>
 
         <!-- Tick marks -->
@@ -66,9 +66,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onUnmounted } from 'vue'
 import { debounce } from 'lodash'
 import InfoTooltip from './InfoTooltip.vue'
+import * as mapHelpers from '@/helpers/map'
+import { useAlertStore } from '@/stores/alerts'
+
+const alertStore = useAlertStore()
 
 const props = defineProps({
   modelValue: {
@@ -207,6 +211,77 @@ const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
 
+// Main stage change handler with COG loading logic
+const handleStageChange = debounce(async () => {
+  console.log('Stage value changed:', props.modelValue)
+  let addedCogs = false
+
+  // Get the features to process based on mode
+  const featuresToProcess = props.multiReachMode ? props.selectedFeatures : [props.activeFeature]
+
+  for (const feature of featuresToProcess) {
+    if (!feature?.properties?.fimCogData) continue
+
+    console.log('Processing feature for COGs:', feature)
+    const fimCogData = feature.properties.fimCogData
+    console.log('FIM COG Data:', fimCogData)
+
+    if (fimCogData) {
+      // In multi-reach mode, use the common stages range
+      let targetStage = props.modelValue
+
+      if (props.multiReachMode && multiReachStageData.value) {
+        // Ensure the stage is within the common range and snap if needed
+        if (!multiReachStageData.value.stages_ft.includes(targetStage)) {
+          const nearestStage = multiReachStageData.value.stages_ft.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
+          })
+          targetStage = nearestStage
+          console.log('Snapped to nearest common stage:', nearestStage)
+        }
+      } else {
+        // Single reach mode - use original snapping logic
+        if (!fimCogData.stages_ft.includes(targetStage)) {
+          const nearestStage = fimCogData.stages_ft.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
+          })
+          targetStage = nearestStage
+          console.log('Snapped to nearest stage:', nearestStage)
+        }
+      }
+
+      // Update the stage value if it was snapped
+      if (targetStage !== props.modelValue) {
+        emit('update:modelValue', targetStage)
+      }
+
+      const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
+      if (cogUrls.length > 0) {
+        await mapHelpers.clearCogsFromMap()
+        addedCogs = true
+        mapHelpers.addCogsToMap(cogUrls)
+      }
+    }
+  }
+
+  if (!addedCogs) {
+    alertStore.displayAlert({
+      title: 'No Data Available',
+      text: `There are no COGs available for the selected stage: ${props.modelValue}ft.`,
+      type: 'warning',
+      closable: true,
+      duration: 5
+    })
+    return
+  }
+}, 100) // 100ms debounce delay
+
+// Combined handler for slider changes
+const handleSliderChange = (value) => {
+  modelValue.value = value
+  handleStageChange()
+}
+
 // Check if a tick is covered by mercury
 const isTickCovered = (index) => {
   const tickPosition = (index / (props.tickCount - 1)) * 100
@@ -318,6 +393,10 @@ const stopDrag = () => {
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('touchend', stopDrag)
 }
+
+onUnmounted(() => {
+  handleStageChange.cancel()
+})
 </script>
 
 <style scoped>
