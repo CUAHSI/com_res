@@ -166,7 +166,7 @@
         <v-sheet class="date-select-sheet">
           <v-list>
             <v-list-item>
-              <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto">
+              <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto" class="date-select-menu">
                 <template #activator="{ props }">
                   <v-text-field
                     v-bind="props"
@@ -192,7 +192,7 @@
             </v-list-item>
 
             <v-list-item>
-              <v-menu v-model="endMenu" :close-on-content-click="false" offset-y min-width="auto">
+              <v-menu v-model="endMenu" :close-on-content-click="false" offset-y min-width="auto" class="date-select-menu">
                 <template #activator="{ props }">
                   <v-text-field
                     v-bind="props"
