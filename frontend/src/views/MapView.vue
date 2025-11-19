@@ -136,14 +136,22 @@
         :max="
           multiReachMode && multiReachStageData
             ? multiReachStageData.max
-            : activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]
+            : activeFeatureFimCogData
+            ? activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]
+            : 0
         "
         :stages="
           multiReachMode && multiReachStageData
             ? multiReachStageData.stages_ft
-            : activeFeatureFimCogData.stages_ft
+            : activeFeatureFimCogData
+            ? activeFeatureFimCogData.stages_ft
+            : []
         "
-        :flows="activeFeatureFimCogData.flows_cfs"
+        :flows="
+          activeFeatureFimCogData
+            ? activeFeatureFimCogData.flows_cfs
+            : []
+        "
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"
@@ -296,6 +304,14 @@ const toggle = async (component_name) => {
 const activeFeatureFimCogData = computed(() => {
   if (!activeFeature.value || !activeFeature.value.properties) return null
   return activeFeature.value.properties.fimCogData || null
+})
+
+const activeFeatureStages = computed(() => {
+  return activeFeatureFimCogData.value?.stages_ft || []
+})
+
+const activeFeatureFlows = computed(() => {
+  return activeFeatureFimCogData.value?.flows_cfs || []
 })
 
 // New computed property for multi-reach stage data
