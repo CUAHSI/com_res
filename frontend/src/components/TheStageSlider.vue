@@ -217,6 +217,11 @@ const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
 
+// Format number to show only one decimal place
+const formatNumber = (value) => {
+  return Math.round(value * 10) / 10
+}
+
 // Main stage change handler with COG loading logic
 const handleStageChange = debounce(async () => {
   console.log('Stage value changed:', internalValue.value)
@@ -313,9 +318,13 @@ const tooltipText = computed(() =>
     : 'This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels.'
 )
 
-const handleLabel = computed(() =>
-  props.multiReachMode ? `${internalValue.value} ft` : `${flowFromStage(internalValue.value)} cfs`
-)
+const handleLabel = computed(() => {
+  if (props.multiReachMode) {
+    return `${formatNumber(internalValue.value)} ft`
+  } else {
+    return `${formatNumber(flowFromStage(internalValue.value))} cfs`
+  }
+})
 
 const footerLabel = computed(() => (props.multiReachMode ? 'Stage (ft)' : 'Stage (ft)'))
 
