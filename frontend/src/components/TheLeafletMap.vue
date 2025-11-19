@@ -23,7 +23,7 @@ import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
+import { onMounted, ref, watch, nextTick, onUnmounted, computed } from 'vue'
 import {
   mapObject,
   featureLayerProviders,
@@ -86,6 +86,16 @@ const cleanupKeyboardListeners = () => {
   document.removeEventListener('keydown', handleKeyDown)
   document.removeEventListener('keyup', handleKeyUp)
 }
+
+// Computed property that always returns the latest providers
+const allProviders = computed(() => {
+  const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
+    apikey: ACCESS_TOKEN,
+    maxResults: 3
+  })
+  
+  return [addressSearchProvider, ...featureLayerProviders.value]
+})
 
 onMounted(() => {
   // https://leafletjs.com/reference.html#map-zoomsnap
@@ -178,18 +188,6 @@ onMounted(() => {
     OpenTopoMap: openTopo
   }
 
-  const addressSearchProvider = esriLeafletGeocoder.arcgisOnlineProvider({
-    apikey: ACCESS_TOKEN,
-    maxResults: 3
-    // nearby: {
-    //   lat: -33.8688,
-    //   lng: 151.2093
-    // }
-  })
-
-  // add the address search provider to the featureLayerProviders
-  const providers = [addressSearchProvider, ...featureLayerProviders.value]
-
   // /*
   //  * LEAFLET CONTROLS
   //  */
@@ -210,7 +208,7 @@ onMounted(() => {
       useMapBounds: true,
       expanded: false,
       title: ' Search',
-      providers: providers
+      providers: allProviders.value
     })
     .addTo(leaflet.value)
 
