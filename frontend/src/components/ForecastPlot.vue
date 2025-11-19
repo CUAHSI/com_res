@@ -370,22 +370,21 @@ const fetchIQRData = async (reach_id) => {
 }
 
 const toggleFullScreen = async () => {
-  // remove the quantiles
   const originalShowQuantiles = showQuantiles.value
-  showQuantiles.value = false
-  await nextTick()
+  setShowQuantiles(false, reach_id.value)
   isFullScreen.value = !isFullScreen.value
   emit('toggleFullScreen', isFullScreen.value)
   
-  await nextTick()
+  setTimeout(() => {
     if (linePlotRef.value) {
-    linePlotRef.value.refreshChart()
-  }
-  await nextTick()
-  // now add the quantiles back if they were on
-  if (originalShowQuantiles) {
-    showQuantiles.value = true
-  }
+      linePlotRef.value.refreshChart()
+      console.log('Chart refreshed after fullscreen transition')
+    }
+    
+    setTimeout(() => {
+      setShowQuantiles(originalShowQuantiles, reach_id.value)
+    }, 50)
+  }, 100)
 }
 
 // Toggle legend visibility
