@@ -18,14 +18,14 @@
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
         <v-slider
-          v-model="modelValue"
+          v-model="internalValue"
           vertical
-          :max="max"
-          :min="min"
+          :max="stageSliderMax"
+          :min="stageSliderMin"
           :step="step"
           hide-details
           class="slider-input"
-          @update:modelValue="$emit('update:modelValue', modelValue)"
+          @update:modelValue="handleSliderChange"
         ></v-slider>
 
         <!-- Tick marks -->
@@ -48,8 +48,8 @@
             v-for="(stage, index) in visibleStages"
             :key="index"
             class="label-inside"
-            :class="{ 'covered': stage <= modelValue }"
-            :style="{ bottom: `${((stage - min) / (max - min)) * 100}%` }"
+            :class="{ 'covered': stage <= internalValue }"
+            :style="{ bottom: `${((stage - stageSliderMin) / (stageSliderMax - stageSliderMin)) * 100}%` }"
           >
             {{ stage }}
           </div>
@@ -66,31 +66,30 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onUnmounted, watch } from 'vue'
 import { debounce } from 'lodash'
 import InfoTooltip from './InfoTooltip.vue'
-import { useFeaturesStore } from '@/stores/features'
-import { storeToRefs } from 'pinia'
+import * as mapHelpers from '@/helpers/map'
+import { useAlertStore } from '@/stores/alerts'
 
-const featureStore = useFeaturesStore()
-const { multiReachMode } = storeToRefs(featureStore)
+const alertStore = useAlertStore()
 
 const props = defineProps({
   modelValue: {
     type: Number,
     required: true
   },
-  min: {
-    type: Number,
-    default: 0
+  multiReachMode: {
+    type: Boolean,
+    default: false
   },
-  max: {
-    type: Number,
-    default: 100
+  selectedFeatures: {
+    type: Array,
+    default: () => []
   },
-  step: {
-    type: Number,
-    default: 1
+  activeFeature: {
+    type: Object,
+    default: null
   },
   width: {
     type: String,
@@ -100,13 +99,9 @@ const props = defineProps({
     type: String,
     default: '400px'
   },
-  stages: {
-    type: Array,
-    default: () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-  },
-  flows: {
-    type: Array,
-    default: () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+  step: {
+    type: Number,
+    default: 1
   },
   majorTickInterval: {
     type: Number,
@@ -118,35 +113,79 @@ const props = defineProps({
   },
   minLabelSpacing: {
     type: Number,
-    default: 40 // Minimum vertical pixels between labels to prevent overlap
+    default: 40
   }
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const trackSliderChange = debounce((value) => {
-  try {
-    if (window.heap) {
-      window.heap.track('Slider Value Changed', {
-        newValue: value,
-        min: props.min,
-        max: props.max,
-        step: props.step
-      })
-    } else {
-      console.warn('Heap is not available. Slider change event not tracked.')
-    }
-  } catch (error) {
-    console.warn('Error tracking slider change event:', error)
-  }
-}, 300)
+// Use internal value to manage local state
+const internalValue = ref(props.modelValue)
 
-const modelValue = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    emit('update:modelValue', value)
-    trackSliderChange(value)
+// Watch for external changes to modelValue
+watch(() => props.modelValue, (newValue) => {
+  internalValue.value = newValue
+})
+
+// Computed properties for stage slider data
+const activeFeatureFimCogData = computed(() => {
+  if (!props.activeFeature || !props.activeFeature.properties) return null
+  return props.activeFeature.properties.fimCogData || null
+})
+
+const multiReachStageData = computed(() => {
+  if (props.selectedFeatures.length === 0) return null
+
+  // Collect all fimCogData from selected features
+  const allFimCogData = props.selectedFeatures
+    .map((feature) => feature.properties?.fimCogData)
+    .filter((data) => data && data.stages_ft && data.stages_ft.length > 0)
+
+  if (allFimCogData.length === 0) return null
+
+  // Find the minimum of all maximum stage values
+  const maxStages = allFimCogData.map((data) => data.stages_ft[data.stages_ft.length - 1])
+  const minMaxStage = Math.min(...maxStages)
+
+  // Find the maximum of all minimum stage values
+  const minStages = allFimCogData.map((data) => data.stages_ft[0])
+  const maxMinStage = Math.max(...minStages)
+
+  // Get all unique stages within the common range
+  const allStages = Array.from(
+    new Set(
+      allFimCogData.flatMap((data) =>
+        data.stages_ft.filter((stage) => stage >= maxMinStage && stage <= minMaxStage)
+      )
+    )
+  ).sort((a, b) => a - b)
+
+  return {
+    stages_ft: allStages,
+    min: maxMinStage,
+    max: minMaxStage,
+    allFimCogData: allFimCogData
   }
+})
+
+const stageSliderMin = computed(() => 0)
+
+const stageSliderMax = computed(() => {
+  if (props.multiReachMode && multiReachStageData.value) {
+    return multiReachStageData.value.max
+  }
+  return activeFeatureFimCogData.value?.stages_ft?.[activeFeatureFimCogData.value.stages_ft.length - 1] || 0
+})
+
+const stageSliderStages = computed(() => {
+  if (props.multiReachMode && multiReachStageData.value) {
+    return multiReachStageData.value.stages_ft
+  }
+  return activeFeatureFimCogData.value?.stages_ft || []
+})
+
+const stageSliderFlows = computed(() => {
+  return activeFeatureFimCogData.value?.flows_cfs || []
 })
 
 const ticks = Array(props.tickCount).fill(0)
@@ -154,38 +193,111 @@ const isDragging = ref(false)
 const startY = ref(0)
 const startValue = ref(0)
 
+// Main stage change handler with COG loading logic
+const handleStageChange = debounce(async () => {
+  console.log('Stage value changed:', internalValue.value)
+  let addedCogs = false
+
+  // Get the features to process based on mode
+  const featuresToProcess = props.multiReachMode ? props.selectedFeatures : [props.activeFeature]
+
+  for (const feature of featuresToProcess) {
+    if (!feature?.properties?.fimCogData) continue
+
+    console.log('Processing feature for COGs:', feature)
+    const fimCogData = feature.properties.fimCogData
+    console.log('FIM COG Data:', fimCogData)
+
+    if (fimCogData) {
+      // In multi-reach mode, use the common stages range
+      let targetStage = internalValue.value
+
+      if (props.multiReachMode && multiReachStageData.value) {
+        // Ensure the stage is within the common range and snap if needed
+        if (!multiReachStageData.value.stages_ft.includes(targetStage)) {
+          const nearestStage = multiReachStageData.value.stages_ft.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
+          })
+          targetStage = nearestStage
+          console.log('Snapped to nearest common stage:', nearestStage)
+        }
+      } else {
+        // Single reach mode - use original snapping logic
+        if (!fimCogData.stages_ft.includes(targetStage)) {
+          const nearestStage = fimCogData.stages_ft.reduce((prev, curr) => {
+            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
+          })
+          targetStage = nearestStage
+          console.log('Snapped to nearest stage:', nearestStage)
+        }
+      }
+
+      // Update the stage value if it was snapped
+      if (targetStage !== internalValue.value) {
+        internalValue.value = targetStage
+        emit('update:modelValue', targetStage)
+      }
+
+      const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
+      if (cogUrls.length > 0) {
+        await mapHelpers.clearCogsFromMap()
+        addedCogs = true
+        mapHelpers.addCogsToMap(cogUrls)
+      }
+    }
+  }
+
+  if (!addedCogs) {
+    alertStore.displayAlert({
+      title: 'No Data Available',
+      text: `There are no COGs available for the selected stage: ${internalValue.value}ft.`,
+      type: 'warning',
+      closable: true,
+      duration: 5
+    })
+    return
+  }
+}, 100) // 100ms debounce delay
+
+// Combined handler for slider changes
+const handleSliderChange = (value) => {
+  internalValue.value = value
+  emit('update:modelValue', value)
+  handleStageChange()
+}
+
 // Check if a tick is covered by mercury
 const isTickCovered = (index) => {
   const tickPosition = (index / (props.tickCount - 1)) * 100
-  const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
+  const mercuryHeight = ((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
   return tickPosition <= mercuryHeight
 }
 
 // Computed style for the vertical line with gradient
 const ticksStyle = computed(() => {
-  const mercuryHeight = ((props.modelValue - props.min) / (props.max - props.min)) * 100
+  const mercuryHeight = ((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100
   return {
     background: `linear-gradient(to top, white 0%, white ${mercuryHeight}%, #333 ${mercuryHeight}%, #333 100%)`
   }
 })
 
 // Computed properties for dynamic text based on multiReachMode
-const headerTitle = computed(() => (multiReachMode.value ? 'Stage' : 'Stage-Flow'))
+const headerTitle = computed(() => (props.multiReachMode ? 'Stage' : 'Stage-Flow'))
 
 const tooltipText = computed(() =>
-  multiReachMode.value
+  props.multiReachMode
     ? 'This slider controls water stage levels. Drag the handle to adjust stage values. The color gradient indicates intensity levels.'
     : 'This slider controls water stage levels and their corresponding flow rates (cfs). Drag the handle to adjust values. The color gradient indicates intensity levels.'
 )
 
 const handleLabel = computed(() =>
-  multiReachMode.value ? `${props.modelValue} ft` : `${flowFromStage(props.modelValue)} cfs`
+  props.multiReachMode ? `${internalValue.value} ft` : `${flowFromStage(internalValue.value)} cfs`
 )
 
-const footerLabel = computed(() => (multiReachMode.value ? 'Stage (ft)' : 'Stage (ft)'))
+const footerLabel = computed(() => (props.multiReachMode ? 'Stage (ft)' : 'Stage (ft)'))
 
 const footerTooltip = computed(() =>
-  multiReachMode.value
+  props.multiReachMode
     ? 'Stage values represent water height measurements. Adjust the slider to change the water stage level.'
     : 'Stage values represent water height measurements. Each stage corresponds to a specific flow rate in cubic feet per second (cfs).'
 )
@@ -195,14 +307,14 @@ const visibleStages = computed(() => {
   const containerHeight = parseInt(props.height) || 400
   const maxPossibleLabels = Math.floor(containerHeight / props.minLabelSpacing)
 
-  if (props.stages.length <= maxPossibleLabels) {
-    return props.stages
+  if (stageSliderStages.value.length <= maxPossibleLabels) {
+    return stageSliderStages.value
   }
 
   // If too many labels, show a subset with every Nth label
-  const step = Math.ceil(props.stages.length / maxPossibleLabels)
-  return props.stages.filter(
-    (_, index) => index % step === 0 || index === 0 || index === props.stages.length - 1
+  const step = Math.ceil(stageSliderStages.value.length / maxPossibleLabels)
+  return stageSliderStages.value.filter(
+    (_, index) => index % step === 0 || index === 0 || index === stageSliderStages.value.length - 1
   )
 })
 
@@ -212,30 +324,30 @@ const containerStyle = computed(() => ({
 }))
 
 const mercuryStyle = computed(() => ({
-  height: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
+  height: `${((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
   backgroundColor: 'blue',
-  margin: '0 10px' // Add horizontal padding
+  margin: '0 10px'
 }))
 
 const handleStyle = computed(() => ({
-  bottom: `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`,
+  bottom: `${((internalValue.value - stageSliderMin.value) / (stageSliderMax.value - stageSliderMin.value)) * 100}%`,
   cursor: isDragging.value ? 'grabbing' : 'grab'
 }))
 
 const flowFromStage = (stage) => {
   // Find the closest stage in the stages array
-  const closestStage = props.stages.reduce((prev, curr) => {
+  const closestStage = stageSliderStages.value.reduce((prev, curr) => {
     return Math.abs(curr - stage) < Math.abs(prev - stage) ? curr : prev
   })
   
-  const index = props.stages.indexOf(closestStage)
-  return index >= 0 ? props.flows[index] : props.flows[0] || 0
+  const index = stageSliderStages.value.indexOf(closestStage)
+  return index >= 0 ? stageSliderFlows.value[index] : stageSliderFlows.value[0] || 0
 }
 
 const startDrag = (e) => {
   isDragging.value = true
   startY.value = e.clientY || e.touches[0].clientY
-  startValue.value = props.modelValue
+  startValue.value = internalValue.value
 
   document.addEventListener('mousemove', handleDrag)
   document.addEventListener('touchmove', handleDrag, { passive: false })
@@ -253,9 +365,14 @@ const handleDrag = (e) => {
 
   let position = 1 - (clientY - rect.top) / rect.height
   position = Math.max(0, Math.min(1, position))
-  const range = props.max - props.min
-  const newValue = props.min + position * range
-  modelValue.value = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
+  const range = stageSliderMax.value - stageSliderMin.value
+  const newValue = stageSliderMin.value + position * range
+  const steppedValue = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
+  
+  // Update internal value and emit the change
+  internalValue.value = steppedValue
+  emit('update:modelValue', steppedValue)
+  handleStageChange()
 }
 
 const stopDrag = () => {
@@ -265,6 +382,10 @@ const stopDrag = () => {
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('touchend', stopDrag)
 }
+
+onUnmounted(() => {
+  handleStageChange.cancel()
+})
 </script>
 
 <style scoped>
