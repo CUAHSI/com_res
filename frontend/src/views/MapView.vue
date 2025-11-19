@@ -132,26 +132,10 @@
     <div v-if="showStageSlider" class="desktop-stage-slider-container">
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="0"
-        :max="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.max
-            : activeFeatureFimCogData
-            ? activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]
-            : 0
-        "
-        :stages="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.stages_ft
-            : activeFeatureFimCogData
-            ? activeFeatureFimCogData.stages_ft
-            : []
-        "
-        :flows="
-          activeFeatureFimCogData
-            ? activeFeatureFimCogData.flows_cfs
-            : []
-        "
+        :min="stageSliderMin"
+        :max="stageSliderMax"
+        :stages="stageSliderStages"
+        :flows="stageSliderFlows"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
         @update:modelValue="handleStageChange"
@@ -306,15 +290,6 @@ const activeFeatureFimCogData = computed(() => {
   return activeFeature.value.properties.fimCogData || null
 })
 
-const activeFeatureStages = computed(() => {
-  return activeFeatureFimCogData.value?.stages_ft || []
-})
-
-const activeFeatureFlows = computed(() => {
-  return activeFeatureFimCogData.value?.flows_cfs || []
-})
-
-// New computed property for multi-reach stage data
 const multiReachStageData = computed(() => {
   if (selectedFeatures.value.length === 0) return null
 
@@ -348,6 +323,26 @@ const multiReachStageData = computed(() => {
     max: minMaxStage,
     allFimCogData: allFimCogData
   }
+})
+
+const stageSliderMin = computed(() => 0)
+
+const stageSliderMax = computed(() => {
+  if (multiReachMode.value && multiReachStageData.value) {
+    return multiReachStageData.value.max
+  }
+  return activeFeatureFimCogData.value?.stages_ft?.[activeFeatureFimCogData.value.stages_ft.length - 1] || 0
+})
+
+const stageSliderStages = computed(() => {
+  if (multiReachMode.value && multiReachStageData.value) {
+    return multiReachStageData.value.stages_ft
+  }
+  return activeFeatureFimCogData.value?.stages_ft || []
+})
+
+const stageSliderFlows = computed(() => {
+  return activeFeatureFimCogData.value?.flows_cfs || []
 })
 
 const showStageSlider = computed(() => {
