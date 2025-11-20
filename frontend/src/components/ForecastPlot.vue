@@ -44,7 +44,7 @@
       <LinePlot
         v-if="!isLoading && hasData"
         :timeseries="plot_timeseries"
-        :quantiles="showQuantiles ? quantilesData : []"
+        :quantiles="showQuantiles ? quantilesData.forecast : []"
         :iqr="showIQR ? iqrData : []"
         :title="plot_title"
         :use-log-scale="showQuantiles"
@@ -256,6 +256,9 @@ const plotContainerStyle = computed(() => {
   }
 })
 
+// helper function to convert Date objects to ISO date strings
+const toIsoDate = (date) => date.toISOString().split('T')[0]
+
 const setShowQuantiles = async (value, reach_id) => {
   // If turning on quantiles, turn off IQR
   if (value) {
@@ -265,9 +268,20 @@ const setShowQuantiles = async (value, reach_id) => {
 
   showQuantiles.value = value
   quantilesFailed.value = false
-  if (value && quantilesData.value.length === 0) {
+  if (value && quantilesData.value.forecast.length === 0) {
     loadingQuantiles.value = true
-    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+    
+    // Show quantiles for the exact forecast period (9 days from previous day)
+    const forecastStart = new Date(datetime.value) // Forecast initialization time
+    const forecastEnd = new Date(forecastStart)
+    forecastEnd.setDate(forecastStart.getDate() + 9) // 9-day forecast
+    
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(
+      reach_id, 
+      toIsoDate(forecastStart), 
+      toIsoDate(forecastEnd),
+      'forecast'
+    ))
   }
   loadingQuantiles.value = false
 }
