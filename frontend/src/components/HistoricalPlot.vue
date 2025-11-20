@@ -316,8 +316,8 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale,
 
 // define properties that can be passed to this component
 const historicalProps = defineProps({
-  reachid: Number,
-  reachname: String,
+  reachid: { type: Number, default: null },
+  reachname: { type: String, default: '' },
   show: {
     type: Boolean,
     required: true

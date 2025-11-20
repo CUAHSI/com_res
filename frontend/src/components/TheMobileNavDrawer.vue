@@ -51,7 +51,20 @@
 <script setup>
 import { useDisplay } from 'vuetify'
 
-const props = defineProps(['show', 'paths'])
+const props = defineProps(
+  {
+    show: {
+      type: Boolean,
+      default: false
+    }
+  },
+  {
+    paths: {
+      type: Array,
+      default: () => []
+    }
+  }
+)
 defineEmits(['toggleMobileNav'])
 
 const { mdAndDown } = useDisplay()

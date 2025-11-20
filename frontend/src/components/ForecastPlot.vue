@@ -296,7 +296,7 @@ const fetchIQRData = async (reach_id) => {
     const params = new URLSearchParams({
       reach_id: reach_id,
       date_time: datetime.value.toISOString().split('T')[0],
-      forecast: forecast_mode.value
+      forecast: forecastMode.value
     })
 
     const response = await fetch(
@@ -392,17 +392,17 @@ const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
 const forecastProps = defineProps({
-  reachid: Number,
-  reachname: String,
-  forecast_datetime: {
+  reachid: { type: Number, default: null },
+  reachname: { type: String, default: '' },
+  forecastDatetime: {
     type: Date,
     default: () => new Date(Date.now() - 24 * 60 * 60 * 1000) // default = yesterday
   },
-  forecast_mode: {
+  forecastMode: {
     type: String,
     default: 'medium_range'
   },
-  forecast_ensemble: {
+  forecastEnsemble: {
     type: String,
     default: '3'
   },
@@ -414,9 +414,9 @@ const forecastProps = defineProps({
 
 const reach_id = toRef(forecastProps, 'reachid')
 const reach_name = toRef(forecastProps, 'reachname')
-const datetime = toRef(forecastProps, 'forecast_datetime')
-const forecast_mode = toRef(forecastProps, 'forecast_mode')
-const ensemble = toRef(forecastProps, 'forecast_ensemble')
+const datetime = toRef(forecastProps, 'forecastDatetime')
+const forecastMode = toRef(forecastProps, 'forecastMode')
+const ensemble = toRef(forecastProps, 'forecastEnsemble')
 const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
@@ -426,12 +426,12 @@ const clearPlot = () => {
   showQuantiles.value = false
 }
 
-watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
+watch([reach_id, reach_name, datetime, forecastMode, ensemble], async () => {
   console.log('Current props:', {
     reach_id: reach_id.value,
     reach_name: reach_name.value,
     datetime: datetime.value,
-    forecast_mode: forecast_mode.value,
+    forecastMode: forecastMode.value,
     ensemble: ensemble.value
   })
   if (reach_id.value && datetime.value) {
@@ -439,7 +439,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
       reach_id.value,
       reach_name.value,
       datetime.value,
-      forecast_mode.value,
+      forecastMode.value,
       ensemble.value
     )
     // Fetch new quantiles when reach ID changes
@@ -458,7 +458,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
   }
 })
 
-const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble) => {
+const getForecastData = async (reach_id, name, datetime, forecastMode, ensemble) => {
   try {
     isLoading.value = true
     error.value = null
@@ -466,10 +466,10 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     const params = new URLSearchParams({
       reach_id: reach_id,
       date_time: datetime.toISOString().split('T')[0],
-      forecast: forecast_mode,
+      forecast: forecastMode,
       ensemble: ensemble
     })
-    console.log(reach_id, name, datetime, forecast_mode, ensemble)
+    console.log(reach_id, name, datetime, forecastMode, ensemble)
     // TODO: ideally we would cache this data so that we can use it when IQR is toggled on...
     const response = await fetch(
       `${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`

@@ -41,11 +41,11 @@
 
 <script setup>
 const props = defineProps({
-  id: String,
-  title: String,
-  description: String,
-  taskPdf: String,
-  videoUrl: String,
+  id: { type: String, default: '' },
+  title: { type: String, default: '' },
+  description: { type: String, default: '' },
+  taskPdf: { type: String, default: '' },
+  videoUrl: { type: String, default: '' },
   pdfLabel: {
     type: String,
     default: '📋 View Task PDF'

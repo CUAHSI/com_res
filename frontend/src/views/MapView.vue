@@ -122,9 +122,9 @@
         ref="forecastPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"
-        :forecast_datetime="forecastDateTime"
-        :forecast_mode="forecastMode"
-        :forecast_ensemble="forecastEnsemble"
+        :forecast-datetime="forecastDateTime"
+        :forecast-mode="forecastMode"
+        :forecast-ensemble="forecastEnsemble"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showForecast"
       />
