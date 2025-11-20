@@ -26,9 +26,10 @@ import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
 import {
   mapObject,
-  featureLayerProviders,
   control,
   leaflet,
+  geoProviders,
+  geosearch,
   mapLoaded,
   isMapMoving,
   activeFeatureLayer,
@@ -187,8 +188,8 @@ onMounted(() => {
     // }
   })
 
-  // add the address search provider to the featureLayerProviders
-  const providers = [addressSearchProvider, ...featureLayerProviders.value]
+  // add the address search provider to the geoProviders
+  geoProviders.value.push(addressSearchProvider)
 
   // /*
   //  * LEAFLET CONTROLS
@@ -203,14 +204,14 @@ onMounted(() => {
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
-  esriLeafletGeocoder
+  geosearch.value = esriLeafletGeocoder
     .geosearch({
       position: 'topright',
       placeholder: 'Search for a location',
       useMapBounds: true,
       expanded: false,
       title: ' Search',
-      providers: providers
+      providers: geoProviders.value
     })
     .addTo(leaflet.value)
 
