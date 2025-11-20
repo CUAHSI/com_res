@@ -391,7 +391,7 @@ const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
-const props = defineProps({
+const forecastProps = defineProps({
   reachid: Number,
   reachname: String,
   forecast_datetime: {
@@ -412,12 +412,11 @@ const props = defineProps({
   }
 })
 
-const reach_id = toRef(props, 'reachid')
-const reach_name = toRef(props, 'reachname')
-const datetime = toRef(props, 'forecast_datetime')
-const forecast_mode = toRef(props, 'forecast_mode')
-const ensemble = toRef(props, 'forecast_ensemble')
-
+const reach_id = toRef(forecastProps, 'reachid')
+const reach_name = toRef(forecastProps, 'reachname')
+const datetime = toRef(forecastProps, 'forecast_datetime')
+const forecast_mode = toRef(forecastProps, 'forecast_mode')
+const ensemble = toRef(forecastProps, 'forecast_ensemble')
 const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''

@@ -315,7 +315,7 @@ const toggleLegend = () => {
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, LinearScale, TimeScale, Filler)
 
 // define properties that can be passed to this component
-const props = defineProps({
+const historicalProps = defineProps({
   reachid: Number,
   reachname: String,
   show: {
@@ -323,8 +323,8 @@ const props = defineProps({
     required: true
   }
 })
-const reach_id = toRef(props, 'reachid') // make this property reactive to it triggers watch()
-const reach_name = toRef(props, 'reachname') // make this property reactive to it triggers watch()
+const reach_id = toRef(historicalProps, 'reachid') // make this property reactive to it triggers watch()
+const reach_name = toRef(historicalProps, 'reachname') // make this property reactive to it triggers watch()
 
 const plot_timeseries = ref([])
 const plot_title = ref()
