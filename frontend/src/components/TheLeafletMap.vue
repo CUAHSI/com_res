@@ -94,7 +94,7 @@ const allProviders = computed(() => {
     maxResults: 3
   })
   
-  return featureLayerProviders.value
+  return [addressSearchProvider, ...featureLayerProviders.value]
 })
 
 onMounted(() => {
