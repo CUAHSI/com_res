@@ -295,7 +295,7 @@ const setShowQuantiles = async (value, reach_id) => {
   quantilesFailed.value = false
   if (value && quantilesData.value.length === 0) {
     loadingQuantiles.value = true
-    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id, toIsoDate(startDate.value), toIsoDate(endDate.value)))
   }
   loadingQuantiles.value = false
 }
@@ -470,7 +470,7 @@ watch([startDate, endDate, reach_id], async () => {
     quantilesFailed.value = false
     if (showQuantiles.value) {
       await quantilesStore.setQuantilesData([])
-      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value))
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value, toIsoDate(startDate.value), toIsoDate(endDate.value)))
     }
     loadingQuantiles.value = false
   }
