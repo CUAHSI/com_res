@@ -12,7 +12,7 @@
       </div>
       <v-list density="compact">
         <v-list-item
-          v-if="multiReachMode"
+          v-if="multiReachMode && !isFeatureSelected"
           :disabled="!canAddMoreFeatures"
           @click="$emit('select-additional-feature')"
         >
@@ -23,10 +23,13 @@
             Select Additional Feature
           </v-list-item-title>
         </v-list-item>
+        <v-list-item v-if="isFeatureSelected && multiReachMode" @click="$emit('deselect-feature')">
+          <v-list-item-title>Deselect Feature</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="$emit('zoom-to-feature')">
           <v-list-item-title>Zoom to Feature</v-list-item-title>
         </v-list-item>
-        <v-list-item @click="$emit('select-feature')">
+        <v-list-item v-if="!isFeatureSelected" @click="$emit('select-feature')">
           <v-list-item-title>Select Feature</v-list-item-title>
         </v-list-item>
         <v-list-item @click="$emit('show-feature-info')">
@@ -43,6 +46,10 @@ defineProps({
   context: {
     type: Object,
     required: true
+  },
+  isFeatureSelected: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -50,6 +57,7 @@ defineEmits([
   'close',
   'zoom-to-feature',
   'select-feature',
+  'deselect-feature',
   'select-additional-feature',
   'show-feature-info',
   'dismiss'

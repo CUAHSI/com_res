@@ -7,9 +7,11 @@
   <ContextMenu
     v-if="contextMenu.show"
     :context="contextMenu"
+    :is-feature-selected="isContextMenuFeatureSelected"
     @close="contextMenu.show = false"
     @zoom-to-feature="contextZoomToFeature"
     @select-feature="contextSelectFeature"
+    @deselect-feature="contextDeselectFeature"
     @select-additional-feature="contextSelectAdditionalFeature"
     @show-feature-info="contextShowFeatureInfo"
     @dismiss="dismissContextMenu"
@@ -23,7 +25,7 @@ import L from 'leaflet'
 import * as esriLeaflet from 'esri-leaflet'
 import * as esriLeafletGeocoder from 'esri-leaflet-geocoder'
 import 'leaflet-easybutton/src/easy-button'
-import { onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
+import { onMounted, ref, watch, nextTick, onUnmounted, computed } from 'vue'
 import {
   mapObject,
   control,
@@ -62,6 +64,26 @@ const { multiReachMode } = storeToRefs(featureStore)
 
 const ACCESS_TOKEN =
   'AAPK7e5916c7ccc04c6aa3a1d0f0d85f8c3brwA96qnn6jQdX3MT1dt_4x1VNVoN8ogd38G2LGBLLYaXk7cZ3YzE_lcY-evhoeGX'
+
+const isContextMenuFeatureSelected = computed(() => {
+  if (!contextMenu.value.feature) return false
+
+  const featureStore = useFeaturesStore()
+  const { selectedFeatures } = storeToRefs(featureStore)
+
+  return selectedFeatures.value.some(
+    (feature) => feature.properties.COMID === contextMenu.value.feature.properties.COMID
+  )
+})
+
+// Add new context menu handler for deselection
+function contextDeselectFeature() {
+  if (contextMenu.value.feature) {
+    featureStore.deselectFeature(contextMenu.value.feature)
+  }
+  contextMenu.value.show = false
+  contextMenuFeatureLatLng.value = null
+}
 
 // Keyboard event handlers
 const handleKeyDown = (event) => {

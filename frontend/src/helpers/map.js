@@ -522,7 +522,7 @@ const showHoverPopup = (feature, latlng, closeable = false) => {
 
 function createFlowlinesFeatureLayer(region) {
   const featureStore = useFeaturesStore()
-  const { multiReachMode } = storeToRefs(featureStore)
+  const { multiReachMode, selectedFeatures } = storeToRefs(featureStore)
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayer = esriLeaflet.featureLayer({
     url: url,
@@ -579,11 +579,27 @@ function createFlowlinesFeatureLayer(region) {
   featureLayer.on('click', function (e) {
     const feature = e.layer.feature
     console.log('Feature clicked:', feature)
+
     const isCtrlOrCmdClick = e.originalEvent.ctrlKey || e.originalEvent.metaKey
-    if (isCtrlOrCmdClick && multiReachMode.value) {
-      console.log('Multi-select enabled via Ctrl/Cmd key.')
-      featureStore.mergeFeature(feature)
+
+    // Check if feature is already selected
+    const isAlreadySelected = selectedFeatures.value.some(
+      (selected) => selected.properties.COMID === feature.properties.COMID
+    )
+
+    if (multiReachMode.value && isCtrlOrCmdClick) {
+      console.log('Multi-select mode with Ctrl/Cmd key.')
+      if (isAlreadySelected) {
+        // Deselect the feature if already selected
+        console.log('Deselecting feature in multi-reach mode')
+        featureStore.deselectFeature(feature)
+      } else {
+        // Select additional feature
+        console.log('Selecting additional feature in multi-reach mode')
+        featureStore.mergeFeature(feature)
+      }
     } else {
+      // Normal selection behavior (replace current selection)
       featureStore.selectFeature(feature)
     }
   })
