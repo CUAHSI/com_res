@@ -11,10 +11,11 @@ import { ENDPOINTS } from '@/constants'
 import parseGeoraster from 'georaster'
 
 const leaflet = shallowRef(null)
+const geoProviders = shallowRef([])
+const geosearch = shallowRef(null)
 const wmsLayers = shallowRef({})
 const mapObject = ref(new Map())
 const flowlinesFeatureLayers = shallowRef([])
-const featureLayerProviders = shallowRef([])
 const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
 const layerControlIsExpanded = ref(false)
@@ -611,7 +612,7 @@ const toggleFeatureLayer = async (region) => {
     const flowlines = createFlowlinesFeatureLayer(region)
     flowlinesFeatureLayers.value.push(flowlines)
     const provider = createFeatureLayerProvider(region)
-    featureLayerProviders.value.push(provider)
+    geoProviders.value.push(provider)
     region.flowlinesLayer = flowlines
   }
   // turn off all other feature layers and turn on the selected one
@@ -625,6 +626,28 @@ const toggleFeatureLayer = async (region) => {
       activeFeatureLayer.value = featureLayer
       control.value.addOverlay(featureLayer, `NHDPlus Flowlines`)
     }
+    
+    // remove the existing geosearch control because
+    // it doesn't seem like esri-leaflet-geocoder supports dynamic provider updates
+    // https://developers.arcgis.com/esri-leaflet/api-reference/esri-leaflet-geocoder/geosearch/#methods
+    if (geosearch.value) {
+      console.log('Removing existing geosearch control to update providers.')
+      leaflet.value.removeControl(geosearch.value)
+    }
+
+    // create a new geosearch control with the updated providers
+    // TODO: currently this shows below the layer control because it gets added last
+    // Ideally we would like to maintain the original position BEFORE the layer control
+    geosearch.value = esriLeafletGeocoder
+    .geosearch({
+      position: 'topright',
+      placeholder: 'Search for a location',
+      useMapBounds: true,
+      expanded: false,
+      title: ' Search',
+      providers: geoProviders.value,
+    })
+    .addTo(leaflet.value)
   })
 }
 
@@ -640,7 +663,8 @@ export {
   leaflet,
   wmsLayers,
   flowlinesFeatureLayers,
-  featureLayerProviders,
+  geosearch,
+  geoProviders,
   activeFeatureLayer,
   toggleWMSLayers,
   toggleFeatureLayer,
