@@ -1,23 +1,23 @@
 <template>
   <v-app-bar
     v-if="!$route.meta.hideNavigation"
-    color="navbar"
-    ref="appBar"
     id="app-bar"
+    ref="appBar"
+    color="navbar"
     elevate-on-scroll
     fixed
     app
     height="100"
   >
-    <template v-slot:image>
-      <v-img gradient="to top right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3)"></v-img>
+    <template #image>
+      <v-img gradient="to top right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3)" />
     </template>
-    <template v-slot:prepend>
+    <template #prepend>
       <router-link :to="{ path: `/` }" class="logo">
-        <v-img :width="70" cover :src="imgUrl" alt="home"></v-img>
+        <v-img :width="70" cover :src="imgUrl" alt="home" />
       </router-link>
     </template>
-    <v-app-bar-title class="text-h4">FloodSavvy</v-app-bar-title>
+    <v-app-bar-title class="text-h4"> FloodSavvy </v-app-bar-title>
 
     <v-tabs v-if="!mdAndDown" v-model="path" align-tabs="title">
       <template v-for="(item, i) in paths" :key="i">
@@ -36,20 +36,20 @@
         <v-tab
           v-else
           v-bind="item.attrs"
-          :text="item.label"
           :id="`navbar-nav-${item.label.replaceAll(/[\/\s]/g, ``)}`"
+          :text="item.label"
         />
       </template>
     </v-tabs>
-    <v-spacer></v-spacer>
+    <v-spacer />
     <v-tooltip text="Report an Issue" location="bottom">
-      <template v-slot:activator="{ props }">
+      <template #activator="{ props }">
         <v-btn icon v-bind="props" @click="toggleGithubDialog">
-          <v-icon :icon="mdiGithub"></v-icon>
+          <v-icon :icon="mdiGithub" />
         </v-btn>
       </template>
     </v-tooltip>
-    <v-app-bar-nav-icon @click="$emit('toggleMobileNav')" v-if="mdAndDown" />
+    <v-app-bar-nav-icon v-if="mdAndDown" @click="$emit('toggleMobileNav')" />
   </v-app-bar>
   <v-dialog v-model="showGithubDialog" max-width="500">
     <v-card>

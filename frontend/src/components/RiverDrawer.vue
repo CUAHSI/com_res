@@ -14,10 +14,10 @@
       <v-btn
         class="mb-4"
         color="primary"
-        @click="getHistoricalData"
         style="margin-top: 10px; width: 100px"
         :loading="isLoading"
         :disabled="isLoading"
+        @click="getHistoricalData"
       >
         Plot Data
       </v-btn>

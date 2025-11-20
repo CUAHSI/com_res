@@ -10,9 +10,9 @@ from google.cloud import bigquery
 
 from app.routers.fim.router import get_bigquery_client
 
+from . import unit_conversions as units
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
-from . import unit_conversions as units
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +239,7 @@ async def get_quantiles(
         description="The unique NWM feature identifier.",
         example=3627071,
     ),
-    si_units: bool = False
+    si_units: bool = False,
 ) -> JSONResponse:
     """
     Get quantiles data for a given feature ID.

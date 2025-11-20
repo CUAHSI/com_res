@@ -44,7 +44,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     return cached && Date.now() - cached.timestamp <= maxAge
   }
 
-    // Clear cache if needed (optional - for memory management)
+  // Clear cache if needed (optional - for memory management)
   const clearCache = () => {
     quantilesCache.value.clear()
   }
@@ -55,12 +55,17 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   }
 
   // Fetch quantiles data from the FastAPI endpoint
-  const getQuantilesData = async (reach_id, startDate = null, endDate = null, plotType = 'historical') => {
+  const getQuantilesData = async (
+    reach_id,
+    startDate = null,
+    endDate = null,
+    plotType = 'historical'
+  ) => {
     if (!reach_id) return
 
     // Generate a cache key that includes the date range and plot type
     const cacheKey = `${reach_id}_${plotType}_${startDate}_${endDate}`
-    
+
     // Check if we have cached data for this reach_id and date range
     if (hasCachedQuantilesData(cacheKey)) {
       const cachedData = getCachedQuantilesData(cacheKey)
@@ -106,10 +111,10 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
       // Generate all dates in the range
       const allDates = generateDateRange(start, end)
-      
+
       // Create a lookup map for quantile data by day of year
       const quantilesByDoy = {}
-      data.forEach(item => {
+      data.forEach((item) => {
         quantilesByDoy[item.doy] = item
       })
 
@@ -121,9 +126,9 @@ export const useQuantilesStore = defineStore('quantiles', () => {
       }
 
       // Create the base Q0 data (hidden from legend and tooltips)
-      const q0Data = allDates.map(date => {
-        return { 
-          x: date.toISOString().split('T')[0], 
+      const q0Data = allDates.map((date) => {
+        return {
+          x: date.toISOString().split('T')[0],
           y: getQuantileForDate(date, 'q0')
         }
       })
@@ -146,9 +151,9 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Much Below Normal',
-          data: allDates.map(date => {
-            return { 
-              x: date.toISOString().split('T')[0], 
+          data: allDates.map((date) => {
+            return {
+              x: date.toISOString().split('T')[0],
               y: getQuantileForDate(date, 'q10')
             }
           }),
@@ -162,9 +167,9 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Below Normal',
-          data: allDates.map(date => {
-            return { 
-              x: date.toISOString().split('T')[0], 
+          data: allDates.map((date) => {
+            return {
+              x: date.toISOString().split('T')[0],
               y: getQuantileForDate(date, 'q25')
             }
           }),
@@ -178,9 +183,9 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Normal',
-          data: allDates.map(date => {
-            return { 
-              x: date.toISOString().split('T')[0], 
+          data: allDates.map((date) => {
+            return {
+              x: date.toISOString().split('T')[0],
               y: getQuantileForDate(date, 'q75')
             }
           }),
@@ -194,9 +199,9 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         },
         {
           label: 'Above Normal',
-          data: allDates.map(date => {
-            return { 
-              x: date.toISOString().split('T')[0], 
+          data: allDates.map((date) => {
+            return {
+              x: date.toISOString().split('T')[0],
               y: getQuantileForDate(date, 'q90')
             }
           }),
@@ -226,12 +231,12 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const generateDateRange = (start, end) => {
     const dates = []
     const current = new Date(start)
-    
+
     while (current <= end) {
       dates.push(new Date(current))
       current.setDate(current.getDate() + 1)
     }
-    
+
     return dates
   }
 

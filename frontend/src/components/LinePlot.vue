@@ -1,6 +1,6 @@
 <template>
   <h5>{{ props.title }}</h5>
-  <Line :data="chartData" :options="chartOptions" ref="chartRef"/>
+  <Line ref="chartRef" :data="chartData" :options="chartOptions" />
 </template>
 
 <script setup>

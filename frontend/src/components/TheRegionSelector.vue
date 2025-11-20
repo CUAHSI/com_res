@@ -14,10 +14,10 @@
       density="compact"
       variant="outlined"
       hide-details
-      @update:modelValue="handleRegionChange"
       :error="!selectedRegion"
       :menu-props="{ contentClass: 'region-selector-menu', zIndex: menuZIndex }"
-    ></v-select>
+      @update:model-value="handleRegionChange"
+    />
   </v-card>
 </template>
 

@@ -1,6 +1,6 @@
 <template>
-  <div v-show="$route.meta.showMap" id="mapContainer"></div>
-  <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
+  <div v-show="$route.meta.showMap" id="mapContainer" />
+  <v-progress-linear v-if="isMapMoving" indeterminate color="primary" />
 
   <TheMultiSelectIndicator v-if="ctrlActive && multiReachMode" />
 

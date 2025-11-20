@@ -38,9 +38,9 @@
               cover
               :lazy-src="`${member.image}`"
             >
-              <template v-slot:placeholder>
+              <template #placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                  <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
+                  <v-progress-circular color="grey-lighten-4" indeterminate />
                 </div>
               </template>
             </v-img>
@@ -49,9 +49,9 @@
             </v-card-title>
             <v-card-subtitle>
               {{ member.position }}
-              <v-divider></v-divider>
+              <v-divider />
               {{ member.org }}
-              <v-divider></v-divider>
+              <v-divider />
               {{ member.email }}
             </v-card-subtitle>
           </v-card>
