@@ -10,13 +10,13 @@
       type="heading, image "
       :loading="isLoading"
       class="mx-auto"
-    ></v-skeleton-loader>
+    />
     <div v-if="!isLoading" class="position-absolute" style="top: 6px; right: 8px; z-index: 2">
       <InfoTooltip
         content-class="plot-info-tooltip"
         :z-index="200000"
         :max-width="420"
-        iconSize="x-small"
+        icon-size="x-small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) forecasted over the
         next 10 days.  
@@ -34,7 +34,7 @@
       />
     </div>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
-      <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+      <v-progress-circular indeterminate color="primary" size="40" />
       <span class="ml-3">Loading forecasted data...</span>
     </v-row>
     <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
@@ -43,13 +43,13 @@
     <div class="plot-container" :style="plotContainerStyle">
       <LinePlot
         v-if="!isLoading && hasData"
+        ref="linePlotRef"
         :timeseries="plot_timeseries"
         :quantiles="showQuantiles ? quantilesData.forecast : []"
         :iqr="showIQR ? iqrData : []"
         :title="plot_title"
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
-        ref="linePlotRef"
       />
     </div>
     <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
@@ -57,15 +57,15 @@
       <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading && (showQuantiles || showIQR)"
+            v-bind="props"
             :color="showLegend ? 'primary' : 'default'"
-            @click="toggleLegend"
             icon
             size="small"
             class="mr-1"
+            @click="toggleLegend"
           >
-            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
+            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye" />
           </v-btn>
         </template>
         <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
@@ -75,23 +75,18 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :color="showIQR ? 'primary' : 'default'"
             :disabled="loadingIQR"
             :loading="loadingIQR"
-            @click="toggleIQR(reach_id)"
             icon
             size="small"
             class="mr-1"
+            @click="toggleIQR(reach_id)"
           >
-            <v-icon :icon="mdiChartBox"></v-icon>
-            <v-progress-circular
-              v-if="loadingIQR"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiChartBox" />
+            <v-progress-circular v-if="loadingIQR" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>{{ showIQR ? 'Hide' : 'Show' }} Forecast IQR</span>
@@ -101,23 +96,18 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="quantilesFailed"
             :loading="loadingQuantiles"
-            @click="toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
+            @click="toggleQuantiles(reach_id)"
           >
-            <v-icon :icon="mdiChartAreaspline"></v-icon>
-            <v-progress-circular
-              v-if="loadingQuantiles"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiChartAreaspline" />
+            <v-progress-circular v-if="loadingQuantiles" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
@@ -127,22 +117,17 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :disabled="downloading.csv"
             :loading="downloading.csv"
-            @click="downCSV"
             icon
             size="small"
             class="mr-1"
+            @click="downCSV"
           >
-            <v-icon :icon="mdiFileDelimited"></v-icon>
-            <v-progress-circular
-              v-if="downloading.csv"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiFileDelimited" />
+            <v-progress-circular v-if="downloading.csv" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>Download CSV</span>
@@ -152,21 +137,16 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :disabled="downloading.json"
             :loading="downloading.json"
-            @click="downJson"
             icon
             size="small"
+            @click="downJson"
           >
-            <v-icon :icon="mdiCodeJson"></v-icon>
-            <v-progress-circular
-              v-if="downloading.json"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiCodeJson" />
+            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>Download JSON</span>
@@ -175,14 +155,14 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            @click="toggleFullScreen"
+            v-bind="props"
             icon
             size="small"
             class="mr-1"
+            @click="toggleFullScreen"
           >
-            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen"></v-icon>
+            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen" />
           </v-btn>
         </template>
         <span>{{ isFullScreen ? 'Exit' : 'Enter' }} Full Screen</span>
@@ -194,7 +174,7 @@
 <script setup>
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
-import { ref, defineExpose, watch, toRef, computed, nextTick } from 'vue'
+import { ref, defineExpose, watch, toRef, computed } from 'vue'
 import {
   mdiChartAreaspline,
   mdiEye,
@@ -270,15 +250,15 @@ const setShowQuantiles = async (value, reach_id) => {
   quantilesFailed.value = false
   if (value && quantilesData.value.forecast.length === 0) {
     loadingQuantiles.value = true
-    
+
     // Show quantiles for the exact forecast period (9 days from previous day)
     const forecastStart = new Date(datetime.value) // Forecast initialization time
     const forecastEnd = new Date(forecastStart)
     forecastEnd.setDate(forecastStart.getDate() + 9) // 9-day forecast
-    
+
     quantilesFailed.value = !(await quantilesStore.getQuantilesData(
-      reach_id, 
-      toIsoDate(forecastStart), 
+      reach_id,
+      toIsoDate(forecastStart),
       toIsoDate(forecastEnd),
       'forecast'
     ))
@@ -492,7 +472,9 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     })
     console.log(reach_id, name, datetime, forecast_mode, ensemble)
     // TODO: ideally we would cache this data so that we can use it when IQR is toggled on...
-    const response = await fetch(`${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`)
+    const response = await fetch(
+      `${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`
+    )
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)

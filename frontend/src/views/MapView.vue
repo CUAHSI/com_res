@@ -1,6 +1,6 @@
 <template>
   <v-overlay :model-value="!mapHelpers.mapLoaded" class="align-center justify-center">
-    <v-progress-circular indeterminate :size="128"></v-progress-circular>
+    <v-progress-circular indeterminate :size="128" />
   </v-overlay>
 
   <v-container fluid class="map-view-container">
@@ -17,9 +17,9 @@
           <!-- Multi-reach Mode Toggle -->
           <div class="control-section">
             <v-card variant="flat" class="multi-reach-toggle-card">
-              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px"
-                >Selection Mode</v-card-title
-              >
+              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px">
+                Selection Mode
+              </v-card-title>
               <v-radio-group
                 v-model="multiReachMode"
                 density="compact"
@@ -27,9 +27,9 @@
                 inline
                 style="padding: 0px 12px 8px 12px"
               >
-                <v-radio label="Single Reach" :value="false" color="primary"></v-radio>
+                <v-radio label="Single Reach" :value="false" color="primary" />
                 <v-radio label="Multi-reach Mode" :value="true" color="primary">
-                  <template v-slot:label>
+                  <template #label>
                     <span>Multi-reach</span>
                     <InfoTooltip
                       text="Enable to select multiple river reaches at a time. Use Ctrl (Cmd on Mac) + Click to select additional reaches on the map. Or use the context menu option 'Select Additional Feature'."
@@ -51,9 +51,9 @@
             <v-card variant="flat" class="action-buttons-card">
               <v-btn
                 id="btn-show-stage-slider"
-                @click="toggle('stage')"
                 :color="toggledStageSlider ? 'primary' : 'white'"
                 class="action-button"
+                @click="toggle('stage')"
               >
                 Flood Map
                 <InfoTooltip
@@ -65,9 +65,9 @@
               <v-btn
                 v-if="!multiReachMode"
                 id="btn-show-historical"
-                @click="toggle('historical')"
                 :color="showHistorical ? 'primary' : 'white'"
                 class="action-button"
+                @click="toggle('historical')"
               >
                 Historical
                 <InfoTooltip
@@ -80,9 +80,9 @@
               </v-btn>
               <v-btn
                 v-if="!multiReachMode"
-                @click="toggle('forecast')"
                 :color="showForecast ? 'primary' : 'white'"
                 class="action-button"
+                @click="toggle('forecast')"
               >
                 Forecast
                 <InfoTooltip
@@ -143,7 +143,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick, onUnmounted } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { useDisplay } from 'vuetify'
 import HistoricalPlot from '@/components/HistoricalPlot.vue'
 import ForecastPlot from '@/components/ForecastPlot.vue'
@@ -288,7 +288,6 @@ const toggle = async (component_name) => {
     }
   }
 }
-
 </script>
 <style scoped>
 .map-view-container {

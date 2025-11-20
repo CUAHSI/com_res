@@ -180,7 +180,7 @@
       <p style="padding: 12px 16px 12px 24px; padding: 12px 16px">
         If you still have questions about FloodSavvy, please reach out to one of our team members on
         the
-        <router-link to="/contact">CONTACT US</router-link> page.
+        <router-link to="/contact"> CONTACT US </router-link> page.
       </p>
 
       <h3 class="ma-2">

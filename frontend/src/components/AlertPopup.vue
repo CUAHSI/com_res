@@ -5,7 +5,7 @@
     :title="props.title"
     :text="props.text"
     :closeable="props.closeable"
-  ></v-alert>
+  />
 </template>
 
 <script setup>

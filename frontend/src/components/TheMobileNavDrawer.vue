@@ -14,7 +14,7 @@
         <template v-for="path in paths" :key="path.label">
           <!-- Items with children -->
           <v-list-group v-if="path.children" :value="path.label" no-action>
-            <template v-slot:activator="{ props: activatorProps }">
+            <template #activator="{ props: activatorProps }">
               <v-list-item v-bind="activatorProps">
                 <v-list-item-title>{{ path.label }}</v-list-item-title>
               </v-list-item>
@@ -35,10 +35,10 @@
           <v-list-item
             v-else
             v-bind="path.attrs"
-            @click="$emit('toggleMobileNav')"
             :id="`drawer-nav-${path.label.replaceAll(/[\/\s]/g, ``)}`"
             active-class="primary darken-3 white--text"
             :class="path.isActive?.() ? 'primary darken-4 white--text' : ''"
+            @click="$emit('toggleMobileNav')"
           >
             <span>{{ path.label }}</span>
           </v-list-item>

@@ -1,11 +1,8 @@
 <template>
-  <v-sheet
-    class="pa-4 resource-box mb-6"
-    elevation="0"
-    rounded
-    :id="id"
-  >
-    <h4 class="ma-2 section-subtitle">{{ title }}</h4>
+  <v-sheet :id="id" class="pa-4 resource-box mb-6" elevation="0" rounded>
+    <h4 class="ma-2 section-subtitle">
+      {{ title }}
+    </h4>
     <p>{{ description }}</p>
 
     <v-row class="mt-4" dense>
@@ -17,13 +14,10 @@
               class="pdf-preview"
               :src="taskPdf + '#page=1&zoom=100&toolbar=0&scrollbar=0'"
               :title="title"
-            ></iframe>
+            />
           </div>
 
-          <v-card-text
-            class="text-center"
-            style="font-size: 0.9rem; color: #1976d2;"
-          >
+          <v-card-text class="text-center" style="font-size: 0.9rem; color: #1976d2">
             {{ pdfLabel }}
           </v-card-text>
         </v-card>
@@ -33,15 +27,10 @@
       <v-col cols="12" md="6">
         <v-card class="scenario-card">
           <div class="pdf-preview-wrapper">
-            <div class="video-placeholder">
-              🎥 Video 
-            </div>
+            <div class="video-placeholder">🎥 Video</div>
           </div>
 
-          <v-card-text
-            class="text-center"
-            style="font-size: 0.9rem; color: #424242;"
-          >
+          <v-card-text class="text-center" style="font-size: 0.9rem; color: #424242">
             Tutorial Video (Coming Soon)
           </v-card-text>
         </v-card>
@@ -59,12 +48,12 @@ const props = defineProps({
   videoUrl: String,
   pdfLabel: {
     type: String,
-    default: "📋 View Task PDF"
+    default: '📋 View Task PDF'
   }
 })
 
 const openTaskPdf = () => {
-  window.open(props.taskPdf, "_blank")
+  window.open(props.taskPdf, '_blank')
 }
 </script>
 
@@ -123,5 +112,5 @@ const openTaskPdf = () => {
 
 .pdf-label {
   color: #1976d2;
-} 
+}
 </style>

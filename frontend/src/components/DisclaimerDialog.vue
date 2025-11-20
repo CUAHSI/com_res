@@ -56,19 +56,14 @@
               height="100"
               class="mx-auto"
               :cover="logo.shouldCover !== false"
-            ></v-img>
+            />
           </v-col>
         </v-row>
       </v-card-text>
-      <v-divider></v-divider>
+      <v-divider />
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="primary"
-          text="Acknowledge"
-          variant="tonal"
-          @click="dismiss_disclaimer"
-        ></v-btn>
+        <v-spacer />
+        <v-btn color="primary" text="Acknowledge" variant="tonal" @click="dismiss_disclaimer" />
       </v-card-actions>
     </v-card>
   </v-dialog>

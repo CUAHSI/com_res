@@ -94,6 +94,8 @@
   </v-container>
 </template>
 
+<script setup></script>
+
 <style>
 @media (min-width: 1024px) {
   .about {
@@ -101,5 +103,3 @@
   }
 }
 </style>
-
-<script setup></script>

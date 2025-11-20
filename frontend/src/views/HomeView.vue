@@ -14,7 +14,9 @@
           <div class="slide-container">
             <v-img :src="slide.image" height="300" cover class="slideshow-image" />
             <div class="slideshow-caption">
-              <p class="caption-text">{{ slide.text }}</p>
+              <p class="caption-text">
+                {{ slide.text }}
+              </p>
             </div>
           </div>
         </v-carousel-item>
@@ -59,8 +61,12 @@
         >
           <v-card class="region-card" elevation="2" @click="handleCardClick(region)">
             <v-img :src="region.image" height="180" cover />
-            <v-card-title class="region-card-title">{{ region.title }}</v-card-title>
-            <v-card-text class="region-card-text">{{ region.text }}</v-card-text>
+            <v-card-title class="region-card-title">
+              {{ region.title }}
+            </v-card-title>
+            <v-card-text class="region-card-text">
+              {{ region.text }}
+            </v-card-text>
           </v-card>
         </v-col>
       </v-row>
@@ -78,8 +84,12 @@
         >
           <v-card class="region-card" elevation="2" @click="handleCardClick(region)">
             <v-img :src="region.image" height="180" cover />
-            <v-card-title class="region-card-title">{{ region.title }}</v-card-title>
-            <v-card-text class="region-card-text">{{ region.text }}</v-card-text>
+            <v-card-title class="region-card-title">
+              {{ region.title }}
+            </v-card-title>
+            <v-card-text class="region-card-text">
+              {{ region.text }}
+            </v-card-text>
           </v-card>
         </v-col>
       </v-row>
@@ -92,9 +102,11 @@
       <v-row dense>
         <v-col v-for="step in steps" :key="step.id" cols="12" md="6">
           <v-card class="start-card" elevation="1">
-            <v-card-title class="start-step-title">{{ step.title }}</v-card-title>
+            <v-card-title class="start-step-title">
+              {{ step.title }}
+            </v-card-title>
             <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
-            <v-card-text v-html="step.text"></v-card-text>
+            <v-card-text v-html="step.text" />
           </v-card>
         </v-col>
       </v-row>

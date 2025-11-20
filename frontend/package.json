@@ -7,10 +7,6 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:e2e": "start-server-and-test preview http://localhost:4173 'cypress run --e2e'",
-    "test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'",
-    "test:unit": "cypress run --component",
-    "test:unit:dev": "cypress open --component",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --ignore-pattern .gitignore",
     "lint-fix": "eslint --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern .gitignore",
     "format": "prettier --check src/",
@@ -19,7 +15,16 @@
     "lint-format-fix": "npm-run-all --parallel lint-fix format-fix",
     "precommit": "npm run lint-format",
     "prepush": "npm run lint-format",
-    "prepare": "husky install"
+    "prepare": "cd .. && husky frontend/.husky"
+  },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx,vue}": [
+      "eslint --fix --ignore-pattern .gitignore",
+      "prettier --write"
+    ],
+    "api/**/*.{js,jsx,ts,tsx,json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
@@ -56,9 +61,7 @@
     "@rushstack/eslint-patch": "^1.15.0",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "cypress": "^15.7.0",
     "eslint": "^9.39.1",
-    "eslint-plugin-cypress": "^5.2.0",
     "eslint-plugin-vue": "^10.5.1",
     "globals": "^16.5.0",
     "husky": "^9.1.7",

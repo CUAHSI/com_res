@@ -10,7 +10,7 @@
           height="80"
           class="mx-auto"
           :cover="logo.shouldCover !== false"
-        ></v-img>
+        />
       </v-col>
     </v-row>
   </v-footer>
