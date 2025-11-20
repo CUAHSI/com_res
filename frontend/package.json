@@ -21,6 +21,15 @@
     "prepush": "npm run lint-format",
     "prepare": "husky install"
   },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx,vue}": [
+      "eslint --fix --ignore-pattern .gitignore",
+      "prettier --write"
+    ],
+    "api/**/*.{js,jsx,ts,tsx,json,md}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
