@@ -236,17 +236,17 @@ const addCogsToMap = async (cogs) => {
           // Check if it's an inundated pixel (value === 1)
           if (pixelValue === 1) {
             // Pure blue for inundated areas - FULLY OPAQUE in canvas
-            imageData.data[index] = 0      // R
-            imageData.data[index + 1] = 0  // G
+            imageData.data[index] = 0 // R
+            imageData.data[index + 1] = 0 // G
             imageData.data[index + 2] = 255 // B
             imageData.data[index + 3] = 255 // A - FULLY OPAQUE (255)
             inundatedPixels++
           } else {
             // NaN or any other value - make fully transparent
-            imageData.data[index] = 0      // R
-            imageData.data[index + 1] = 0  // G
-            imageData.data[index + 2] = 0  // B
-            imageData.data[index + 3] = 0  // A - FULLY TRANSPARENT (0)
+            imageData.data[index] = 0 // R
+            imageData.data[index + 1] = 0 // G
+            imageData.data[index + 2] = 0 // B
+            imageData.data[index + 3] = 0 // A - FULLY TRANSPARENT (0)
           }
         }
       }
@@ -626,7 +626,7 @@ const toggleFeatureLayer = async (region) => {
       activeFeatureLayer.value = featureLayer
       control.value.addOverlay(featureLayer, `NHDPlus Flowlines`)
     }
-    
+
     // remove the existing geosearch control because
     // it doesn't seem like esri-leaflet-geocoder supports dynamic provider updates
     // https://developers.arcgis.com/esri-leaflet/api-reference/esri-leaflet-geocoder/geosearch/#methods
@@ -639,15 +639,15 @@ const toggleFeatureLayer = async (region) => {
     // TODO: currently this shows below the layer control because it gets added last
     // Ideally we would like to maintain the original position BEFORE the layer control
     geosearch.value = esriLeafletGeocoder
-    .geosearch({
-      position: 'topright',
-      placeholder: 'Search for a location',
-      useMapBounds: true,
-      expanded: false,
-      title: ' Search',
-      providers: geoProviders.value,
-    })
-    .addTo(leaflet.value)
+      .geosearch({
+        position: 'topright',
+        placeholder: 'Search for a location',
+        useMapBounds: true,
+        expanded: false,
+        title: ' Search',
+        providers: geoProviders.value
+      })
+      .addTo(leaflet.value)
   })
 }
 

@@ -9,27 +9,24 @@
 
         <!-- Right column: Main -->
         <v-col cols="12" md="9">
-          
           <!-- Intro -->
           <div id="intro" class="text-left mb-12">
             <h3 class="ma-2">How do I use FloodSavvy?</h3>
             <p class="paragraph">
-              To help guide you through FloodSavvy’s key capabilities, here are some 
-              scenario-based exercises related to water-related decision-making and 
-              community resilience planning. It is recommended that you duplicate 
-              the browser so you can view the scenario instructions whilst using 
-              the FloodSavvy resource.
+              To help guide you through FloodSavvy’s key capabilities, here are some scenario-based
+              exercises related to water-related decision-making and community resilience planning.
+              It is recommended that you duplicate the browser so you can view the scenario
+              instructions whilst using the FloodSavvy resource.
             </p>
-          </div>          
+          </div>
 
           <!-- Scenarios -->
           <div id="scenarios" class="text-left mb-12">
             <h3 class="ma-2">Scenario Exercises</h3>
             <p class="paragraph">
-              Before starting, it is recommended that you duplicate the browser 
-              so that you can view the scenario instructions whilst using FloodSavvy. 
-              We recommend completing these scenarios sequentially if you are a first 
-              time user of FloodSavvy.
+              Before starting, it is recommended that you duplicate the browser so that you can view
+              the scenario instructions whilst using FloodSavvy. We recommend completing these
+              scenarios sequentially if you are a first time user of FloodSavvy.
             </p>
 
             <ScenarioBox
@@ -39,8 +36,8 @@
                 you are working on updating your city’s flood hazard mitigation plan. Your team 
                 wants to better understand the frequency and magnitude of flood events from 
                 the past 8-10 years."
-              :taskPdf="taskPdf1"
-              :videoUrl="video1"
+              :task-pdf="taskPdf1"
+              :video-url="video1"
             />
 
             <ScenarioBox
@@ -49,8 +46,8 @@
               description="You are part of a watershed alliance working on a community resilience 
               grant. Your plan includes an analysis of historical flood exposure and inundation 
               risks, with the intention of prioritizing vulnerable communities."
-              :taskPdf="taskPdf2"
-              :videoUrl="video2"
+              :task-pdf="taskPdf2"
+              :video-url="video2"
             />
 
             <ScenarioBox
@@ -59,42 +56,35 @@
               description="You are an emergency manager who would like to use FloodSavvy as 
               a source of forecasted information to assess potential flooding risks from 
               heavy rainfall. "
-              :taskPdf="taskPdf3"
-              :videoUrl="video3"
+              :task-pdf="taskPdf3"
+              :video-url="video3"
             />
           </div>
 
           <!-- Community Narratives Section -->
-          <div class="text-left mb-12" id="community-narratives">
+          <div id="community-narratives" class="text-left mb-12">
             <h3 class="ma-2">Community Narratives</h3>
             <p class="paragraph">
-              The six communities involved in this project had diverse applications of FloodSavvy 
-              and information derived from the National Water Model. These included monitoring ungauged 
-              streams for improved forecast fidelity, exploring potential flood scenarios and identifying 
-              vulnerable areas, as well as improving flood awareness within the community. 
-              To learn more about the communities and their use cases of FloodSavvy, please visit the
-              <a href="https://globalresilience.northeastern.edu/project/ciroh-phase-3/" 
-                target="_blank" 
-                rel="noopener">
-               project website</a>.
-              Please check back in Fall 2025 for links to community use-case narratives.
+              The six communities involved in this project had diverse applications of FloodSavvy
+              and information derived from the National Water Model. These included monitoring
+              ungauged streams for improved forecast fidelity, exploring potential flood scenarios
+              and identifying vulnerable areas, as well as improving flood awareness within the
+              community. To learn more about the communities and their use cases of FloodSavvy,
+              please visit the
+              <a
+                href="https://globalresilience.northeastern.edu/project/ciroh-phase-3/"
+                target="_blank"
+                rel="noopener"
+              >
+                project website</a
+              >. Please check back in Fall 2025 for links to community use-case narratives.
             </p>
           </div>
 
           <!-- Grid of Community Narrative PDFs -->
           <v-row class="mb-12" justify="center">
-            <v-col
-              cols="12"
-              sm="6"
-              md="6"
-              v-for="(item, i) in communityNarratives"
-              :key="i"
-            >
-              <v-card
-                class="narrative-card"
-                @click="openLink(item.url)"
-                elevation="2"
-              >
+            <v-col v-for="(item, i) in communityNarratives" :key="i" cols="12" sm="6" md="6">
+              <v-card class="narrative-card" elevation="2" @click="openLink(item.url)">
                 <div class="narrative-img-wrapper">
                   <img :src="item.img" :alt="item.title" class="narrative-img" />
                 </div>
@@ -111,14 +101,13 @@
             <v-card>
               <v-toolbar color="#013654" dark dense flat>
                 <v-toolbar-title>{{ modalTitle }}</v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-btn icon @click="showPdf = false"><v-icon>mdi-close</v-icon></v-btn>
+                <v-spacer />
+                <v-btn icon @click="showPdf = false">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
               </v-toolbar>
-              <v-card-text style="padding: 0;">
-                <iframe
-                  :src="currentPdf"
-                  style="width: 100%; height: 600px; border: none;"
-                ></iframe>
+              <v-card-text style="padding: 0">
+                <iframe :src="currentPdf" style="width: 100%; height: 600px; border: none" />
               </v-card-text>
             </v-card>
           </v-dialog>
@@ -127,8 +116,8 @@
           <div id="faq" class="text-left mb-12">
             <h3 class="ma-2">Frequently Asked Questions about FloodSavvy</h3>
             <p class="paragraph">
-              If you still have questions about the FloodSavvy resource, 
-              please reach out to our team via the <router-link to="/contact">Contact Us</router-link> 
+              If you still have questions about the FloodSavvy resource, please reach out to our
+              team via the <router-link to="/contact"> Contact Us </router-link>
               page. Below are some of the most common questions we receive about using FloodSavvy.
             </p>
           </div>
@@ -136,58 +125,72 @@
           <v-sheet class="pa-4 resource-box" elevation="0" rounded>
             <ul class="faq-list">
               <li>
-                <strong>Q: I’m not from one of the six communities serviced by FloodSavvy. Where can I find similar information?</strong>
+                <strong
+                  >Q: I’m not from one of the six communities serviced by FloodSavvy. Where can I
+                  find similar information?</strong
+                >
                 <p>
-                  The National Water Prediction Service (NWPS) hosts the National Water Model (NWM) 
-                  and offers valuable information for all U.S. communities. We have created a tutorial 
-                  to help orient you to the NWPS landing page and navigate to the information you might need. 
-                  This tutorial can be found on the National Water Model Resources page.
+                  The National Water Prediction Service (NWPS) hosts the National Water Model (NWM)
+                  and offers valuable information for all U.S. communities. We have created a
+                  tutorial to help orient you to the NWPS landing page and navigate to the
+                  information you might need. This tutorial can be found on the National Water Model
+                  Resources page.
                 </p>
               </li>
               <li>
                 <strong>Q: Where is streamflow information and flood maps sourced from?</strong>
                 <p>
-                  Streamflow information and flood maps are sourced from NOAA’s National Water Model (NWM), 
-                  which integrates data from weather forecasts, terrain models, and streamflow observations.
+                  Streamflow information and flood maps are sourced from NOAA’s National Water Model
+                  (NWM), which integrates data from weather forecasts, terrain models, and
+                  streamflow observations.
                 </p>
               </li>
               <li>
                 <strong>Q: Why is there no data available on a river I selected?</strong>
                 <p>
-                  Some rivers and streams are not currently represented with full datasets in FloodSavvy. 
-                  In certain cases, smaller tributaries or locations near reservoirs may not have modeled 
-                  outputs. These limitations are part of the model design and data coverage.
+                  Some rivers and streams are not currently represented with full datasets in
+                  FloodSavvy. In certain cases, smaller tributaries or locations near reservoirs may
+                  not have modeled outputs. These limitations are part of the model design and data
+                  coverage.
                 </p>
               </li>
               <li>
                 <strong>Q: Where does FloodSavvy work well?</strong>
                 <p>
-                  FloodSavvy may not account for localized impacts near reservoirs, levees, or small-scale urban drainage systems.
+                  FloodSavvy may not account for localized impacts near reservoirs, levees, or
+                  small-scale urban drainage systems.
                 </p>
               </li>
               <li>
-                <strong>Q: Where can I find more information about expected streamflow values in my area?</strong>
+                <strong
+                  >Q: Where can I find more information about expected streamflow values in my
+                  area?</strong
+                >
                 <p>
-                  To find more information about expected streamflow values on a river or stream of interest, 
-                  visit the <a href="https://waterdata.usgs.gov" target="_blank" rel="noopener">USGS Water Data</a> 
-                  website for gauged sites, or use the National Water Model (NWM). The NWM includes a 
-                  streamflow anomaly layer that highlights rivers and streams experiencing higher or lower 
-                  than normal flow rates in near real-time conditions. Please use the NWM Tutorial on the 
-                  National Water Model Resources page to access this information.
+                  To find more information about expected streamflow values on a river or stream of
+                  interest, visit the
+                  <a href="https://waterdata.usgs.gov" target="_blank" rel="noopener"
+                    >USGS Water Data</a
+                  >
+                  website for gauged sites, or use the National Water Model (NWM). The NWM includes
+                  a streamflow anomaly layer that highlights rivers and streams experiencing higher
+                  or lower than normal flow rates in near real-time conditions. Please use the NWM
+                  Tutorial on the National Water Model Resources page to access this information.
                 </p>
               </li>
               <li>
                 <strong>Q: Where can I find more information on flood warnings?</strong>
                 <p>
-                  To find more information on current, official flood warnings, please visit the 
-                  <a href="https://www.weather.gov" target="_blank" rel="noopener">National Weather Service</a> 
-                  website and navigate to the "Latest Warnings" page. Consider contacting your local Weather Forecast 
-                  Office for more details.
+                  To find more information on current, official flood warnings, please visit the
+                  <a href="https://www.weather.gov" target="_blank" rel="noopener"
+                    >National Weather Service</a
+                  >
+                  website and navigate to the "Latest Warnings" page. Consider contacting your local
+                  Weather Forecast Office for more details.
                 </p>
               </li>
             </ul>
           </v-sheet>
-
         </v-col>
       </v-row>
     </v-container>
@@ -195,75 +198,104 @@
 </template>
 
 <script setup>
-import TableOfContents from "@/components/TableOfContents.vue";
-import ScenarioBox from "@/components/ScenarioBox.vue";
-import { ref, provide } from "vue";
+import TableOfContents from '@/components/TableOfContents.vue'
+import ScenarioBox from '@/components/ScenarioBox.vue'
+import { ref, provide } from 'vue'
 
-// Scenario Task PDF imports 
-import taskPdf1 from "@/assets/FloodSavvy_Scenario1.pdf";
-import taskPdf2 from "@/assets/FloodSavvy_Scenario2.pdf";
-import taskPdf3 from "@/assets/FloodSavvy_Scenario3.pdf";
+// Scenario Task PDF imports
+import taskPdf1 from '@/assets/FloodSavvy_Scenario1.pdf'
+import taskPdf2 from '@/assets/FloodSavvy_Scenario2.pdf'
+import taskPdf3 from '@/assets/FloodSavvy_Scenario3.pdf'
 
-// Community Narratives   
-import img1 from "@/assets/RoaringRiver.jpg"
-import img2 from "@/assets/DeSoto.jpeg"
-import img3 from "@/assets/Springfield.jpg"
-import img4 from "@/assets/MARC.jpg"
-import img5 from "@/assets/TROC.jpg"
-import img6 from "@/assets/WRC.jpeg"
+// Community Narratives
+import img1 from '@/assets/RoaringRiver.jpg'
+import img2 from '@/assets/DeSoto.jpeg'
+import img3 from '@/assets/Springfield.jpg'
+import img4 from '@/assets/MARC.jpg'
+import img5 from '@/assets/TROC.jpg'
+import img6 from '@/assets/WRC.jpeg'
 
 const communityNarratives = [
-  { title: "Roaring River State Park: Harnessing Flood Map Visualizations for Scenario Planning & New Staff Training", img: img1, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Roaring-river_CN1110.pdf" },
-  { title: "DeSoto Community: Expanding Access to Hydrological Data for Improved Flood Forecasting", img: img2, url: "hhttps://globalresilience.northeastern.edu/wp-content/uploads/2024/04/DeSoto_CN1110.pdf" },
-  { title: "Springfield-Greene County: Beyond Floodplain: Communicating Flood Risks to Community Members", img: img3, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Springfirld_CN1110.pdf" },
-  { title: "Mt Ascutney Community: Enhancing Forecasting Fidelity for Local Emergency Management Directors", img: img4, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Mt-Ascutney_CN1110.pdf" },
-  { title: "Two Rivers-Ottauquechee Community: Accessing Hydrological Data to Support Flood Forecasting & Mitigation Project Prioritrization", img: img5, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Two-rivers_CN1110.pdf" },
-  { title: "Windham Region: Contextualizing Flood Risk in Ungaged Rivers to Strengthen Local Knowledge and Planning", img: img6, url: "https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Windham_CN1110.pdf" },
+  {
+    title:
+      'Roaring River State Park: Harnessing Flood Map Visualizations for Scenario Planning & New Staff Training',
+    img: img1,
+    url: 'https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Roaring-river_CN1110.pdf'
+  },
+  {
+    title: 'DeSoto Community: Expanding Access to Hydrological Data for Improved Flood Forecasting',
+    img: img2,
+    url: 'hhttps://globalresilience.northeastern.edu/wp-content/uploads/2024/04/DeSoto_CN1110.pdf'
+  },
+  {
+    title:
+      'Springfield-Greene County: Beyond Floodplain: Communicating Flood Risks to Community Members',
+    img: img3,
+    url: 'https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Springfirld_CN1110.pdf'
+  },
+  {
+    title:
+      'Mt Ascutney Community: Enhancing Forecasting Fidelity for Local Emergency Management Directors',
+    img: img4,
+    url: 'https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Mt-Ascutney_CN1110.pdf'
+  },
+  {
+    title:
+      'Two Rivers-Ottauquechee Community: Accessing Hydrological Data to Support Flood Forecasting & Mitigation Project Prioritrization',
+    img: img5,
+    url: 'https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Two-rivers_CN1110.pdf'
+  },
+  {
+    title:
+      'Windham Region: Contextualizing Flood Risk in Ungaged Rivers to Strengthen Local Knowledge and Planning',
+    img: img6,
+    url: 'https://globalresilience.northeastern.edu/wp-content/uploads/2024/04/Windham_CN1110.pdf'
+  }
 ]
 
 const openLink = (url) => {
-  window.open(url, "_blank");
+  window.open(url, '_blank')
 }
 
 // Scenario video URL
-const video1 = "https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv";
-const video2 = "https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv";
-const video3 = "https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv";
+const video1 = 'https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv'
+const video2 = 'https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv'
+const video3 = 'https://www.youtube.com/embed/bdXhQ4JRI88?si=O1Vx7WqEi-aCsJQv'
 
 // PDF modal
-const showPdf = ref(false);
-const modalTitle = ref("");
-const currentPdf = ref("");
+const showPdf = ref(false)
+const modalTitle = ref('')
+const currentPdf = ref('')
 
 // Provide openPdf to children
 const openPdf = (pdf, title) => {
-  modalTitle.value = title;
-  currentPdf.value = pdf;
-  showPdf.value = true;
-};
-provide("openPdf", openPdf);
+  modalTitle.value = title
+  currentPdf.value = pdf
+  showPdf.value = true
+}
+provide('openPdf', openPdf)
 
 // TOC
 const tocItems = [
-  { id: "intro", title: "How do I use FloodSavvy?" },
-  { 
-    id: "scenarios", 
-    title: "Scenario Exercises",
+  { id: 'intro', title: 'How do I use FloodSavvy?' },
+  {
+    id: 'scenarios',
+    title: 'Scenario Exercises',
     subsections: [
-      { id: "scenario1", title: "Scenario 1: Historical Forecasts" },
-      { id: "scenario2", title: "Scenario 2: Flood Resilience Plan" },
-      { id: "scenario3", title: "Scenario 3: Flood Resilience Plan" },
+      { id: 'scenario1', title: 'Scenario 1: Historical Forecasts' },
+      { id: 'scenario2', title: 'Scenario 2: Flood Resilience Plan' },
+      { id: 'scenario3', title: 'Scenario 3: Flood Resilience Plan' }
     ]
   },
-  { id: "community-narratives", title: "Community Narratives" },
-  { id: "faq", title: "FAQs" },
-];
+  { id: 'community-narratives', title: 'Community Narratives' },
+  { id: 'faq', title: 'FAQs' }
+]
 
 // Smooth scroll with offset
 const scrollToSection = (id) => {
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: "smooth" });
-};
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
+}
 </script>
 
 <style scoped>
@@ -312,11 +344,11 @@ const scrollToSection = (id) => {
 }
 
 [id] {
-  scroll-margin-top: 120px; 
+  scroll-margin-top: 120px;
 }
 
 .narrative-card {
-  height: 280px;             
+  height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -330,7 +362,7 @@ const scrollToSection = (id) => {
 }
 
 .narrative-img-wrapper {
-  height: 70%;              
+  height: 70%;
   overflow: hidden;
   border-radius: 10px 10px 0 0;
 }
@@ -338,7 +370,7 @@ const scrollToSection = (id) => {
 .narrative-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;         
+  object-fit: cover;
 }
 
 .narrative-title {
@@ -347,5 +379,4 @@ const scrollToSection = (id) => {
   font-size: 0.9rem;
   padding-top: 8px;
 }
-
 </style>

@@ -10,13 +10,13 @@
       type="heading, image "
       :loading="isLoading"
       class="mx-auto"
-    ></v-skeleton-loader>
+    />
     <div v-if="!isLoading" class="position-absolute" style="top: 6px; right: 8px; z-index: 2">
       <InfoTooltip
         content-class="plot-info-tooltip"
         :z-index="200000"
         :max-width="420"
-        iconSize="x-small"
+        icon-size="x-small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) for the past 90 days. 
         You can explore a different timeframe by clicking the button in the bottom-right 
@@ -29,18 +29,18 @@
       />
     </div>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
-      <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+      <v-progress-circular indeterminate color="primary" size="40" />
       <span class="ml-3">Loading historical data...</span>
     </v-row>
     <div class="plot-container" :style="plotContainerStyle">
       <LinePlot
         v-if="!isLoading"
+        ref="linePlotRef"
         :timeseries="plot_timeseries"
         :quantiles="showQuantiles ? quantilesData.historical : []"
         :title="plot_title"
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
-        ref="linePlotRef"
       />
     </div>
 
@@ -49,15 +49,15 @@
       <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading && showQuantiles"
+            v-bind="props"
             :color="showLegend ? 'primary' : 'default'"
-            @click="toggleLegend"
             icon
             size="small"
             class="mr-1"
+            @click="toggleLegend"
           >
-            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
+            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye" />
           </v-btn>
         </template>
         <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
@@ -67,23 +67,18 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="quantilesFailed"
             :loading="loadingQuantiles"
-            @click="toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
+            @click="toggleQuantiles(reach_id)"
           >
-            <v-icon :icon="mdiChartAreaspline"></v-icon>
-            <v-progress-circular
-              v-if="loadingQuantiles"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiChartAreaspline" />
+            <v-progress-circular v-if="loadingQuantiles" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
@@ -93,22 +88,17 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :disabled="downloading.csv"
             :loading="downloading.csv"
-            @click="downCSV"
             icon
             size="small"
             class="mr-1"
+            @click="downCSV"
           >
-            <v-icon :icon="mdiFileDelimited"></v-icon>
-            <v-progress-circular
-              v-if="downloading.csv"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiFileDelimited" />
+            <v-progress-circular v-if="downloading.csv" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>Download CSV</span>
@@ -118,21 +108,16 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :disabled="downloading.json"
             :loading="downloading.json"
-            @click="downJson"
             icon
             size="small"
+            @click="downJson"
           >
-            <v-icon :icon="mdiCodeJson"></v-icon>
-            <v-progress-circular
-              v-if="downloading.json"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiCodeJson" />
+            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>Download JSON</span>
@@ -166,7 +151,13 @@
         <v-sheet class="date-select-sheet">
           <v-list>
             <v-list-item>
-              <v-menu v-model="startMenu" :close-on-content-click="false" offset-y min-width="auto" class="date-select-menu">
+              <v-menu
+                v-model="startMenu"
+                :close-on-content-click="false"
+                offset-y
+                min-width="auto"
+                class="date-select-menu"
+              >
                 <template #activator="{ props }">
                   <v-text-field
                     v-bind="props"
@@ -174,7 +165,7 @@
                     label="Start Date"
                     readonly
                     density="compact"
-                  ></v-text-field>
+                  />
                 </template>
                 <v-date-picker
                   v-model="tempStartDate"
@@ -186,13 +177,19 @@
                           .split('T')[0]
                       : '2099-12-31'
                   "
-                  @update:modelValue="() => (startMenu = false)"
-                ></v-date-picker>
+                  @update:model-value="() => (startMenu = false)"
+                />
               </v-menu>
             </v-list-item>
 
             <v-list-item>
-              <v-menu v-model="endMenu" :close-on-content-click="false" offset-y min-width="auto" class="date-select-menu">
+              <v-menu
+                v-model="endMenu"
+                :close-on-content-click="false"
+                offset-y
+                min-width="auto"
+                class="date-select-menu"
+              >
                 <template #activator="{ props }">
                   <v-text-field
                     v-bind="props"
@@ -200,7 +197,7 @@
                     label="End Date"
                     readonly
                     density="compact"
-                  ></v-text-field>
+                  />
                 </template>
                 <v-date-picker
                   v-model="tempEndDate"
@@ -213,13 +210,13 @@
                           .split('T')[0]
                       : '2099-12-31'
                   "
-                  @update:modelValue="() => (endMenu = false)"
-                ></v-date-picker>
+                  @update:model-value="() => (endMenu = false)"
+                />
               </v-menu>
             </v-list-item>
 
             <v-list-item class="d-flex justify-end">
-              <v-btn class="mt-2" color="primary" @click="onTimeSelectionClose">Apply</v-btn>
+              <v-btn class="mt-2" color="primary" @click="onTimeSelectionClose"> Apply </v-btn>
             </v-list-item>
           </v-list>
         </v-sheet>
@@ -228,14 +225,14 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
-            @click="toggleFullScreen"
+            v-bind="props"
             icon
             size="small"
             class="mr-1"
+            @click="toggleFullScreen"
           >
-            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen"></v-icon>
+            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen" />
           </v-btn>
         </template>
         <span>{{ isFullScreen ? 'Exit' : 'Enter' }} Full Screen</span>
@@ -296,8 +293,8 @@ const setShowQuantiles = async (value, reach_id) => {
   if (value && quantilesData.value.historical.length === 0) {
     loadingQuantiles.value = true
     quantilesFailed.value = !(await quantilesStore.getQuantilesData(
-      reach_id, 
-      toIsoDate(startDate.value), 
+      reach_id,
+      toIsoDate(startDate.value),
       toIsoDate(endDate.value),
       'historical'
     ))
@@ -403,10 +400,10 @@ const formattedEndDate = computed({
 const toggleFullScreen = async () => {
   isFullScreen.value = !isFullScreen.value
   emit('toggleFullScreen', isFullScreen.value)
-  
+
   // Wait for the DOM to update
   await nextTick()
-  
+
   // Force chart to re-render with new dimensions
   if (linePlotRef.value) {
     linePlotRef.value.updateChart()
@@ -475,7 +472,11 @@ watch([startDate, endDate, reach_id], async () => {
     quantilesFailed.value = false
     if (showQuantiles.value) {
       await quantilesStore.setQuantilesData([])
-      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value, toIsoDate(startDate.value), toIsoDate(endDate.value)))
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(
+        reach_id.value,
+        toIsoDate(startDate.value),
+        toIsoDate(endDate.value)
+      ))
     }
     loadingQuantiles.value = false
   }

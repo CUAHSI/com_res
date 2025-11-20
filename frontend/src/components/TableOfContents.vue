@@ -5,22 +5,14 @@
       <nav>
         <ul class="toc-list">
           <li v-for="item in tocItems" :key="item.id">
-            <a
-              href="javascript:void(0);"
-              @click="scrollToSection(item.id)"
-              class="toc-link"
-            >
+            <a href="javascript:void(0);" class="toc-link" @click="scrollToSection(item.id)">
               {{ item.title }}
             </a>
 
             <!-- Subsections -->
             <ul v-if="item.subsections" class="toc-sublist">
               <li v-for="sub in item.subsections" :key="sub.id">
-                <a
-                  href="javascript:void(0);"
-                  @click="scrollToSection(sub.id)"
-                  class="toc-sublink"
-                >
+                <a href="javascript:void(0);" class="toc-sublink" @click="scrollToSection(sub.id)">
                   {{ sub.title }}
                 </a>
               </li>
@@ -33,20 +25,13 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  tocItems: {
-    type: Array,
-    required: true,
-  },
-});
-
 // Smooth scroll with offset
 const scrollToSection = (id) => {
-  const el = document.getElementById(id);
+  const el = document.getElementById(id)
   if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-};
+}
 </script>
 
 <style scoped>
@@ -87,7 +72,9 @@ const scrollToSection = (id) => {
   text-decoration: none;
   padding: 6px 8px 6px 12px;
   border-radius: 4px;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .toc-link:hover {
   background-color: #f5f5f5;

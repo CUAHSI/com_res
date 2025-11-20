@@ -3,17 +3,19 @@
     <!-- Header with title and info tooltip -->
     <div class="slider-header">
       <h3>{{ headerTitle }}</h3>
-      <InfoTooltip iconSize="x-small" :text="tooltipText" />
+      <InfoTooltip icon-size="x-small" :text="tooltipText" />
     </div>
 
     <div class="thermometer-slider-container" :style="containerStyle">
       <div class="thermometer">
         <!-- Mercury fill -->
-        <div class="mercury" :style="mercuryStyle"></div>
+        <div class="mercury" :style="mercuryStyle" />
 
         <!-- Grabbable handle -->
         <div class="handle" :style="handleStyle" @mousedown="startDrag" @touchstart="startDrag">
-          <div class="handle-label">{{ handleLabel }}</div>
+          <div class="handle-label">
+            {{ handleLabel }}
+          </div>
         </div>
 
         <!-- Vuetify slider (hidden but handles keyboard accessibility) -->
@@ -25,8 +27,8 @@
           :step="step"
           hide-details
           class="slider-input"
-          @update:modelValue="handleSliderChange"
-        ></v-slider>
+          @update:model-value="handleSliderChange"
+        />
 
         <!-- Tick marks -->
         <div class="ticks" :style="ticksStyle">
@@ -34,12 +36,12 @@
             v-for="(_, index) in ticks"
             :key="index"
             class="tick"
-            :class="{ 
+            :class="{
               'major-tick': index % majorTickInterval === 0,
-              'covered': isTickCovered(index)
+              covered: isTickCovered(index)
             }"
             :style="{ bottom: `${(index / (ticks.length - 1)) * 100}%` }"
-          ></div>
+          />
         </div>
 
         <!-- Labels inside thermometer -->
@@ -48,8 +50,10 @@
             v-for="(stage, index) in visibleStages"
             :key="index"
             class="label-inside"
-            :class="{ 'covered': stage <= internalValue }"
-            :style="{ bottom: `${((stage - stageSliderMin) / (stageSliderMax - stageSliderMin)) * 100}%` }"
+            :class="{ covered: stage <= internalValue }"
+            :style="{
+              bottom: `${((stage - stageSliderMin) / (stageSliderMax - stageSliderMin)) * 100}%`
+            }"
           >
             {{ stage }}
           </div>
@@ -123,20 +127,27 @@ const emit = defineEmits(['update:modelValue'])
 const internalValue = ref(props.modelValue)
 
 // Watch for external changes to modelValue
-watch(() => props.modelValue, (newValue) => {
-  internalValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    internalValue.value = newValue
+  }
+)
 
 // Watch for changes in selected features and adjust internalValue if needed
-watch([() => props.selectedFeatures, () => props.multiReachMode], () => {
-  // If the current internalValue exceeds the new max, clamp it to the new max
-  if (internalValue.value > stageSliderMax.value) {
-    internalValue.value = stageSliderMax.value
-    emit('update:modelValue', stageSliderMax.value)
-    // Trigger stage change to update COGs
-    handleStageChange()
-  }
-}, { deep: true })
+watch(
+  [() => props.selectedFeatures, () => props.multiReachMode],
+  () => {
+    // If the current internalValue exceeds the new max, clamp it to the new max
+    if (internalValue.value > stageSliderMax.value) {
+      internalValue.value = stageSliderMax.value
+      emit('update:modelValue', stageSliderMax.value)
+      // Trigger stage change to update COGs
+      handleStageChange()
+    }
+  },
+  { deep: true }
+)
 
 // Computed properties for stage slider data
 const activeFeatureFimCogData = computed(() => {
@@ -185,7 +196,11 @@ const stageSliderMax = computed(() => {
   if (props.multiReachMode && multiReachStageData.value) {
     return multiReachStageData.value.max
   }
-  return activeFeatureFimCogData.value?.stages_ft?.[activeFeatureFimCogData.value.stages_ft.length - 1] || 0
+  return (
+    activeFeatureFimCogData.value?.stages_ft?.[
+      activeFeatureFimCogData.value.stages_ft.length - 1
+    ] || 0
+  )
 })
 
 const stageSliderStages = computed(() => {
@@ -204,11 +219,11 @@ const safeMercuryHeight = computed(() => {
   const max = stageSliderMax.value
   const min = stageSliderMin.value
   const value = internalValue.value
-  
+
   if (max <= min) return 0
   if (value <= min) return 0
   if (value >= max) return 100
-  
+
   return ((value - min) / (max - min)) * 100
 })
 
@@ -371,7 +386,7 @@ const flowFromStage = (stage) => {
   const closestStage = stageSliderStages.value.reduce((prev, curr) => {
     return Math.abs(curr - stage) < Math.abs(prev - stage) ? curr : prev
   })
-  
+
   const index = stageSliderStages.value.indexOf(closestStage)
   return index >= 0 ? stageSliderFlows.value[index] : stageSliderFlows.value[0] || 0
 }
@@ -400,7 +415,7 @@ const handleDrag = (e) => {
   const range = stageSliderMax.value - stageSliderMin.value
   const newValue = stageSliderMin.value + position * range
   const steppedValue = props.step > 1 ? Math.round(newValue / props.step) * props.step : newValue
-  
+
   // Update internal value and emit the change
   internalValue.value = steppedValue
   emit('update:modelValue', steppedValue)
