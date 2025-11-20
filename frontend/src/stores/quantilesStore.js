@@ -49,8 +49,34 @@ export const useQuantilesStore = defineStore('quantiles', () => {
     quantilesCache.value.delete(reachId)
   }
 
+  // Helper function to generate multi-year quantile data
+  const generateMultiYearQuantiles = (baseQuantileData, startYear, endYear) => {
+    const multiYearQuantiles = []
+
+    for (let year = startYear; year <= endYear; year++) {
+      baseQuantileData.forEach(quantileSet => {
+        const yearQuantiles = {
+          // Preserve all original properties
+          ...quantileSet,
+          // Update data points for the current year
+          data: quantileSet.data.map(point => {
+            const pointDate = new Date(point.x)
+            pointDate.setFullYear(year)
+            return {
+              ...point,
+              x: pointDate.toISOString()
+            }
+          })
+        }
+        multiYearQuantiles.push(yearQuantiles)
+      })
+    }
+
+    return multiYearQuantiles
+  }
+
   // Fetch quantiles data from the FastAPI endpoint
-  const getQuantilesData = async (reach_id) => {
+  const getQuantilesData = async (reach_id, startDate = null, endDate = null) => {
     if (!reach_id) return
 
     // Check if we have cached data for this reach_id
@@ -75,8 +101,18 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         return false
       }
 
-      // Get current year for date alignment
+      // Calculate year range for multi-year display
       const currentYear = new Date().getFullYear()
+      let startYear = currentYear
+      let endYear = currentYear
+
+      // If start and end dates are provided, calculate the year range
+      if (startDate && endDate) {
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+        startYear = start.getFullYear()
+        endYear = end.getFullYear()
+      }
 
       // Create the base Q0 data (hidden from legend and tooltips)
       const q0Data = data.map((item) => {
@@ -85,8 +121,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         return { x: date.toISOString().split('T')[0], y: item.q0 }
       })
 
-      // Transform the quantiles data for the chart - use actual dates for current year
-      const transformedQuantiles = [
+      // Create base quantiles for one year (we'll expand this to multiple years)
+      const baseQuantiles = [
         {
           // Hidden Q0 dataset - serves as the base for fills but doesn't show in legend/tooltips
           label: '', // Empty label to hide from legend
@@ -177,6 +213,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
           tension: 0.1
         }
       ]
+
+      // Generate multi-year quantiles if we have a date range spanning multiple years
+      const transformedQuantiles = (startYear !== endYear) 
+        ? generateMultiYearQuantiles(baseQuantiles, startYear, endYear)
+        : baseQuantiles
 
       // Cache the data for future use
       cacheQuantilesData(reach_id, transformedQuantiles)

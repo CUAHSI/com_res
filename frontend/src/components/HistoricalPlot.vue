@@ -295,7 +295,7 @@ const setShowQuantiles = async (value, reach_id) => {
   quantilesFailed.value = false
   if (value && quantilesData.value.length === 0) {
     loadingQuantiles.value = true
-    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id, startDate.value, endDate.value))
   }
   loadingQuantiles.value = false
 }
@@ -465,12 +465,12 @@ const getHistoricalData = async () => {
 watch([startDate, endDate, reach_id], async () => {
   if (startDate.value && endDate.value && reach_id.value) {
     await getHistoricalData()
-    // Fetch new quantiles when reach ID changes
+    // Fetch new quantiles when reach ID or date range changes
     loadingQuantiles.value = true
     quantilesFailed.value = false
     if (showQuantiles.value) {
       await quantilesStore.setQuantilesData([])
-      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value))
+      quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id.value, startDate.value, endDate.value))
     }
     loadingQuantiles.value = false
   }
