@@ -19,7 +19,7 @@
     "lint-format-fix": "npm-run-all --parallel lint-fix format-fix",
     "precommit": "npm run lint-format",
     "prepush": "npm run lint-format",
-    "prepare": "husky install"
+    "prepare": "cd .. && husky frontend/.husky"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx,vue}": [
