@@ -290,6 +290,21 @@ const showLegendToggle = computed(() => {
   return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
 })
 
+const deepClone = (obj) => {
+  if (obj === null || typeof obj !== 'object') return obj
+  if (obj instanceof Date) return new Date(obj.getTime())
+  if (obj instanceof Array) return obj.map(item => deepClone(item))
+  if (obj instanceof Object) {
+    const clonedObj = {}
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        clonedObj[key] = deepClone(obj[key])
+      }
+    }
+    return clonedObj
+  }
+}
+
 const expandQuantilesForDisplay = (quantiles, startDate, endDate) => {
   if (!quantiles.length) return []
   
@@ -301,12 +316,14 @@ const expandQuantilesForDisplay = (quantiles, startDate, endDate) => {
   const expandedQuantiles = []
   
   for (let year = startYear; year <= endYear; year++) {
-    quantiles.forEach(quantileSet => {
-      const yearQuantiles = {
-        ...quantileSet,
-        data: quantileSet.data.map(point => {
+    quantiles.forEach(originalQuantileSet => {
+      // Deep clone the entire quantile set
+      const yearQuantiles = deepClone(originalQuantileSet)
+      
+      // Only update the data points with the new year
+      if (yearQuantiles.data && Array.isArray(yearQuantiles.data)) {
+        yearQuantiles.data = yearQuantiles.data.map(point => {
           const pointDate = new Date(point.x)
-          // Keep the same day-of-year but change the year
           pointDate.setFullYear(year)
           return {
             ...point,
