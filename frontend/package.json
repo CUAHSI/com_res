@@ -38,7 +38,7 @@
     "proj4": "^2.20.1",
     "proj4-fully-loaded": "^0.2.0",
     "proj4leaflet": "^1.0.2",
-    "swagger-ui": "^5.30.2",
+    "swagger-ui-dist": "^5.30.2",
     "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.24",
     "vue-chartjs": "^5.3.3",

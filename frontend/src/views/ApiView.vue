@@ -3,18 +3,17 @@
     <div class="swagger" id="swagger"></div>
   </v-theme-provider>
 </template>
-
 <script setup>
 import { onMounted } from 'vue'
-import SwaggerUI from 'swagger-ui'
+import 'swagger-ui-dist/swagger-ui.css';
 import { ENDPOINTS } from '@/constants'
-import 'swagger-ui/dist/swagger-ui.css'
+import { SwaggerUIBundle, SwaggerUIStandalonePreset } from 'swagger-ui-dist';
 
 onMounted(() => {
-  SwaggerUI({
+  SwaggerUIBundle({
     url: ENDPOINTS.openapi,
     dom_id: '#swagger',
-    withCredentials: true
-  })
-})
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+  });
+});
 </script>
