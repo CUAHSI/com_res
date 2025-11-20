@@ -7,50 +7,35 @@ const MAX_CACHE_AGE = 24 * 60 * 60 * 1000 // 24 hours
 export const useQuantilesStore = defineStore('quantiles', () => {
   const quantilesData = ref([])
 
-  // Cache for quantiles data by reach_id and date range
+  // Cache for quantiles data by reach_id
   const quantilesCache = ref(new Map())
 
   const setQuantilesData = async (data) => {
     quantilesData.value = data
   }
 
-  // Generate cache key that includes both reach_id and date range
-  const generateCacheKey = (reachId, startDate, endDate) => {
-    if (!startDate || !endDate) {
-      return `${reachId}`
-    }
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    const startYear = start.getFullYear()
-    const endYear = end.getFullYear()
-    return `${reachId}_${startYear}_${endYear}`
-  }
-
-  const cacheQuantilesData = (reachId, data, startDate = null, endDate = null) => {
-    const cacheKey = generateCacheKey(reachId, startDate, endDate)
-    quantilesCache.value.set(cacheKey, {
+  const cacheQuantilesData = (reachId, data) => {
+    quantilesCache.value.set(reachId, {
       data,
       timestamp: Date.now()
     })
   }
 
-  const getCachedQuantilesData = (reachId, startDate = null, endDate = null, maxAge = MAX_CACHE_AGE) => {
-    const cacheKey = generateCacheKey(reachId, startDate, endDate)
-    const cached = quantilesCache.value.get(cacheKey)
+  const getCachedQuantilesData = (reachId, maxAge = MAX_CACHE_AGE) => {
+    const cached = quantilesCache.value.get(reachId)
     if (!cached) return null
 
     // Check if cache is still valid
     if (Date.now() - cached.timestamp > maxAge) {
-      quantilesCache.value.delete(cacheKey)
+      quantilesCache.value.delete(reachId)
       return null
     }
 
     return cached.data
   }
 
-  const hasCachedQuantilesData = (reachId, startDate = null, endDate = null, maxAge = MAX_CACHE_AGE) => {
-    const cacheKey = generateCacheKey(reachId, startDate, endDate)
-    const cached = quantilesCache.value.get(cacheKey)
+  const hasCachedQuantilesData = (reachId, maxAge = MAX_CACHE_AGE) => {
+    const cached = quantilesCache.value.get(reachId)
     return cached && Date.now() - cached.timestamp <= maxAge
   }
 
@@ -61,12 +46,7 @@ export const useQuantilesStore = defineStore('quantiles', () => {
 
   // Clear cache for a specific reach_id (optional)
   const clearCacheForReach = (reachId) => {
-    // Remove all cache entries for this reach_id regardless of date range
-    for (const [key] of quantilesCache.value.entries()) {
-      if (key.startsWith(`${reachId}_`) || key === reachId.toString()) {
-        quantilesCache.value.delete(key)
-      }
-    }
+    quantilesCache.value.delete(reachId)
   }
 
   // Helper function to generate multi-year quantile data
@@ -99,9 +79,9 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   const getQuantilesData = async (reach_id, startDate = null, endDate = null) => {
     if (!reach_id) return
 
-    // Check if we have cached data for this reach_id AND date range
-    if (hasCachedQuantilesData(reach_id, startDate, endDate)) {
-      const cachedData = getCachedQuantilesData(reach_id, startDate, endDate)
+    // Check if we have cached data for this reach_id
+    if (hasCachedQuantilesData(reach_id)) {
+      const cachedData = getCachedQuantilesData(reach_id)
       setQuantilesData(cachedData)
       return true
     }
@@ -239,8 +219,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         ? generateMultiYearQuantiles(baseQuantiles, startYear, endYear)
         : baseQuantiles
 
-      // Cache the data for future use with the date range
-      cacheQuantilesData(reach_id, transformedQuantiles, startDate, endDate)
+      // Cache the data for future use
+      cacheQuantilesData(reach_id, transformedQuantiles)
 
       // Set the shared quantiles data in Pinia store
       setQuantilesData(transformedQuantiles)
