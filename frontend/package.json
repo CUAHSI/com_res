@@ -18,9 +18,8 @@
     "prepare": "cd .. && husky frontend/.husky"
   },
   "lint-staged": {
-    "frontend/**/*.{js,jsx,vue}": [
-      "eslint --fix --ignore-pattern .gitignore",
-      "prettier --write"
+    "frontend/**/*.{vue,js,jsx,cjs,mjs}": [
+      "npm-run-all --parallel lint-fix format-fix"
     ],
     "api/**/*.{js,jsx,ts,tsx,json,md}": [
       "prettier --write"
