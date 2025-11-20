@@ -36,7 +36,7 @@
       <LinePlot
         v-if="!isLoading"
         :timeseries="plot_timeseries"
-        :quantiles="showQuantiles ? quantilesData : []"
+        :quantiles="showQuantiles ? quantilesData.historical : []"
         :title="plot_title"
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
@@ -293,9 +293,14 @@ const showLegendToggle = computed(() => {
 const setShowQuantiles = async (value, reach_id) => {
   showQuantiles.value = value
   quantilesFailed.value = false
-  if (value && quantilesData.value.length === 0) {
+  if (value && quantilesData.value.historical.length === 0) {
     loadingQuantiles.value = true
-    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id, toIsoDate(startDate.value), toIsoDate(endDate.value)))
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(
+      reach_id, 
+      toIsoDate(startDate.value), 
+      toIsoDate(endDate.value),
+      'historical'
+    ))
   }
   loadingQuantiles.value = false
 }

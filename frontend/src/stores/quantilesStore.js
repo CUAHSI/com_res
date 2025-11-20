@@ -3,43 +3,48 @@ import { ref } from 'vue'
 import { API_BASE } from '@/constants'
 
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000 // 24 hours
-
 export const useQuantilesStore = defineStore('quantiles', () => {
-  const quantilesData = ref([])
+  const quantilesData = ref({
+    historical: [],
+    forecast: []
+  })
 
-  // Cache for quantiles data by reach_id
+  // Cache for quantiles data by reach_id and plot type
   const quantilesCache = ref(new Map())
 
-  const setQuantilesData = async (data) => {
-    quantilesData.value = data
+  const setQuantilesData = async (data, plotType = 'historical') => {
+    quantilesData.value[plotType] = data
   }
 
-  const cacheQuantilesData = (reachId, data) => {
-    quantilesCache.value.set(reachId, {
+  const cacheQuantilesData = (reachId, data, plotType = 'historical') => {
+    const cacheKey = `${reachId}_${plotType}`
+    quantilesCache.value.set(cacheKey, {
       data,
       timestamp: Date.now()
     })
   }
 
-  const getCachedQuantilesData = (reachId, maxAge = MAX_CACHE_AGE) => {
-    const cached = quantilesCache.value.get(reachId)
+  const getCachedQuantilesData = (reachId, plotType = 'historical', maxAge = MAX_CACHE_AGE) => {
+    const cacheKey = `${reachId}_${plotType}`
+    const cached = quantilesCache.value.get(cacheKey)
     if (!cached) return null
 
     // Check if cache is still valid
     if (Date.now() - cached.timestamp > maxAge) {
-      quantilesCache.value.delete(reachId)
+      quantilesCache.value.delete(cacheKey)
       return null
     }
 
     return cached.data
   }
 
-  const hasCachedQuantilesData = (reachId, maxAge = MAX_CACHE_AGE) => {
-    const cached = quantilesCache.value.get(reachId)
+  const hasCachedQuantilesData = (reachId, plotType = 'historical', maxAge = MAX_CACHE_AGE) => {
+    const cacheKey = `${reachId}_${plotType}`
+    const cached = quantilesCache.value.get(cacheKey)
     return cached && Date.now() - cached.timestamp <= maxAge
   }
 
-  // Clear cache if needed (optional - for memory management)
+    // Clear cache if needed (optional - for memory management)
   const clearCache = () => {
     quantilesCache.value.clear()
   }
@@ -50,16 +55,16 @@ export const useQuantilesStore = defineStore('quantiles', () => {
   }
 
   // Fetch quantiles data from the FastAPI endpoint
-  const getQuantilesData = async (reach_id, startDate = null, endDate = null) => {
+  const getQuantilesData = async (reach_id, startDate = null, endDate = null, plotType = 'historical') => {
     if (!reach_id) return
 
-    // Generate a cache key that includes the date range
-    const cacheKey = `${reach_id}_${startDate}_${endDate}`
+    // Generate a cache key that includes the date range and plot type
+    const cacheKey = `${reach_id}_${plotType}_${startDate}_${endDate}`
     
     // Check if we have cached data for this reach_id and date range
     if (hasCachedQuantilesData(cacheKey)) {
       const cachedData = getCachedQuantilesData(cacheKey)
-      setQuantilesData(cachedData)
+      setQuantilesData(cachedData, plotType)
       return true
     }
 
@@ -85,10 +90,18 @@ export const useQuantilesStore = defineStore('quantiles', () => {
         start = new Date(startDate)
         end = new Date(endDate)
       } else {
-        // Default to current year if no range provided
-        const currentYear = new Date().getFullYear()
-        start = new Date(currentYear, 0, 1) // Jan 1 of current year
-        end = new Date(currentYear, 11, 31) // Dec 31 of current year
+        // Default behavior based on plot type
+        if (plotType === 'forecast') {
+          // For forecast plot, show current year + next year to cover forecast range
+          const currentYear = new Date().getFullYear()
+          start = new Date(currentYear, 0, 1) // Jan 1 of current year
+          end = new Date(currentYear + 1, 11, 31) // Dec 31 of next year
+        } else {
+          // For historical plot, default to current year
+          const currentYear = new Date().getFullYear()
+          start = new Date(currentYear, 0, 1) // Jan 1 of current year
+          end = new Date(currentYear, 11, 31) // Dec 31 of current year
+        }
       }
 
       // Generate all dates in the range
@@ -121,18 +134,15 @@ export const useQuantilesStore = defineStore('quantiles', () => {
           // Hidden Q0 dataset - serves as the base for fills but doesn't show in legend/tooltips
           label: '', // Empty label to hide from legend
           data: q0Data,
-          borderColor: 'transparent', // Make border invisible
-          backgroundColor: 'transparent', // Make background invisible
-          pointRadius: 0, // No points
-          pointHoverRadius: 0, // No hover points
-          borderWidth: 0, // No border
-          fill: true, // This will be the base fill
-          showLine: false, // Don't show the line
-          hidden: false, // Keep it visible for filling purposes
-          // Hide from tooltips and legend
-          tooltip: {
-            enabled: false
-          }
+          borderColor: 'transparent',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          borderWidth: 0,
+          fill: true,
+          showLine: false,
+          hidden: false,
+          tooltip: { enabled: false }
         },
         {
           label: 'Much Below Normal',
@@ -143,14 +153,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
             }
           }),
           borderColor: 'darkred',
-          backgroundColor: 'rgba(139, 0, 0, 0.3)', // Semi-transparent darkred
+          backgroundColor: 'rgba(139, 0, 0, 0.3)',
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 0,
-          fill: {
-            target: '-1', // Fill to the previous dataset (Q0)
-            above: 'rgba(139, 0, 0, 0.3)' // Fill color for the area
-          },
+          fill: { target: '-1', above: 'rgba(139, 0, 0, 0.3)' },
           tension: 0.1
         },
         {
@@ -162,14 +169,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
             }
           }),
           borderColor: 'darkorange',
-          backgroundColor: 'rgba(255, 140, 0, 0.3)', // Semi-transparent darkorange
+          backgroundColor: 'rgba(255, 140, 0, 0.3)',
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 0,
-          fill: {
-            target: '-1', // Fill to the previous dataset (Q10)
-            above: 'rgba(255, 140, 0, 0.3)' // Fill color for the area
-          },
+          fill: { target: '-1', above: 'rgba(255, 140, 0, 0.3)' },
           tension: 0.1
         },
         {
@@ -181,14 +185,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
             }
           }),
           borderColor: 'darkgreen',
-          backgroundColor: 'rgba(0, 100, 0, 0.3)', // Semi-transparent darkgreen
+          backgroundColor: 'rgba(0, 100, 0, 0.3)',
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 0,
-          fill: {
-            target: '-1', // Fill to the previous dataset (Q25)
-            above: 'rgba(0, 100, 0, 0.3)' // Fill color for the area
-          },
+          fill: { target: '-1', above: 'rgba(0, 100, 0, 0.3)' },
           tension: 0.1
         },
         {
@@ -200,14 +201,11 @@ export const useQuantilesStore = defineStore('quantiles', () => {
             }
           }),
           borderColor: 'darkblue',
-          backgroundColor: 'rgba(0, 0, 139, 0.3)', // Semi-transparent darkblue
+          backgroundColor: 'rgba(0, 0, 139, 0.3)',
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 0,
-          fill: {
-            target: '-1', // Fill to the previous dataset (Q75)
-            above: 'rgba(0, 0, 139, 0.3)' // Fill color for the area
-          },
+          fill: { target: '-1', above: 'rgba(0, 0, 139, 0.3)' },
           tension: 0.1
         }
       ]
@@ -215,8 +213,8 @@ export const useQuantilesStore = defineStore('quantiles', () => {
       // Cache the data for future use
       cacheQuantilesData(cacheKey, transformedQuantiles)
 
-      // Set the shared quantiles data in Pinia store
-      setQuantilesData(transformedQuantiles)
+      // Set the shared quantiles data in Pinia store for the specific plot type
+      setQuantilesData(transformedQuantiles, plotType)
     } catch (err) {
       console.error('Failed to load quantiles data:', err)
       return false
