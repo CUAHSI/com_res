@@ -36,7 +36,7 @@
       <LinePlot
         v-if="!isLoading"
         :timeseries="plot_timeseries"
-        :quantiles="showQuantiles ? quantilesData : []"
+        :quantiles="showQuantiles ? displayQuantiles : []"
         :title="plot_title"
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
@@ -288,6 +288,43 @@ const emit = defineEmits(['toggleFullScreen'])
 
 const showLegendToggle = computed(() => {
   return showQuantiles.value && !quantilesFailed.value && !loadingQuantiles.value
+})
+
+const expandQuantilesForDisplay = (quantiles, startDate, endDate) => {
+  if (!quantiles.length) return []
+  
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const startYear = start.getFullYear()
+  const endYear = end.getFullYear()
+  
+  const expandedQuantiles = []
+  
+  for (let year = startYear; year <= endYear; year++) {
+    quantiles.forEach(quantileSet => {
+      const yearQuantiles = {
+        ...quantileSet,
+        data: quantileSet.data.map(point => {
+          const pointDate = new Date(point.x)
+          // Keep the same day-of-year but change the year
+          pointDate.setFullYear(year)
+          return {
+            ...point,
+            x: pointDate.toISOString()
+          }
+        })
+      }
+      expandedQuantiles.push(yearQuantiles)
+    })
+  }
+  
+  return expandedQuantiles
+}
+
+const displayQuantiles = computed(() => {
+  if (!showQuantiles.value || quantilesFailed.value) return []
+  
+  return expandQuantilesForDisplay(quantilesData.value, startDate.value, endDate.value)
 })
 
 const setShowQuantiles = async (value, reach_id) => {
