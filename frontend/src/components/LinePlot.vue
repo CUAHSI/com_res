@@ -1,12 +1,10 @@
 <template>
   <h5>{{ props.title }}</h5>
-  <div style="height: calc(23vh); width: 100%">
-    <Line :data="chartData" :options="chartOptions" />
-  </div>
+  <Line ref="chartRef" :data="chartData" :options="chartOptions" />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Line } from 'vue-chartjs'
 import 'chartjs-adapter-date-fns'
 import {
@@ -59,6 +57,34 @@ const props = defineProps({
   showLegend: {
     type: Boolean,
     default: true
+  }
+})
+
+const chartRef = ref(null)
+
+defineExpose({
+  // Method to force chart update
+  updateChart: () => {
+    if (chartRef.value && chartRef.value.chart) {
+      chartRef.value.chart.update()
+    }
+  },
+  // Method to resize chart
+  resizeChart: () => {
+    if (chartRef.value && chartRef.value.chart) {
+      chartRef.value.chart.resize()
+    }
+  },
+  // Method to update and resize
+  refreshChart: () => {
+    if (chartRef.value && chartRef.value.chart) {
+      chartRef.value.chart.resize()
+      chartRef.value.chart.update()
+    }
+  },
+  // Direct access to chart instance (use with caution)
+  getChart: () => {
+    return chartRef.value?.chart || null
   }
 })
 
@@ -237,7 +263,7 @@ const chartOptions = computed(() => ({
             label += ': '
           }
           if (context.parsed.y !== null) {
-            label += context.parsed.y.toFixed(2) + ' cms'
+            label += context.parsed.y.toFixed(2) + ' cfs'
           }
           return label
         },

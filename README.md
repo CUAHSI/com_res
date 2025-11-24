@@ -11,7 +11,7 @@ git checkout develop
 
 ### Full stack for local development
 ```console
-cp .env.template .env
+cp env.template .env
 make build-all
 make up-all
 ```

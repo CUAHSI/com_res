@@ -6,7 +6,7 @@
   >
     <v-card elevation="4" :disabled="context.pending">
       <div class="d-flex justify-end">
-        <v-btn icon size="x-small" variant="text" @click="$emit('dismiss')" class="close-button">
+        <v-btn icon size="x-small" variant="text" class="close-button" @click="$emit('dismiss')">
           <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
       </div>
@@ -17,7 +17,9 @@
           @click="$emit('select-additional-feature')"
         >
           <v-list-item-title>
-            <v-icon color="warning" v-if="!canAddMoreFeatures">{{ mdiAlert }}</v-icon>
+            <v-icon v-if="!canAddMoreFeatures" color="warning">
+              {{ mdiAlert }}
+            </v-icon>
             Select Additional Feature
           </v-list-item-title>
         </v-list-item>
@@ -32,7 +34,7 @@
         </v-list-item>
       </v-list>
     </v-card>
-    <v-progress-linear v-if="context.pending" indeterminate color="primary"></v-progress-linear>
+    <v-progress-linear v-if="context.pending" indeterminate color="primary" />
   </div>
 </template>
 
@@ -70,7 +72,7 @@ const canAddMoreFeatures = computed(() => {
 <style scoped>
 .context-menu-container {
   position: fixed;
-  z-index: 10000;
+  z-index: var(--z-index-context-menu);
   background: white;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);

@@ -1,17 +1,22 @@
 <template>
-  <v-card v-if="show" class="mx-auto" elevation="8" style="height: calc(30vh); width: 100%">
+  <v-card
+    v-if="show"
+    class="mx-auto"
+    :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
+    elevation="8"
+  >
     <v-skeleton-loader
       v-if="isLoading"
       type="heading, image "
       :loading="isLoading"
       class="mx-auto"
-    ></v-skeleton-loader>
+    />
     <div v-if="!isLoading" class="position-absolute" style="top: 6px; right: 8px; z-index: 2">
       <InfoTooltip
         content-class="plot-info-tooltip"
         :z-index="200000"
         :max-width="420"
-        iconSize="x-small"
+        icon-size="x-small"
         style="margin-left: 4px"
         text="This graph shows streamflow (in cubic feet per second) forecasted over the
         next 10 days.  
@@ -29,37 +34,38 @@
       />
     </div>
     <v-row v-if="isLoading" justify="center" align="center" class="mt-4">
-      <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+      <v-progress-circular indeterminate color="primary" size="40" />
       <span class="ml-3">Loading forecasted data...</span>
     </v-row>
     <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
       <span class="ml-3">No forecasted data available.</span>
     </v-row>
-    <LinePlot
-      v-if="!isLoading && hasData"
-      :timeseries="plot_timeseries"
-      :quantiles="showQuantiles ? quantilesData : []"
-      :iqr="showIQR ? iqrData : []"
-      :title="plot_title"
-      :style="plot_style"
-      :use-log-scale="showQuantiles"
-      :show-legend="showLegend"
-    />
-
-    <v-card-actions class="position-relative" style="justify-content: flex-end; gap: 8px">
+    <div class="plot-container" :style="plotContainerStyle">
+      <LinePlot
+        v-if="!isLoading && hasData"
+        ref="linePlotRef"
+        :timeseries="plot_timeseries"
+        :quantiles="showQuantiles ? quantilesData.forecast : []"
+        :iqr="showIQR ? iqrData : []"
+        :title="plot_title"
+        :use-log-scale="showQuantiles"
+        :show-legend="showLegend"
+      />
+    </div>
+    <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
       <!-- Legend Toggle Button -->
       <v-tooltip v-if="showLegendToggle" location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading && (showQuantiles || showIQR)"
+            v-bind="props"
             :color="showLegend ? 'primary' : 'default'"
-            @click="toggleLegend"
             icon
             size="small"
             class="mr-1"
+            @click="toggleLegend"
           >
-            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye"></v-icon>
+            <v-icon :icon="showLegend ? mdiEyeOff : mdiEye" />
           </v-btn>
         </template>
         <span>{{ showLegend ? 'Hide' : 'Show' }} Legend</span>
@@ -69,23 +75,18 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :color="showIQR ? 'primary' : 'default'"
             :disabled="loadingIQR"
             :loading="loadingIQR"
-            @click="toggleIQR(reach_id)"
             icon
             size="small"
             class="mr-1"
+            @click="toggleIQR(reach_id)"
           >
-            <v-icon :icon="mdiChartBox"></v-icon>
-            <v-progress-circular
-              v-if="loadingIQR"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiChartBox" />
+            <v-progress-circular v-if="loadingIQR" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>{{ showIQR ? 'Hide' : 'Show' }} Forecast IQR</span>
@@ -95,23 +96,18 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :color="showQuantiles ? 'primary' : 'default'"
             :disabled="quantilesFailed"
             :loading="loadingQuantiles"
-            @click="toggleQuantiles(reach_id)"
             icon
             size="small"
             class="mr-1"
+            @click="toggleQuantiles(reach_id)"
           >
-            <v-icon :icon="mdiChartAreaspline"></v-icon>
-            <v-progress-circular
-              v-if="loadingQuantiles"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiChartAreaspline" />
+            <v-progress-circular v-if="loadingQuantiles" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>{{ showQuantiles ? 'Hide' : 'Show' }} Historical Quantiles</span>
@@ -121,22 +117,17 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :disabled="downloading.csv"
             :loading="downloading.csv"
-            @click="downCSV"
             icon
             size="small"
             class="mr-1"
+            @click="downCSV"
           >
-            <v-icon :icon="mdiFileDelimited"></v-icon>
-            <v-progress-circular
-              v-if="downloading.csv"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiFileDelimited" />
+            <v-progress-circular v-if="downloading.csv" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>Download CSV</span>
@@ -146,24 +137,35 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-bind="props"
             v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
             :disabled="downloading.json"
             :loading="downloading.json"
-            @click="downJson"
             icon
             size="small"
+            @click="downJson"
           >
-            <v-icon :icon="mdiCodeJson"></v-icon>
-            <v-progress-circular
-              v-if="downloading.json"
-              indeterminate
-              color="white"
-              size="20"
-            ></v-progress-circular>
+            <v-icon :icon="mdiCodeJson" />
+            <v-progress-circular v-if="downloading.json" indeterminate color="white" size="20" />
           </v-btn>
         </template>
         <span>Download JSON</span>
+      </v-tooltip>
+      <!-- Full Screen Button -->
+      <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
+        <template #activator="{ props }">
+          <v-btn
+            v-if="plot_timeseries.length > 0 && !isLoading"
+            v-bind="props"
+            icon
+            size="small"
+            class="mr-1"
+            @click="toggleFullScreen"
+          >
+            <v-icon :icon="isFullScreen ? mdiFullscreenExit : mdiFullscreen" />
+          </v-btn>
+        </template>
+        <span>{{ isFullScreen ? 'Exit' : 'Enter' }} Full Screen</span>
       </v-tooltip>
     </v-card-actions>
   </v-card>
@@ -173,9 +175,17 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, watch, toRef, computed } from 'vue'
-import { mdiChartAreaspline, mdiEye, mdiEyeOff, mdiChartBox } from '@mdi/js'
+import {
+  mdiChartAreaspline,
+  mdiEye,
+  mdiEyeOff,
+  mdiChartBox,
+  mdiCodeJson,
+  mdiFileDelimited,
+  mdiFullscreenExit,
+  mdiFullscreen
+} from '@mdi/js'
 import { API_BASE } from '@/constants'
-import { mdiCodeJson, mdiFileDelimited } from '@mdi/js'
 import InfoTooltip from '@/components/InfoTooltip.vue'
 import { useQuantilesStore } from '@/stores/quantilesStore'
 import {
@@ -198,15 +208,36 @@ const showQuantiles = ref(false)
 const loadingQuantiles = ref(false)
 const quantilesFailed = ref(false)
 const showLegend = ref(false)
+const isFullScreen = ref(false)
+const linePlotRef = ref(null)
 
 // New IQR state
 const showIQR = ref(false)
 const loadingIQR = ref(false)
 const iqrData = ref([])
 
+const emit = defineEmits(['toggleFullScreen'])
+
 const showLegendToggle = computed(() => {
   return (showQuantiles.value || showIQR.value) && !loadingQuantiles.value && !loadingIQR.value
 })
+
+const plotContainerStyle = computed(() => {
+  if (isFullScreen.value) {
+    return {
+      height: 'calc(100vh - 80px)',
+      width: '100%'
+    }
+  } else {
+    return {
+      height: 'calc(23vh)',
+      width: '100%'
+    }
+  }
+})
+
+// helper function to convert Date objects to ISO date strings
+const toIsoDate = (date) => date.toISOString().split('T')[0]
 
 const setShowQuantiles = async (value, reach_id) => {
   // If turning on quantiles, turn off IQR
@@ -217,9 +248,20 @@ const setShowQuantiles = async (value, reach_id) => {
 
   showQuantiles.value = value
   quantilesFailed.value = false
-  if (value && quantilesData.value.length === 0) {
+  if (value && quantilesData.value.forecast.length === 0) {
     loadingQuantiles.value = true
-    quantilesFailed.value = !(await quantilesStore.getQuantilesData(reach_id))
+
+    // Show quantiles for the exact forecast period (9 days from previous day)
+    const forecastStart = new Date(datetime.value) // Forecast initialization time
+    const forecastEnd = new Date(forecastStart)
+    forecastEnd.setDate(forecastStart.getDate() + 9) // 9-day forecast
+
+    quantilesFailed.value = !(await quantilesStore.getQuantilesData(
+      reach_id,
+      toIsoDate(forecastStart),
+      toIsoDate(forecastEnd),
+      'forecast'
+    ))
   }
   loadingQuantiles.value = false
 }
@@ -236,7 +278,6 @@ const toggleIQR = async (reach_id) => {
   // If turning on IQR, turn off quantiles
   if (newValue) {
     showQuantiles.value = false
-    quantilesData.value = []
   }
 
   showIQR.value = newValue
@@ -255,7 +296,7 @@ const fetchIQRData = async (reach_id) => {
     const params = new URLSearchParams({
       reach_id: reach_id,
       date_time: datetime.value.toISOString().split('T')[0],
-      forecast: forecast_mode.value
+      forecast: forecastMode.value
     })
 
     const response = await fetch(
@@ -322,6 +363,19 @@ const fetchIQRData = async (reach_id) => {
   }
 }
 
+const toggleFullScreen = async () => {
+  const originalShowQuantiles = showQuantiles.value
+  setShowQuantiles(false, reach_id.value)
+  isFullScreen.value = !isFullScreen.value
+  emit('toggleFullScreen', isFullScreen.value)
+  setTimeout(() => {
+    if (linePlotRef.value) {
+      linePlotRef.value.refreshChart()
+    }
+    setShowQuantiles(originalShowQuantiles, reach_id.value)
+  }, 200) // 200ms delay for fullscreen transition to complete
+}
+
 // Toggle legend visibility
 const toggleLegend = () => {
   showLegend.value = !showLegend.value
@@ -337,18 +391,18 @@ const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
-const props = defineProps({
-  reachid: Number,
-  reachname: String,
-  forecast_datetime: {
+const forecastProps = defineProps({
+  reachid: { type: Number, default: null },
+  reachname: { type: String, default: '' },
+  forecastDatetime: {
     type: Date,
     default: () => new Date(Date.now() - 24 * 60 * 60 * 1000) // default = yesterday
   },
-  forecast_mode: {
+  forecastMode: {
     type: String,
     default: 'medium_range'
   },
-  forecast_ensemble: {
+  forecastEnsemble: {
     type: String,
     default: '3'
   },
@@ -358,12 +412,11 @@ const props = defineProps({
   }
 })
 
-const reach_id = toRef(props, 'reachid')
-const reach_name = toRef(props, 'reachname')
-const datetime = toRef(props, 'forecast_datetime')
-const forecast_mode = toRef(props, 'forecast_mode')
-const ensemble = toRef(props, 'forecast_ensemble')
-
+const reach_id = toRef(forecastProps, 'reachid')
+const reach_name = toRef(forecastProps, 'reachname')
+const datetime = toRef(forecastProps, 'forecastDatetime')
+const forecastMode = toRef(forecastProps, 'forecastMode')
+const ensemble = toRef(forecastProps, 'forecastEnsemble')
 const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
@@ -373,12 +426,12 @@ const clearPlot = () => {
   showQuantiles.value = false
 }
 
-watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
+watch([reach_id, reach_name, datetime, forecastMode, ensemble], async () => {
   console.log('Current props:', {
     reach_id: reach_id.value,
     reach_name: reach_name.value,
     datetime: datetime.value,
-    forecast_mode: forecast_mode.value,
+    forecastMode: forecastMode.value,
     ensemble: ensemble.value
   })
   if (reach_id.value && datetime.value) {
@@ -386,7 +439,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
       reach_id.value,
       reach_name.value,
       datetime.value,
-      forecast_mode.value,
+      forecastMode.value,
       ensemble.value
     )
     // Fetch new quantiles when reach ID changes
@@ -405,7 +458,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
   }
 })
 
-const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble) => {
+const getForecastData = async (reach_id, name, datetime, forecastMode, ensemble) => {
   try {
     isLoading.value = true
     error.value = null
@@ -413,20 +466,34 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     const params = new URLSearchParams({
       reach_id: reach_id,
       date_time: datetime.toISOString().split('T')[0],
-      forecast: forecast_mode,
+      forecast: forecastMode,
       ensemble: ensemble
     })
-    console.log(reach_id, name, datetime, forecast_mode, ensemble)
-    const response = await fetch(`${API_BASE}/timeseries/nwm-forecast?${params.toString()}`)
+    console.log(reach_id, name, datetime, forecastMode, ensemble)
+    // TODO: ideally we would cache this data so that we can use it when IQR is toggled on...
+    const response = await fetch(
+      `${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`
+    )
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const data = await response.json()
-    let formattedData = Object.entries(data).map(([x, y]) => ({ x, y }))
-    hasData.value = formattedData.length > 0
-    plot_timeseries.value = formattedData
+
+    // The get-summarized-nwm-forecast endpoint returns: {timestamp: [], mean: [], q25: [], q75: []}
+    // We want to use the mean values for the main forecast line
+    if (data.timestamp && data.mean) {
+      let formattedData = data.timestamp.map((timestamp, index) => ({
+        x: timestamp,
+        y: data.mean[index]
+      }))
+      hasData.value = formattedData.length > 0
+      plot_timeseries.value = formattedData
+    } else {
+      hasData.value = false
+      plot_timeseries.value = []
+    }
   } catch (err) {
     error.value = `Failed to load data: ${err.message}`
     console.error('API error:', err)
@@ -510,5 +577,43 @@ defineExpose({
 .chart-tooltip span {
   white-space: normal;
   word-break: normal;
+}
+
+.plot-card {
+  transition: all 0.3s ease;
+  height: calc(30vh);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.plot-card.full-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: var(--z-index-plots) !important;
+  margin: 0;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.plot-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: var(--z-index-plots) !important;
+}
+
+.card-actions {
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 20px;
+}
+
+/* When in full screen, ensure body doesn't scroll */
+body.no-scroll {
+  overflow: hidden;
 }
 </style>

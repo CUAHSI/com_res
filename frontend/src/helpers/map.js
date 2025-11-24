@@ -11,23 +11,24 @@ import { ENDPOINTS } from '@/constants'
 import parseGeoraster from 'georaster'
 
 const leaflet = shallowRef(null)
+const geoProviders = shallowRef([])
+const geosearch = shallowRef(null)
 const wmsLayers = shallowRef({})
 const mapObject = ref(new Map())
 const flowlinesFeatureLayers = shallowRef([])
-const featureLayerProviders = shallowRef([])
 const activeFeatureLayer = shallowRef(null)
 const control = shallowRef(null)
 const layerControlIsExpanded = ref(false)
 const featureOptions = ref({
-  selectedColor: '#00FFFF', // Cyan color for selected features
-  defaultColor: 'lightblue',
-  defaultWeight: 1,
+  selectedColor: '#00fff2ff', // Cyan color for selected features
+  defaultColor: '#3292afff',
+  defaultWeight: 2,
   selectedWeight: 5,
   opacity: 0.7
 })
 const mapLoaded = ref(false)
 const isMapMoving = ref(false) // Track if the map is currently moving
-const stageValue = ref(5) // Default stage value for the slider
+const stageValue = ref(1) // Default stage value for the slider
 
 const MIN_WMS_ZOOM = 9
 const MIN_WFS_ZOOM = 9
@@ -223,10 +224,8 @@ const addCogsToMap = async (cogs) => {
       // The structure is [band][rows] where all rows are Float32Arrays
       const pixelData = georaster.values[0] // First band
 
-      // const noDataValue = georaster.noDataValue ?? -9999
       let inundatedPixels = 0
 
-      // Optimized rendering for binary data (1 = inundated, NaN = not inundated)
       for (let y = 0; y < georaster.height; y++) {
         const row = pixelData[y]
 
@@ -236,15 +235,18 @@ const addCogsToMap = async (cogs) => {
 
           // Check if it's an inundated pixel (value === 1)
           if (pixelValue === 1) {
-            // Blue color for inundated areas
+            // Pure blue for inundated areas - FULLY OPAQUE in canvas
             imageData.data[index] = 0 // R
-            imageData.data[index + 1] = 100 // G (slight green for better visibility)
+            imageData.data[index + 1] = 0 // G
             imageData.data[index + 2] = 255 // B
-            imageData.data[index + 3] = 180 // A (semi-transparent)
+            imageData.data[index + 3] = 255 // A - FULLY OPAQUE (255)
             inundatedPixels++
           } else {
-            // Transparent for non-inundated areas (NaN, noDataValue, or other values)
-            imageData.data[index + 3] = 0
+            // NaN or any other value - make fully transparent
+            imageData.data[index] = 0 // R
+            imageData.data[index + 1] = 0 // G
+            imageData.data[index + 2] = 0 // B
+            imageData.data[index + 3] = 0 // A - FULLY TRANSPARENT (0)
           }
         }
       }
@@ -266,7 +268,7 @@ const addCogsToMap = async (cogs) => {
       const leafletBounds = L.latLngBounds(geographicBounds)
 
       const overlay = L.imageOverlay(dataURL, leafletBounds, {
-        opacity: 0.6,
+        opacity: 0.4,
         interactive: false,
         zIndex: 100000
       }).addTo(leaflet.value)
@@ -311,7 +313,7 @@ function reprojectEPSG5070ToWGS84(georaster) {
   return bounds
 }
 
-const clearCogsFromMap = () => {
+const clearCogsFromMap = async () => {
   console.log('Clearing all COG overlays from map')
   if (window.cogOverlays) {
     window.cogOverlays.forEach((overlay) => {
@@ -374,7 +376,11 @@ async function createWMSLayers(region) {
       }
       const wmsLayer = esriLeaflet.dynamicMapLayer({
         url: url,
-        pane: 'overlayPane',
+        pane: layer.name.includes('Points of Interest')
+          ? 'panePOI'
+          : layer.name.includes('Waterbodies')
+            ? 'paneWaterbodies'
+            : 'overlayPane',
         layers: [layer.id],
         transparent: true,
         format: 'image/png',
@@ -589,7 +595,7 @@ function createFeatureLayerProvider(region) {
   let url = `https://arcgis.cuahsi.org/arcgis/rest/services/CIROH-ComRes/${region.name}/FeatureServer/${region.flowlinesLayerNumber}`
   const featureLayerProvider = esriLeafletGeocoder.featureLayerProvider({
     url: url,
-    searchFields: ['PopupTitle'],
+    searchFields: ['PopupTitle', 'REACHCODE'],
     label: `${region.name} Flowlines`,
     //bufferRadius: 5000,
     formatSuggestion: function (feature) {
@@ -606,7 +612,7 @@ const toggleFeatureLayer = async (region) => {
     const flowlines = createFlowlinesFeatureLayer(region)
     flowlinesFeatureLayers.value.push(flowlines)
     const provider = createFeatureLayerProvider(region)
-    featureLayerProviders.value.push(provider)
+    geoProviders.value.push(provider)
     region.flowlinesLayer = flowlines
   }
   // turn off all other feature layers and turn on the selected one
@@ -620,6 +626,28 @@ const toggleFeatureLayer = async (region) => {
       activeFeatureLayer.value = featureLayer
       control.value.addOverlay(featureLayer, `NHDPlus Flowlines`)
     }
+
+    // remove the existing geosearch control because
+    // it doesn't seem like esri-leaflet-geocoder supports dynamic provider updates
+    // https://developers.arcgis.com/esri-leaflet/api-reference/esri-leaflet-geocoder/geosearch/#methods
+    if (geosearch.value) {
+      console.log('Removing existing geosearch control to update providers.')
+      leaflet.value.removeControl(geosearch.value)
+    }
+
+    // create a new geosearch control with the updated providers
+    // TODO: currently this shows below the layer control because it gets added last
+    // Ideally we would like to maintain the original position BEFORE the layer control
+    geosearch.value = esriLeafletGeocoder
+      .geosearch({
+        position: 'topright',
+        placeholder: 'Search for a location',
+        useMapBounds: true,
+        expanded: false,
+        title: ' Search',
+        providers: geoProviders.value
+      })
+      .addTo(leaflet.value)
   })
 }
 
@@ -635,7 +663,8 @@ export {
   leaflet,
   wmsLayers,
   flowlinesFeatureLayers,
-  featureLayerProviders,
+  geosearch,
+  geoProviders,
   activeFeatureLayer,
   toggleWMSLayers,
   toggleFeatureLayer,

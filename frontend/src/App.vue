@@ -1,17 +1,17 @@
 <template>
   <v-app>
     <v-main>
-      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '1000000' }"></AlertPopup>
+      <AlertPopup v-bind="alertStore.displayed" :style="{ 'z-index': '1000000' }" />
       <DisclaimerDialog
         v-if="!alertStore.disclaimer_accepted"
-        @accept="alertStore.acceptDisclaimer"
         :z-index="9999999"
+        @accept="alertStore.acceptDisclaimer"
       />
-      <TheAppBar @toggle-mobile-nav="toggleMobileNav" :paths="paths" />
+      <TheAppBar :paths="paths" @toggle-mobile-nav="toggleMobileNav" />
       <TheMobileNavDrawer
-        @toggle-mobile-nav="toggleMobileNav"
         :show="showMobileNavigation"
         :paths="paths"
+        @toggle-mobile-nav="toggleMobileNav"
       />
       <RouterView v-slot="{ Component }">
         <KeepAlive>
@@ -59,8 +59,17 @@ const paths = [
     label: 'Maps'
   },
   {
-    attrs: { to: '/resources' },
-    label: 'Resources'
+    label: 'Resources',
+    children: [
+      {
+        attrs: { to: '/resources-floodsavvy' },
+        label: 'FloodSavvy Resources'
+      },
+      {
+        attrs: { to: '/resources-nwps' },
+        label: 'NWPS Resources'
+      }
+    ]
   },
   {
     attrs: { to: '/about' },

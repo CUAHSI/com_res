@@ -11,10 +11,11 @@
     <v-card :prepend-icon="mdiAlertCircle" title="Disclaimer">
       <v-card-text>
         <p>
-          FloodSavvy is an <span style="color:red; font-weight:600;">experimental</span>
-          application that visualizes potential <strong>inundation flooding</strong>
-          based on forecasts from NOAA's National Water Model (NWM) and its associated
-          Flood Inundation Mapping (FIM) services. 
+          FloodSavvy is an
+          <span style="color: red; font-weight: 600">experimental</span> application that visualizes
+          potential <strong>inundation flooding</strong>
+          based on forecasts from NOAA's National Water Model (NWM) and its associated Flood
+          Inundation Mapping (FIM) services.
         </p>
 
         <p>
@@ -24,24 +25,25 @@
         </p>
 
         <p>
-          While FloodSavvy offers useful insights into where inundation may occur,
-          all outputs are estimates and include inherent uncertainty.
-          These maps are <strong>NOT official flood products</strong> from NOAA or the
-          National Weather Service, although they draw on similar methodologies to NOAA’s
-          experimental FIM services.
+          While FloodSavvy offers useful insights into where inundation may occur, all outputs are
+          estimates and include inherent uncertainty. These maps are
+          <strong>NOT official flood products</strong> from NOAA or the National Weather Service,
+          although they draw on similar methodologies to NOAA’s experimental FIM services.
         </p>
 
         <p>
-          FloodSavvy is intended to support public understanding and exploration of
-          historical and potential future flood scenarios using publicly available data.
-          For <strong>official and authoritative flood forecasts, warnings, and maps</strong>,
-          please refer to the <span style="color:darkcyan; font-weight:600;">NWPS Resources</span> available under the <strong>Resources</strong> tab.
+          FloodSavvy is intended to support public understanding and exploration of historical and
+          potential future flood scenarios using publicly available data. For
+          <strong>official and authoritative flood forecasts, warnings, and maps</strong>, please
+          refer to the
+          <span style="color: darkcyan; font-weight: 600">NWPS Resources</span> available under the
+          <strong>Resources</strong> tab.
         </p>
 
         <p>
-          FloodSavvy is for <strong>informational and educational use only</strong> and
-          should <strong>NOT</strong> be relied upon for emergency decision-making or as a
-          substitute for official guidance.
+          FloodSavvy is for <strong>informational and educational use only</strong> and should
+          <strong>NOT</strong> be relied upon for emergency decision-making or as a substitute for
+          official guidance.
         </p>
         <!-- Logo row -->
         <v-row class="mt-4" justify="space-around" align="center">
@@ -54,19 +56,14 @@
               height="100"
               class="mx-auto"
               :cover="logo.shouldCover !== false"
-            ></v-img>
+            />
           </v-col>
         </v-row>
       </v-card-text>
-      <v-divider></v-divider>
+      <v-divider />
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="primary"
-          text="Acknowledge"
-          variant="tonal"
-          @click="dismiss_disclaimer"
-        ></v-btn>
+        <v-spacer />
+        <v-btn color="primary" text="Acknowledge" variant="tonal" @click="dismiss_disclaimer" />
       </v-card-actions>
     </v-card>
   </v-dialog>

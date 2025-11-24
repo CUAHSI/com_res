@@ -1,6 +1,6 @@
 <template>
   <v-overlay :model-value="!mapHelpers.mapLoaded" class="align-center justify-center">
-    <v-progress-circular indeterminate :size="128"></v-progress-circular>
+    <v-progress-circular indeterminate :size="128" />
   </v-overlay>
 
   <v-container fluid class="map-view-container">
@@ -11,15 +11,15 @@
         <div class="left-column">
           <!-- Region Selector -->
           <div class="control-section">
-            <TheRegionSelector :z-index="999999" />
+            <TheRegionSelector />
           </div>
 
           <!-- Multi-reach Mode Toggle -->
           <div class="control-section">
             <v-card variant="flat" class="multi-reach-toggle-card">
-              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px"
-                >Selection Mode</v-card-title
-              >
+              <v-card-title style="font-size: medium; padding: 8px 12px 0px 12px">
+                Selection Mode
+              </v-card-title>
               <v-radio-group
                 v-model="multiReachMode"
                 density="compact"
@@ -27,9 +27,9 @@
                 inline
                 style="padding: 0px 12px 8px 12px"
               >
-                <v-radio label="Single Reach" :value="false" color="primary"></v-radio>
+                <v-radio label="Single Reach" :value="false" color="primary" />
                 <v-radio label="Multi-reach Mode" :value="true" color="primary">
-                  <template v-slot:label>
+                  <template #label>
                     <span>Multi-reach</span>
                     <InfoTooltip
                       text="Enable to select multiple river reaches at a time. Use Ctrl (Cmd on Mac) + Click to select additional reaches on the map. Or use the context menu option 'Select Additional Feature'."
@@ -51,9 +51,9 @@
             <v-card variant="flat" class="action-buttons-card">
               <v-btn
                 id="btn-show-stage-slider"
-                @click="toggle('stage')"
                 :color="toggledStageSlider ? 'primary' : 'white'"
                 class="action-button"
+                @click="toggle('stage')"
               >
                 Flood Map
                 <InfoTooltip
@@ -65,9 +65,9 @@
               <v-btn
                 v-if="!multiReachMode"
                 id="btn-show-historical"
-                @click="toggle('historical')"
                 :color="showHistorical ? 'primary' : 'white'"
                 class="action-button"
+                @click="toggle('historical')"
               >
                 Historical
                 <InfoTooltip
@@ -80,16 +80,15 @@
               </v-btn>
               <v-btn
                 v-if="!multiReachMode"
-                @click="toggle('forecast')"
                 :color="showForecast ? 'primary' : 'white'"
                 class="action-button"
+                @click="toggle('forecast')"
               >
                 Forecast
                 <InfoTooltip
                   text="Display forecasted streamflow data for selected river or stream in a graph,
                   showing hourly values in cubic feet per second (cfs)."
                   style="margin-left: 5px"
-                  z-index="999999"
                   class="tooltip-icon"
                 />
               </v-btn>
@@ -123,9 +122,9 @@
         ref="forecastPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"
-        :forecast_datetime="forecastDateTime"
-        :forecast_mode="forecastMode"
-        :forecast_ensemble="forecastEnsemble"
+        :forecast-datetime="forecastDateTime"
+        :forecast-mode="forecastMode"
+        :forecast-ensemble="forecastEnsemble"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showForecast"
       />
@@ -133,21 +132,11 @@
     <div v-if="showStageSlider" class="desktop-stage-slider-container">
       <TheStageSlider
         v-model="mapHelpers.stageValue.value"
-        :min="0"
-        :max="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.max
-            : activeFeatureFimCogData.stages_ft[activeFeatureFimCogData.stages_ft.length - 1]
-        "
-        :stages="
-          multiReachMode && multiReachStageData
-            ? multiReachStageData.stages_ft
-            : activeFeatureFimCogData.stages_ft
-        "
-        :flows="activeFeatureFimCogData.flows_cms"
+        :multi-reach-mode="multiReachMode"
+        :selected-features="selectedFeatures"
+        :active-feature="activeFeature"
         :width="mdAndDown ? '50px' : '60px'"
         :height="mdAndDown ? '100px' : '400px'"
-        @update:modelValue="handleStageChange"
       />
     </div>
   </v-container>
@@ -182,9 +171,17 @@ const { activeFeature, selectedFeatures, toggledStageSlider, multiReachMode } =
 
 const reach_name = ref(null)
 const reach_id = ref(null)
-const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000)) // default: yesterday
+const forecastDateTime = ref(new Date(Date.now() - 24 * 60 * 60 * 1000))
 const forecastMode = ref('medium_range')
 const forecastEnsemble = ref('3')
+
+const showStageSlider = computed(() => {
+  // Check if any selected feature has data
+  const hasData = selectedFeatures.value.some(
+    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
+  )
+  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
+})
 
 // Watch the COMID from the store. When it changes,
 // we will update the data displayed in the timeseries plot
@@ -288,121 +285,7 @@ const toggle = async (component_name) => {
       mapHelpers.clearCogsFromMap()
     } else {
       toggledStageSlider.value = true
-      handleStageChange()
     }
-  }
-}
-
-const activeFeatureFimCogData = computed(() => {
-  if (!activeFeature.value || !activeFeature.value.properties) return null
-  return activeFeature.value.properties.fimCogData || null
-})
-
-// New computed property for multi-reach stage data
-const multiReachStageData = computed(() => {
-  if (selectedFeatures.value.length === 0) return null
-
-  // Collect all fimCogData from selected features
-  const allFimCogData = selectedFeatures.value
-    .map((feature) => feature.properties?.fimCogData)
-    .filter((data) => data && data.stages_ft && data.stages_ft.length > 0)
-
-  if (allFimCogData.length === 0) return null
-
-  // Find the minimum of all maximum stage values
-  const maxStages = allFimCogData.map((data) => data.stages_ft[data.stages_ft.length - 1])
-  const minMaxStage = Math.min(...maxStages)
-
-  // Find the maximum of all minimum stage values
-  const minStages = allFimCogData.map((data) => data.stages_ft[0])
-  const maxMinStage = Math.max(...minStages)
-
-  // Get all unique stages within the common range
-  const allStages = Array.from(
-    new Set(
-      allFimCogData.flatMap((data) =>
-        data.stages_ft.filter((stage) => stage >= maxMinStage && stage <= minMaxStage)
-      )
-    )
-  ).sort((a, b) => a - b)
-
-  return {
-    stages_ft: allStages,
-    min: maxMinStage,
-    max: minMaxStage,
-    allFimCogData: allFimCogData
-  }
-})
-
-const showStageSlider = computed(() => {
-  // Check if any selected feature has data
-  const hasData = selectedFeatures.value.some(
-    (feature) => feature.properties?.fimCogData?.stages_ft?.length > 0
-  )
-  return hasData && !mapHelpers.layerControlIsExpanded.value && toggledStageSlider.value
-})
-
-const handleStageChange = () => {
-  console.log('Stage value changed:', mapHelpers.stageValue.value)
-  mapHelpers.clearCogsFromMap()
-  let addedCogs = false
-
-  // Get the features to process based on mode
-  const featuresToProcess = multiReachMode.value ? selectedFeatures.value : [activeFeature.value]
-
-  for (const feature of featuresToProcess) {
-    if (!feature?.properties?.fimCogData) continue
-
-    console.log('Processing feature for COGs:', feature)
-    const fimCogData = feature.properties.fimCogData
-    console.log('FIM COG Data:', fimCogData)
-
-    if (fimCogData) {
-      // In multi-reach mode, use the common stages range
-      let targetStage = mapHelpers.stageValue.value
-
-      if (multiReachMode.value && multiReachStageData.value) {
-        // Ensure the stage is within the common range and snap if needed
-        if (!multiReachStageData.value.stages_ft.includes(targetStage)) {
-          const nearestStage = multiReachStageData.value.stages_ft.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
-          })
-          targetStage = nearestStage
-          console.log('Snapped to nearest common stage:', nearestStage)
-        }
-      } else {
-        // Single reach mode - use original snapping logic
-        if (!fimCogData.stages_ft.includes(targetStage)) {
-          const nearestStage = fimCogData.stages_ft.reduce((prev, curr) => {
-            return Math.abs(curr - targetStage) < Math.abs(prev - targetStage) ? curr : prev
-          })
-          targetStage = nearestStage
-          console.log('Snapped to nearest stage:', nearestStage)
-        }
-      }
-
-      // Update the stage value if it was snapped
-      if (targetStage !== mapHelpers.stageValue.value) {
-        mapHelpers.stageValue.value = targetStage
-      }
-
-      const cogUrls = mapHelpers.determineCogsForStage(fimCogData.files, fimCogData.stages_ft)
-      if (cogUrls.length > 0) {
-        addedCogs = true
-        mapHelpers.addCogsToMap(cogUrls)
-      }
-    }
-  }
-
-  if (!addedCogs) {
-    alertStore.displayAlert({
-      title: 'No Data Available',
-      text: `There are no COGs available for the selected stage: ${mapHelpers.stageValue.value}m.`,
-      type: 'warning',
-      closable: true,
-      duration: 5
-    })
-    return
   }
 }
 </script>
@@ -417,7 +300,7 @@ const handleStageChange = () => {
   position: absolute;
   top: 10px;
   left: 15px;
-  z-index: 999999;
+  z-index: var(--z-index-map-controls);
   width: 500px; /* Increased width to accommodate two columns */
 }
 
@@ -425,7 +308,7 @@ const handleStageChange = () => {
   position: absolute;
   top: 10px;
   left: 15px;
-  z-index: 999999;
+  z-index: var(--z-index-map-controls);
   width: 200px;
 }
 
@@ -500,7 +383,7 @@ const handleStageChange = () => {
   height: calc(100vh - 270px);
   position: fixed;
   top: 280px;
-  z-index: 99999;
+  z-index: var(--z-index-plots);
 }
 
 .mobile-map-container {
@@ -519,7 +402,7 @@ const handleStageChange = () => {
   position: absolute;
   right: 15px;
   top: 230px;
-  z-index: 99999;
+  z-index: var(--z-index-map-controls);
   pointer-events: none;
 }
 

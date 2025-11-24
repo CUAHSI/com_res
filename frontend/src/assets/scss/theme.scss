@@ -1,8 +1,13 @@
-// :root {
-
-// }
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 @import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
+
+:root {
+  --z-index-map-controls: 9999;
+  --z-index-plots: 99999;
+  --z-index-alerts: 9999999999;
+  --z-index-context-menu: 100000;
+  --z-index-multi-select-indicator: 100001;
+}
 
 %default-font-style {
   font-size: 18px;

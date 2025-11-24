@@ -15,7 +15,9 @@
       />
     </template>
 
-    <div class="whitespace-normal">{{ text }}</div>
+    <div class="whitespace-normal">
+      {{ text }}
+    </div>
   </v-tooltip>
 </template>
 

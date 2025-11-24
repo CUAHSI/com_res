@@ -10,6 +10,7 @@ from google.cloud import bigquery
 
 from app.routers.fim.router import get_bigquery_client
 
+from . import unit_conversions as units
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
 
@@ -238,6 +239,7 @@ async def get_quantiles(
         description="The unique NWM feature identifier.",
         example=3627071,
     ),
+    si_units: bool = False,
 ) -> JSONResponse:
     """
     Get quantiles data for a given feature ID.
@@ -245,6 +247,7 @@ async def get_quantiles(
     Arguments:
     ==========
     feature_id: int - the NWM feature ID for which to collect quantiles data.
+    si_units: bool - if False, convert streamflow from CMS to CFS (default: False)
 
     Returns:
     ========
@@ -274,24 +277,37 @@ async def get_quantiles(
 
         query_job = client.query(query, job_config=job_config)
 
+        # Convert the query results to a list of dictionaries first
         results = []
         for row in query_job:
-            results.append(
-                {
-                    "feature_id": row["feature_id"],
-                    "doy": row["doy"],
-                    "q0": row["q0"],
-                    "q5": row["q5"],
-                    "q10": row["q10"],
-                    "q25": row["q25"],
-                    "q75": row["q75"],
-                    "q90": row["q90"],
-                    "q100": row["q100"],
-                }
-            )
+            result_row = {
+                "feature_id": row["feature_id"],
+                "doy": row["doy"],
+                "q0": row["q0"],
+                "q5": row["q5"],
+                "q10": row["q10"],
+                "q25": row["q25"],
+                "q75": row["q75"],
+                "q90": row["q90"],
+                "q100": row["q100"],
+            }
+            results.append(result_row)
+
+        # Convert to pandas DataFrame for unit conversion
+        df = pandas.DataFrame(results)
+
+        # Convert the units to cfs if necessary
+        if not si_units:
+            # convert all quantile columns from cms to cfs
+            quantile_columns = ["q0", "q5", "q10", "q25", "q75", "q90", "q100"]
+            for col in quantile_columns:
+                df[col] = df[col].apply(units.cms_to_cfs)
+
+        # Convert back to list of dictionaries for JSON response
+        final_results = df.to_dict('records')
 
     except Exception as e:
         logging.error(f"Quantiles query failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"BigQuery operation failed: {str(e)}")
 
-    return JSONResponse(content=jsonable_encoder(results))
+    return JSONResponse(content=jsonable_encoder(final_results))

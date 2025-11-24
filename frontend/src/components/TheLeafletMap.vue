@@ -1,6 +1,6 @@
 <template>
-  <div v-show="$route.meta.showMap" id="mapContainer"></div>
-  <v-progress-linear v-if="isMapMoving" indeterminate color="primary"></v-progress-linear>
+  <div v-show="$route.meta.showMap" id="mapContainer" />
+  <v-progress-linear v-if="isMapMoving" indeterminate color="primary" />
 
   <TheMultiSelectIndicator v-if="ctrlActive && multiReachMode" />
 
@@ -26,9 +26,10 @@ import 'leaflet-easybutton/src/easy-button'
 import { onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
 import {
   mapObject,
-  featureLayerProviders,
   control,
   leaflet,
+  geoProviders,
+  geosearch,
   mapLoaded,
   isMapMoving,
   activeFeatureLayer,
@@ -97,6 +98,12 @@ onMounted(() => {
     zoomDelta: 1,
     zoomControl: false
   }).setView([38.2, -96], 5)
+
+  leaflet.value.createPane('paneWaterbodies')
+  leaflet.value.getPane('paneWaterbodies').style.zIndex = 450
+  leaflet.value.createPane('panePOI')
+  leaflet.value.getPane('panePOI').style.zIndex = 500
+
   mapObject.value.hucbounds = []
   mapObject.value.popups = []
   mapObject.value.buffer = 20
@@ -181,8 +188,8 @@ onMounted(() => {
     // }
   })
 
-  // add the address search provider to the featureLayerProviders
-  const providers = [addressSearchProvider, ...featureLayerProviders.value]
+  // add the address search provider to the geoProviders
+  geoProviders.value.push(addressSearchProvider)
 
   // /*
   //  * LEAFLET CONTROLS
@@ -197,14 +204,14 @@ onMounted(() => {
 
   // Geocoder Control
   // https://developers.arcgis.com/esri-leaflet/api-reference/controls/geosearch/
-  esriLeafletGeocoder
+  geosearch.value = esriLeafletGeocoder
     .geosearch({
       position: 'topright',
       placeholder: 'Search for a location',
       useMapBounds: true,
       expanded: false,
       title: ' Search',
-      providers: providers
+      providers: geoProviders.value
     })
     .addTo(leaflet.value)
 
