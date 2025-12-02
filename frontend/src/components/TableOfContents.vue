@@ -25,6 +25,16 @@
 </template>
 
 <script setup>
+import { defineProps } from 'vue'
+
+// Define props
+defineProps({
+  tocItems: {
+    type: Array,
+    default: () => []
+  }
+})
+
 // Smooth scroll with offset
 const scrollToSection = (id) => {
   const el = document.getElementById(id)
