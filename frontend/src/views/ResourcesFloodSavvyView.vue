@@ -4,7 +4,7 @@
       <v-row>
         <!-- Left column: TOC -->
         <v-col cols="12" md="3" class="toc-sticky">
-          <TableOfContents :toc-items="tocItems" :scroll-handler="scrollToSection" />
+          <TableOfContents :toc-items="tocItems" />
         </v-col>
 
         <!-- Right column: Main -->
@@ -290,12 +290,6 @@ const tocItems = [
   { id: 'community-narratives', title: 'Community Narratives' },
   { id: 'faq', title: 'FAQs' }
 ]
-
-// Smooth scroll with offset
-const scrollToSection = (id) => {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
-}
 </script>
 
 <style scoped>

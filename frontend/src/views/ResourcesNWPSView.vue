@@ -4,7 +4,7 @@
       <v-row>
         <!-- Left column: Table of Contents -->
         <v-col cols="12" md="3" class="toc-sticky">
-          <TableOfContents :toc-items="tocItems" :scroll-handler="scrollToSection" />
+          <TableOfContents :toc-items="tocItems" />
         </v-col>
 
         <!-- Right column: Main Content -->
@@ -95,13 +95,6 @@ import TableOfContents from '@/components/TableOfContents.vue'
 import ScenarioBox from '@/components/ScenarioBox.vue'
 
 const pdfUrl = pdfFile
-
-const scrollToSection = (id) => {
-  const el = document.getElementById(id)
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' })
-  }
-}
 
 const resources = [
   {
@@ -224,7 +217,7 @@ const glossary = [
 
 const tocItems = [
   { id: 'pdf-guide', title: '101 Users Guide' },
-  { id: 'video', title: 'Quick Start Video' },
+  { id: 'tutorial-box', title: 'Quick Start Video' },
   { id: 'resources', title: 'Additional Resources' },
   { id: 'glossary', title: 'Glossary ' }
 ]
