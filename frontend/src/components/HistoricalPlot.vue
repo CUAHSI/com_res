@@ -1,8 +1,8 @@
 <template>
   <v-card
     v-if="show"
-    class="mx-auto"
-    :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
+    class="mx-auto plot-card"
+    :class="{ 'full-screen': isFullScreen }"
     elevation="8"
   >
     <v-skeleton-loader
@@ -245,6 +245,7 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, computed, onMounted, watch, toRef, nextTick } from 'vue'
+import { useDisplay } from 'vuetify'
 import {
   mdiCalendarExpandHorizontal,
   mdiChartAreaspline,
@@ -280,6 +281,7 @@ const quantilesFailed = ref(false)
 const showLegend = ref(false)
 const isFullScreen = ref(false)
 const linePlotRef = ref(null)
+const { xs, sm } = useDisplay()
 
 const emit = defineEmits(['toggleFullScreen'])
 
@@ -367,15 +369,17 @@ const initializeDates = () => {
 const plotContainerStyle = computed(() => {
   if (isFullScreen.value) {
     return {
-      height: 'calc(100vh)',
-      width: '100%'
-    }
-  } else {
-    return {
-      height: 'calc(23vh)',
+      height: 'calc(100vh - 80px)',
       width: '100%'
     }
   }
+  if (xs.value) {
+    return { height: '260px', width: '100%' }
+  }
+  if (sm.value) {
+    return { height: '300px', width: '100%' }
+  }
+  return { height: '340px', width: '100%' }
 })
 
 // Formatted display values
@@ -597,10 +601,11 @@ onMounted(() => {
 
 .plot-card {
   transition: all 0.3s ease;
-  height: calc(30vh);
   width: 100%;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
+  padding: 8px 8px 12px 8px;
 }
 
 .plot-card.full-screen {
@@ -613,6 +618,7 @@ onMounted(() => {
   margin: 0;
   max-width: none !important;
   max-height: none !important;
+  padding: 12px;
 }
 
 .plot-container {
@@ -630,5 +636,13 @@ onMounted(() => {
 /* When in full screen, ensure body doesn't scroll */
 body.no-scroll {
   overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .plot-card {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 </style>

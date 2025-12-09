@@ -552,4 +552,50 @@ onUnmounted(() => {
 #mapContainer :deep(.leaflet-layer canvas) {
   cursor: inherit !important;
 }
+
+/* Responsive adjustments for map controls */
+@media (max-width: 600px) {
+  #mapContainer :deep(.leaflet-control-zoom) {
+    margin-right: 5px;
+    margin-top: 5px;
+  }
+
+  #mapContainer :deep(.leaflet-control-zoom a) {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    font-size: 16px;
+  }
+
+  #mapContainer :deep(.leaflet-control-layers) {
+    margin-right: 5px;
+    margin-top: 5px;
+  }
+
+  #mapContainer :deep(.esri-leaflet-geocoder-control) {
+    margin-right: 5px;
+    margin-top: 5px;
+  }
+
+  #mapContainer :deep(.easy-button-button) {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  #mapContainer :deep(.leaflet-control-zoom a) {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+  }
+
+  #mapContainer :deep(.easy-button-button) {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+  }
+}
 </style>

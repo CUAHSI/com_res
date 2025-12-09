@@ -1,8 +1,8 @@
 <template>
   <v-card
     v-if="show"
-    class="mx-auto"
-    :class="{ 'full-screen': isFullScreen, 'plot-card': isFullScreen }"
+    class="mx-auto plot-card"
+    :class="{ 'full-screen': isFullScreen }"
     elevation="8"
   >
     <v-skeleton-loader
@@ -175,6 +175,7 @@
 import 'chartjs-adapter-date-fns'
 import LinePlot from '@/components/LinePlot.vue'
 import { ref, defineExpose, watch, toRef, computed } from 'vue'
+import { useDisplay } from 'vuetify'
 import {
   mdiChartAreaspline,
   mdiEye,
@@ -210,6 +211,7 @@ const quantilesFailed = ref(false)
 const showLegend = ref(false)
 const isFullScreen = ref(false)
 const linePlotRef = ref(null)
+const { xs, sm } = useDisplay()
 
 // New IQR state
 const showIQR = ref(false)
@@ -228,12 +230,14 @@ const plotContainerStyle = computed(() => {
       height: 'calc(100vh - 80px)',
       width: '100%'
     }
-  } else {
-    return {
-      height: 'calc(23vh)',
-      width: '100%'
-    }
   }
+  if (xs.value) {
+    return { height: '260px', width: '100%' }
+  }
+  if (sm.value) {
+    return { height: '300px', width: '100%' }
+  }
+  return { height: '340px', width: '100%' }
 })
 
 // helper function to convert Date objects to ISO date strings
@@ -581,10 +585,11 @@ defineExpose({
 
 .plot-card {
   transition: all 0.3s ease;
-  height: calc(30vh);
   width: 100%;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
+  padding: 8px 8px 12px 8px;
 }
 
 .plot-card.full-screen {
@@ -597,6 +602,7 @@ defineExpose({
   margin: 0;
   max-width: none !important;
   max-height: none !important;
+  padding: 12px;
 }
 
 .plot-container {
@@ -615,5 +621,13 @@ defineExpose({
 /* When in full screen, ensure body doesn't scroll */
 body.no-scroll {
   overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .plot-card {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 </style>
