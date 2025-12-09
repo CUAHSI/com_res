@@ -437,16 +437,18 @@ onUnmounted(() => {
 
 <style scoped>
 .slider-wrapper {
-  height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
-  padding: 12px 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  padding: 6px 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  min-width: 0;
+  width: 100%;
+  max-width: 120px;
 }
 
 .thermometer-slider-container {
@@ -455,7 +457,6 @@ onUnmounted(() => {
   pointer-events: none;
   box-sizing: border-box;
   width: 100%;
-  height: 400px !important; /* Explicitly set the height */
   margin: 5px 0;
 }
 
@@ -464,23 +465,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   width: 100%;
   position: relative;
   z-index: 1001;
   pointer-events: auto;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 
 .slider-header h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 11px;
   color: #333;
   white-space: nowrap;
   text-align: center;
   font-weight: bold;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 /* Footer styles */
@@ -488,14 +489,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 6px;
   width: 100%;
-  font-size: 12px;
+  font-size: 10px;
   color: #666;
   position: relative;
   z-index: 1001;
   pointer-events: auto;
-  gap: 4px;
+  gap: 3px;
 }
 
 /* Ensure tooltips have high z-index */
@@ -511,31 +512,29 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   background-color: #f5f5f5;
-  border-radius: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
   border: 2px solid #ddd;
   overflow: visible;
   pointer-events: auto;
-  padding-right: 30px;
-  /* Make room for labels */
+  padding-right: 20px;
 }
 
 .mercury {
   position: absolute;
   bottom: 0;
-  width: calc(100% - 20px);
-  /* Account for horizontal padding */
+  width: calc(100% - 16px);
   transition: height 0.2s ease;
-  border-radius: 0 0 18px 18px;
-  margin: 0 10px;
+  border-radius: 0 0 13px 13px;
+  margin: 0 8px;
 }
 
 .handle {
   position: absolute;
   left: 50%;
   transform: translate(-50%, 50%);
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background-color: white;
   border: 2px solid #1976d2;
@@ -551,16 +550,16 @@ onUnmounted(() => {
 
 .handle-label {
   position: absolute;
-  top: -24px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   color: #1976d2;
   background-color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
   border: 1px solid #ddd;
 }
 
@@ -573,16 +572,16 @@ onUnmounted(() => {
 
 .ticks {
   position: absolute;
-  right: 25px;
-  top: 10px;
-  bottom: 10px;
+  right: 16px;
+  top: 8px;
+  bottom: 8px;
   width: 2px;
   transition: background 0.2s ease;
 }
 
 .tick {
   position: absolute;
-  right: 0;
+  right: 2px;
   width: 6px;
   height: 1px;
   background-color: #333;
@@ -605,19 +604,19 @@ onUnmounted(() => {
 
 .labels-inside {
   position: absolute;
-  right: 8px;
-  top: 10px;
-  bottom: 10px;
-  width: 30px;
+  right: 4px;
+  top: 8px;
+  bottom: 8px;
+  width: 22px;
   pointer-events: none;
 }
 
 .label-inside {
   position: absolute;
   transform: translateY(50%);
-  font-size: 10px;
+  font-size: 9px;
   text-align: right;
-  padding-right: 8px;
+  padding-right: 6px;
   z-index: 1;
   color: #333; /* Default color for uncovered labels */
   transition: color 0.2s ease;
@@ -636,5 +635,65 @@ onUnmounted(() => {
 /* Adjust handle z-index to stay above everything */
 .handle {
   z-index: 2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .slider-wrapper {
+    padding: 5px 7px;
+    max-width: 100px;
+  }
+
+  .slider-header h3 {
+    font-size: 10px;
+  }
+
+  .slider-footer {
+    font-size: 9px;
+  }
+
+  .thermometer {
+    border-radius: 12px;
+    padding-right: 16px;
+  }
+
+  .handle {
+    width: 16px;
+    height: 16px;
+  }
+
+  .handle-label {
+    font-size: 9px;
+    top: -18px;
+    padding: 1px 3px;
+  }
+
+  .labels-inside {
+    width: 18px;
+    right: 2px;
+  }
+
+  .label-inside {
+    font-size: 8px;
+    padding-right: 4px;
+  }
+
+  .ticks {
+    right: 12px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  .slider-wrapper {
+    padding: 7px 9px;
+  }
+
+  .slider-header h3 {
+    font-size: 11px;
+  }
+
+  .slider-footer {
+    font-size: 10px;
+  }
 }
 </style>

@@ -112,6 +112,9 @@ const selectFeature = async (feature) => {
 
 const clearAllFeatures = () => {
   try {
+    if (!activeFeatureLayer.value || typeof activeFeatureLayer.value.eachFeature !== 'function') {
+      return
+    }
     activeFeatureLayer.value.eachFeature(function (feature) {
       feature.setStyle({ color: featureOptions.value.defaultColor })
     })

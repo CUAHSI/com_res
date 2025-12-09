@@ -11,7 +11,7 @@
   >
     <v-list nav dense class="nav-items">
       <v-list class="text-body-1">
-        <template v-for="path in paths" :key="path.label">
+        <template v-for="path in navPaths" :key="path.label">
           <!-- Items with children -->
           <v-list-group v-if="path.children" :value="path.label" no-action>
             <template #activator="{ props: activatorProps }">
@@ -35,7 +35,7 @@
           <v-list-item
             v-else
             v-bind="path.attrs"
-            :id="`drawer-nav-${path.label.replaceAll(/[\/\s]/g, ``)}`"
+            :id="`drawer-nav-${path.label.replaceAll(/[\/\\s]/g, ``)}`"
             active-class="primary darken-3 white--text"
             :class="path.isActive?.() ? 'primary darken-4 white--text' : ''"
             @click="$emit('toggleMobileNav')"
@@ -49,22 +49,20 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useDisplay } from 'vuetify'
 
-const props = defineProps(
-  {
-    show: {
-      type: Boolean,
-      default: false
-    }
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: false
   },
-  {
-    paths: {
-      type: Array,
-      default: () => []
-    }
+  paths: {
+    type: Array,
+    default: () => []
   }
-)
+})
+const navPaths = computed(() => props.paths || [])
 defineEmits(['toggleMobileNav'])
 
 const { mdAndDown } = useDisplay()
