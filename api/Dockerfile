@@ -10,11 +10,6 @@ RUN pip install -r requirements.txt
 COPY requirements-dev.txt requirements-dev.txt
 RUN pip install -r requirements-dev.txt
 
-RUN python -m wget https://dl.min.io/client/mc/release/linux-amd64/mc
-RUN chmod +x mc
-RUN mv mc /usr/local/bin/mc
-
-COPY ./com_res /com_res
 
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
@@ -33,6 +28,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+#RUN python -m wget https://dl.min.io/client/mc/release/linux-amd64/mc
+#RUN chmod +x mc
+#RUN mv mc /usr/local/bin/mc
+RUN curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && \
+    chmod +x /usr/local/bin/mc
+
+COPY ./com_res /com_res
 # (Optional) For local testing with a service account key:
 # COPY key.json /app/key.json
 # ENV GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"

@@ -181,8 +181,10 @@ class AnalysisAssim:
 
         if len(dfs) > 1:
             df = pandas.concat(dfs, ignore_index=True)
-        else:
+        elif len(dfs) == 1:
             df = dfs[0]
+        else:
+            df = pandas.DataFrame(columns=["feature_id", "time", "streamflow", "velocity"])
 
         # clean datetime columns and return
         df.time = pandas.to_datetime(df.time)
