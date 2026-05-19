@@ -110,15 +110,16 @@
     >
       <HistoricalPlot
         v-show="showHistorical"
+        v-if="showHistorical"
         ref="historicalPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showHistorical"
       />
-
       <ForecastPlot
         v-show="showForecast"
+        v-if="showForecast"
         ref="forecastPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"
@@ -261,13 +262,6 @@ const toggle = async (component_name) => {
   // based on which button was clicked.
   if (component_name === 'historical') {
     showHistorical.value = !showHistorical.value
-    await nextTick()
-    await historicalPlotRef.value.getHistoricalData(
-      reach_id.value.toString(),
-      reach_name.value,
-      new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-      new Date(Date.now())
-    )
   } else if (component_name === 'forecast') {
     showForecast.value = !showForecast.value
     await nextTick()

@@ -34,7 +34,7 @@
     </v-row>
     <div class="plot-container" :style="plotContainerStyle">
       <LinePlot
-        v-if="!isLoading"
+        v-if="!isLoading && plot_timeseries.length > 0"
         ref="linePlotRef"
         :timeseries="plot_timeseries"
         :quantiles="showQuantiles ? quantilesData.historical : []"
@@ -42,6 +42,9 @@
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
       />
+      <div v-if="!isLoading && plot_timeseries.length === 0 && reach_id" class="no-data-overlay">
+        No data available for the selected date range.
+      </div>
     </div>
 
     <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
@@ -138,11 +141,7 @@
         <template #activator="{ props: menuProps }">
           <v-tooltip text="Adjust Start and End Dates" location="bottom" class="chart-tooltip">
             <template #activator="{ props: tooltipProps }">
-              <v-btn
-                v-if="plot_timeseries.length > 0 && !isLoading"
-                v-bind="{ ...menuProps, ...tooltipProps }"
-                icon
-              >
+              <v-btn v-if="!isLoading" v-bind="{ ...menuProps, ...tooltipProps }" icon>
                 <v-icon>{{ mdiCalendarExpandHorizontal }}</v-icon>
               </v-btn>
             </template>
@@ -225,7 +224,7 @@
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-if="plot_timeseries.length > 0 && !isLoading"
+            v-if="!isLoading"
             v-bind="props"
             icon
             size="small"
@@ -630,5 +629,15 @@ onMounted(() => {
 /* When in full screen, ensure body doesn't scroll */
 body.no-scroll {
   overflow: hidden;
+}
+
+.no-data-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 0.9rem;
 }
 </style>

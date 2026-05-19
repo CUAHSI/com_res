@@ -2,6 +2,7 @@ pyyaml
 requests
 fastapi
 fastapi-users[beanie]
+motor
 google-cloud-bigquery
 uvicorn[standard]
 httpx_oauth==0.15.1
