@@ -105,7 +105,7 @@
             <v-card-title class="start-step-title">
               {{ step.title }}
             </v-card-title>
-            <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
+            <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
             <v-card-text v-html="step.text" />
           </v-card>
         </v-col>

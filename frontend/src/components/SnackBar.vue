@@ -12,7 +12,7 @@
 <script setup>
 const props = defineProps({
   message: { type: String, default: '' },
-  show: { default: true },
+  show: { type: Boolean, default: true },
   timeout: { type: Number, default: 2000 }
 })
 </script>

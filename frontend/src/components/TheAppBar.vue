@@ -85,7 +85,12 @@ import { ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import imgUrl from '@/assets/floodsavvy_icon.png'
-defineProps(['paths'])
+defineProps({
+  paths: {
+    type: Array,
+    default: () => []
+  }
+})
 defineEmits(['toggleMobileNav'])
 import { mdiGithub } from '@mdi/js'
 

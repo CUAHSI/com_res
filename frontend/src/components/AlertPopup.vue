@@ -11,8 +11,8 @@
 <script setup>
 const props = defineProps({
   text: { type: String, default: '' },
-  title: { default: 'Alert' },
-  closeable: { default: true }
+  title: { default: 'Alert', type: String },
+  closeable: { default: true, type: Boolean }
 })
 </script>
 

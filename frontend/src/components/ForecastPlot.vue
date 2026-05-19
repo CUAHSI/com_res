@@ -37,9 +37,6 @@
       <v-progress-circular indeterminate color="primary" size="40" />
       <span class="ml-3">Loading forecasted data...</span>
     </v-row>
-    <v-row v-if="!hasData && !isLoading" justify="center" align="center" class="mt-4">
-      <span class="ml-3">No forecasted data available.</span>
-    </v-row>
     <div class="plot-container" :style="plotContainerStyle">
       <LinePlot
         v-if="!isLoading && hasData"
@@ -51,6 +48,9 @@
         :use-log-scale="showQuantiles"
         :show-legend="showLegend"
       />
+      <div v-if="!isLoading && !hasData && reach_id" class="no-data-overlay">
+        No data available for the selected date.
+      </div>
     </div>
     <v-card-actions class="card-actions" :class="{ 'full-screen-actions': isFullScreen }">
       <!-- Legend Toggle Button -->
@@ -151,11 +151,65 @@
         </template>
         <span>Download JSON</span>
       </v-tooltip>
+
+      <!-- Forecast Date Selector -->
+      <v-menu
+        v-model="forecastMenu"
+        location="top left"
+        :offset="[-50, -60]"
+        content-class="menu-content"
+        attach="body"
+        :close-on-content-click="false"
+        :persistent="true"
+        :retain-focus="false"
+        class="date-select-menu"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-tooltip text="Adjust Forecast Date" location="bottom" class="chart-tooltip">
+            <template #activator="{ props: tooltipProps }">
+              <v-btn v-if="!isLoading" v-bind="{ ...menuProps, ...tooltipProps }" icon>
+                <v-icon>{{ mdiCalendarExpandHorizontal }}</v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
+        </template>
+        <v-sheet class="date-select-sheet">
+          <v-list>
+            <v-list-item>
+              <v-menu
+                v-model="forecastSubMenu"
+                :close-on-content-click="false"
+                class="date-select-menu"
+              >
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    v-model="formattedForecastDate"
+                    label="Forecast Date"
+                    readonly
+                    density="compact"
+                  />
+                </template>
+                <v-date-picker
+                  v-model="tempForecastDate"
+                  :min="'2016-01-01'"
+                  :max="new Date().toISOString().split('T')[0]"
+                  @update:model-value="() => (forecastSubMenu = false)"
+                />
+              </v-menu>
+            </v-list-item>
+            <v-list-item class="d-flex justify-end">
+              <v-btn class="mt-2" color="primary" @click="onForecastDateClose"> Apply </v-btn>
+            </v-list-item>
+          </v-list>
+        </v-sheet>
+      </v-menu>
+
       <!-- Full Screen Button -->
       <v-tooltip location="bottom" max-width="200px" class="chart-tooltip">
         <template #activator="{ props }">
           <v-btn
-            v-if="plot_timeseries.length > 0 && !isLoading"
+            v-if="!isLoading"
             v-bind="props"
             icon
             size="small"
@@ -183,7 +237,8 @@ import {
   mdiCodeJson,
   mdiFileDelimited,
   mdiFullscreenExit,
-  mdiFullscreen
+  mdiFullscreen,
+  mdiCalendarExpandHorizontal
 } from '@mdi/js'
 import { API_BASE } from '@/constants'
 import InfoTooltip from '@/components/InfoTooltip.vue'
@@ -217,6 +272,26 @@ const loadingIQR = ref(false)
 const iqrData = ref([])
 
 const emit = defineEmits(['toggleFullScreen'])
+
+// datepicker state
+const forecastDate = ref(null) // local override of the prop
+const tempForecastDate = ref(null)
+const forecastMenu = ref(false)
+const forecastSubMenu = ref(false)
+
+const formattedForecastDate = computed({
+  get() {
+    return tempForecastDate.value ? new Date(tempForecastDate.value).toLocaleDateString() : ''
+  },
+  set(value) {
+    tempForecastDate.value = value ? new Date(value).toISOString().split('T')[0] : null
+  }
+})
+
+function onForecastDateClose() {
+  forecastDate.value = tempForecastDate.value
+  forecastMenu.value = false
+}
 
 const showLegendToggle = computed(() => {
   return (showQuantiles.value || showIQR.value) && !loadingQuantiles.value && !loadingIQR.value
@@ -252,7 +327,7 @@ const setShowQuantiles = async (value, reach_id) => {
     loadingQuantiles.value = true
 
     // Show quantiles for the exact forecast period (9 days from previous day)
-    const forecastStart = new Date(datetime.value) // Forecast initialization time
+    const forecastStart = new Date(forecastDate.value) // forecast initialization time
     const forecastEnd = new Date(forecastStart)
     forecastEnd.setDate(forecastStart.getDate() + 9) // 9-day forecast
 
@@ -295,8 +370,8 @@ const fetchIQRData = async (reach_id) => {
     loadingIQR.value = true
     const params = new URLSearchParams({
       reach_id: reach_id,
-      date_time: datetime.value.toISOString().split('T')[0],
-      forecast: forecast_mode.value
+      date_time: new Date(forecastDate.value).toISOString().split('T')[0],
+      forecast: forecastMode.value
     })
 
     const response = await fetch(
@@ -391,18 +466,18 @@ const hasData = ref(false)
 const downloading = ref({ json: false, csv: false })
 const error = ref(null)
 
-const props = defineProps({
-  reachid: Number,
-  reachname: String,
-  forecast_datetime: {
+const forecastProps = defineProps({
+  reachid: { type: Number, default: null },
+  reachname: { type: String, default: '' },
+  forecastDatetime: {
     type: Date,
     default: () => new Date(Date.now() - 24 * 60 * 60 * 1000) // default = yesterday
   },
-  forecast_mode: {
+  forecastMode: {
     type: String,
     default: 'medium_range'
   },
-  forecast_ensemble: {
+  forecastEnsemble: {
     type: String,
     default: '3'
   },
@@ -412,12 +487,11 @@ const props = defineProps({
   }
 })
 
-const reach_id = toRef(props, 'reachid')
-const reach_name = toRef(props, 'reachname')
-const datetime = toRef(props, 'forecast_datetime')
-const forecast_mode = toRef(props, 'forecast_mode')
-const ensemble = toRef(props, 'forecast_ensemble')
-
+const reach_id = toRef(forecastProps, 'reachid')
+const reach_name = toRef(forecastProps, 'reachname')
+const datetime = toRef(forecastProps, 'forecastDatetime')
+const forecastMode = toRef(forecastProps, 'forecastMode')
+const ensemble = toRef(forecastProps, 'forecastEnsemble')
 const clearPlot = () => {
   plot_timeseries.value = []
   plot_title.value = ''
@@ -427,20 +501,35 @@ const clearPlot = () => {
   showQuantiles.value = false
 }
 
-watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
+// Initialize forecastDate when the prop arrives
+watch(
+  datetime,
+  (val) => {
+    if (val && !forecastDate.value) {
+      forecastDate.value = val
+    }
+  },
+  { immediate: true }
+)
+
+// Sync temp date when menu opens
+watch(forecastMenu, (isOpen) => {
+  if (isOpen) tempForecastDate.value = forecastDate.value
+})
+watch([reach_id, reach_name, forecastDate, forecastMode, ensemble], async () => {
   console.log('Current props:', {
     reach_id: reach_id.value,
     reach_name: reach_name.value,
     datetime: datetime.value,
-    forecast_mode: forecast_mode.value,
+    forecastMode: forecastMode.value,
     ensemble: ensemble.value
   })
-  if (reach_id.value && datetime.value) {
+  if (reach_id.value && forecastDate.value) {
     await getForecastData(
       reach_id.value,
       reach_name.value,
-      datetime.value,
-      forecast_mode.value,
+      new Date(forecastDate.value),
+      forecastMode.value,
       ensemble.value
     )
     // Fetch new quantiles when reach ID changes
@@ -459,7 +548,7 @@ watch([reach_id, reach_name, datetime, forecast_mode, ensemble], async () => {
   }
 })
 
-const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble) => {
+const getForecastData = async (reach_id, name, datetime, forecastMode, ensemble) => {
   try {
     isLoading.value = true
     error.value = null
@@ -467,10 +556,10 @@ const getForecastData = async (reach_id, name, datetime, forecast_mode, ensemble
     const params = new URLSearchParams({
       reach_id: reach_id,
       date_time: datetime.toISOString().split('T')[0],
-      forecast: forecast_mode,
+      forecast: forecastMode,
       ensemble: ensemble
     })
-    console.log(reach_id, name, datetime, forecast_mode, ensemble)
+    console.log(reach_id, name, datetime, forecastMode, ensemble)
     // TODO: ideally we would cache this data so that we can use it when IQR is toggled on...
     const response = await fetch(
       `${API_BASE}/timeseries/get-summarized-nwm-forecast?${params.toString()}`
@@ -604,7 +693,6 @@ defineExpose({
   flex: 1;
   min-height: 0;
   position: relative;
-  z-index: var(--z-index-plots) !important;
 }
 
 .card-actions {
@@ -616,5 +704,31 @@ defineExpose({
 /* When in full screen, ensure body doesn't scroll */
 body.no-scroll {
   overflow: hidden;
+}
+
+.no-data-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.menu-content {
+  z-index: 5000 !important;
+}
+
+.date-select-sheet {
+  margin-left: 16px;
+  min-width: 300px;
+  z-index: calc(var(--z-index-plots) + 100) !important;
+  position: relative;
+}
+
+.date-select-menu {
+  z-index: calc(var(--z-index-plots) + 100) !important;
+  position: relative;
 }
 </style>
