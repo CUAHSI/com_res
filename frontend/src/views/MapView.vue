@@ -105,25 +105,21 @@
     </v-row>
 
     <div
-      v-if="showHistorical && !multiReachMode"
+      v-if="(showHistorical || showForecast) && !multiReachMode"
       :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }"
     >
       <HistoricalPlot
         v-show="showHistorical"
+        v-if="showHistorical"
         ref="historicalPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"
         :style="{ width: '500px', height: '300px', padding: '0px 10px', margin: '10px 0px' }"
         :show="showHistorical"
       />
-    </div>
-
-    <div
-      v-if="showForecast && !multiReachMode"
-      :class="{ 'mobile-plot-container': mdAndDown, 'desktop-plot-container': !mdAndDown }"
-    >
       <ForecastPlot
         v-show="showForecast"
+        v-if="showForecast"
         ref="forecastPlotRef"
         :reachid="reach_id"
         :reachname="reach_name"

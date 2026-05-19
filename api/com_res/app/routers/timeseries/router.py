@@ -211,10 +211,9 @@ async def get_summarized_nwm_forecast(
     # collect data from the CIROH-hosted API
     data = await get_forecast_nwm(reach_id, date_time, forecast, str_ensembles)
 
-    # return error if the forecast data could not be collected
-    # otherwise continue to compute stats
+    # return an empty object if not forecast data was collected.
     if data.status_code != 200:
-        return data
+        return JSONResponse(content={"timestamp": [], "mean": [], "q25": [], "q75": []})
 
     # decode the forecast response and load it as JSON
     data = json.loads(data.body.decode("utf-8"))
