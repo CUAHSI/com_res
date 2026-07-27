@@ -1,14 +1,10 @@
-FROM python:3.12-bullseye
+FROM python:3.12-slim-bookworm
 
 # Ensure all system packages are up to date to reduce vulnerabilities
 RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-
-# remove requirements-dev installation for deployments
-COPY requirements-dev.txt requirements-dev.txt
-RUN pip install -r requirements-dev.txt
 
 
 # https://www.digicert.com/kb/digicert-root-certificates.htm
@@ -23,24 +19,13 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
 
-# Install system dependencies (required for Google Cloud SDK)
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-#RUN python -m wget https://dl.min.io/client/mc/release/linux-amd64/mc
-#RUN chmod +x mc
-#RUN mv mc /usr/local/bin/mc
-RUN curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && \
-    chmod +x /usr/local/bin/mc
-
 COPY ./com_res /com_res
 # (Optional) For local testing with a service account key:
 # COPY key.json /app/key.json
 # ENV GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
 
-ENV PYTHONPATH "/com_res/:${PYTHONPATH}"
+ENV PYTHONPATH=/com_res/
 
 EXPOSE 8000
 
-CMD uvicorn --host 0.0.0.0 --port 8000 --proxy-headers main:app
+CMD ["uvicorn", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "main:app"]

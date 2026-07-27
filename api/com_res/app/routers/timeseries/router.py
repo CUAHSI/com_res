@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import date, datetime
 
 import pandas
@@ -13,8 +12,6 @@ from app.routers.fim.router import get_bigquery_client
 from . import unit_conversions as units
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 

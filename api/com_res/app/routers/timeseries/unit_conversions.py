@@ -39,20 +39,3 @@ def m_to_ft(meters):
         Length in feet.
     """
     return meters * 3.28084
-
-
-def ft_to_m(feet):
-    """
-    Converts from feet to meters.
-
-    Parameters:
-    ==========
-    feet: float
-        Length in feet.
-
-    Returns:
-    ========
-    float:
-        Length in meters.
-    """
-    return feet / 3.28084

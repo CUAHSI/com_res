@@ -17,15 +17,14 @@ def get_bigquery_client():
     __settings = get_settings()
 
     # 1. First try explicit service account path if configured
-    if hasattr(__settings, 'google_application_credentials_path'):
-        credentials_path = __settings.google_application_credentials_path
-        if credentials_path and os.path.exists(credentials_path):
-            try:
-                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-                credentials, project = default()
-                return bigquery.Client(credentials=credentials, project=project or "com-res")
-            except Exception as e:
-                logging.warning(f"GOOGLE_APPLICATION_CREDENTIALS auth failed: {e}")
+    credentials_path = __settings.google_application_credentials_path
+    if credentials_path and os.path.exists(credentials_path):
+        try:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+            credentials, project = default()
+            return bigquery.Client(credentials=credentials, project=project or "com-res")
+        except Exception as e:
+            logging.warning(f"GOOGLE_APPLICATION_CREDENTIALS auth failed: {e}")
 
     # 2. Try Application Default Credentials
     try:
@@ -34,9 +33,6 @@ def get_bigquery_client():
     except exceptions.DefaultCredentialsError as e:
         logging.error("No valid credentials found")
         raise HTTPException(status_code=500, detail=f"Could not authenticate with BigQuery credentials: {str(e)}")
-
-
-router = APIRouter()
 
 
 @router.get("/fim")
