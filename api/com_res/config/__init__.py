@@ -13,6 +13,10 @@ class Settings(BaseSettings):
 
     nwm_bigquery_key: str
     nwm_bigquery_url: str
+    bigquery_project_id: str = "com-res"
+    cloud_run_region: str = "us-central1"
+    cloud_run_job_name: str = "fimserv"
+    gcs_bucket_name: str = "com_res_fim_output"
 
     google_application_credentials_path: str = ""
 

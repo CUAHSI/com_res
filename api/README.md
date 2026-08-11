@@ -17,6 +17,10 @@ Required environment variables:
 - `ALLOW_ORIGINS`
 - `NWM_BIGQUERY_KEY`
 - `NWM_BIGQUERY_URL`
+- `BIGQUERY_PROJECT_ID` (optional, defaults to `com-res`)
+- `CLOUD_RUN_REGION` (optional, defaults to `us-central1`)
+- `CLOUD_RUN_JOB_NAME` (optional, defaults to `fimserv`)
+- `GCS_BUCKET_NAME` (optional, defaults to `com_res_fim_output`)
 - `GOOGLE_APPLICATION_CREDENTIALS_PATH` (optional, for explicit service account key path)
 
 ## Local Run
