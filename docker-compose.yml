@@ -8,11 +8,27 @@ services:
     volumes:
       - ./api/com_res:/com_res
       # https://cloud.google.com/docs/authentication/external/set-up-adc
-      - $HOME/.config/gcloud/application_default_credentials.json:/app/key.json
+      #- $HOME/.config/gcloud/application_default_credentials.json:/app/key.json
+      - ./api/key.json:/app/key.json
     build:
       context: ./api/
       dockerfile: Dockerfile
     working_dir: /com_res
     command: uvicorn --host 0.0.0.0 --port 8000 --proxy-headers main:app
+    env_file:
+      - .env
+
+  frontend:
+    platform: linux/amd64
+    image: frontend
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    command: caddy run --config /etc/caddy/Caddyfile
     env_file:
       - .env
