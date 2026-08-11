@@ -94,12 +94,9 @@ async def get_fim(
         for row in query_job:
             # TODO fix the "public_url listing in bigQuery"
             # https://cuahsi.atlassian.net/browse/CAM-797
-            results['files'].append(row['asset_url'])
+            results['files'].append(row['public_url'])
             results['stages_ft'].append(row['stage'])
             results['flows_cfs'].append(row['flow'])
-
-        # replace the "gs://" prefix with "https://storage.googleapis.com/"
-        results['files'] = [url.replace("gs://", "https://storage.googleapis.com/") for url in results['files']]
 
     except Exception as e:
         logging.error(f"Query failed: {str(e)}")
