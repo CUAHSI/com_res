@@ -12,31 +12,41 @@ from config import get_settings
 router = APIRouter()
 
 
+def _log_bigquery_identity(credentials, project_id: str) -> None:
+    principal = getattr(credentials, "service_account_email", None)
+    if not principal:
+        principal = credentials.__class__.__name__
+    logging.error("BigQuery client initialized: project=%s principal=%s", project_id, principal)
+
+
 def get_bigquery_client():
     """Helper function to create BigQuery client with flexible credential handling"""
     __settings = get_settings()
+    default_project = __settings.bigquery_project_id
 
     # 1. First try explicit service account path if configured
-    if hasattr(__settings, 'google_application_credentials_path'):
-        credentials_path = __settings.google_application_credentials_path
-        if credentials_path and os.path.exists(credentials_path):
-            try:
-                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-                credentials, project = default()
-                return bigquery.Client(credentials=credentials, project=project or "com-res")
-            except Exception as e:
-                logging.warning(f"GOOGLE_APPLICATION_CREDENTIALS auth failed: {e}")
+    credentials_path = __settings.google_application_credentials_path
+    if credentials_path and os.path.exists(credentials_path):
+        try:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+            credentials, project = default()
+            client_project = default_project or project or "com-res"
+            client = bigquery.Client(credentials=credentials, project=client_project)
+            _log_bigquery_identity(credentials, client.project)
+            return client
+        except Exception as e:
+            logging.warning(f"GOOGLE_APPLICATION_CREDENTIALS auth failed: {e}")
 
     # 2. Try Application Default Credentials
     try:
         credentials, project = default()
-        return bigquery.Client(credentials=credentials, project=project or "com-res")  # Fallback project
+        client_project = default_project or project or "com-res"
+        client = bigquery.Client(credentials=credentials, project=client_project)
+        _log_bigquery_identity(credentials, client.project)
+        return client
     except exceptions.DefaultCredentialsError as e:
         logging.error("No valid credentials found")
         raise HTTPException(status_code=500, detail=f"Could not authenticate with BigQuery credentials: {str(e)}")
-
-
-router = APIRouter()
 
 
 @router.get("/fim")
@@ -60,11 +70,13 @@ async def get_fim(
     HTTPException: if the BigQuery operation fails or if the reach ID is not found.
     """
     try:
+        settings = get_settings()
         client = get_bigquery_client()
+        table_ref = f"`{settings.bigquery_project_id}.flood_data.fim_catalog`"
 
-        query = """
+        query = f"""
         SELECT *
-        FROM `com-res.flood_data.fim_catalog`
+        FROM {table_ref}
         WHERE reach_id = @reach_id
         ORDER BY stage ASC
         """
@@ -82,12 +94,9 @@ async def get_fim(
         for row in query_job:
             # TODO fix the "public_url listing in bigQuery"
             # https://cuahsi.atlassian.net/browse/CAM-797
-            results['files'].append(row['asset_url'])
+            results['files'].append(row['public_url'])
             results['stages_ft'].append(row['stage'])
             results['flows_cfs'].append(row['flow'])
-
-        # replace the "gs://" prefix with "https://storage.googleapis.com/"
-        results['files'] = [url.replace("gs://", "https://storage.googleapis.com/") for url in results['files']]
 
     except Exception as e:
         logging.error(f"Query failed: {str(e)}")

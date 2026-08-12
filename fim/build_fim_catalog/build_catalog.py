@@ -65,7 +65,7 @@ def create_bigquery_fim_records(fim_files, extension=".cog"):
             "stage": stage,
             "flow": flow,
             "asset_url": url,
-            "public_url": f'https://storage.googleapis.com/{fim_files[0].replace("gs://", "")}',
+            "public_url": fim_files[0],
         }
 
         items.append(dat)

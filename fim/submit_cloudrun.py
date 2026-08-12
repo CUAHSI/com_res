@@ -14,6 +14,7 @@ pip install google-auth google-auth-oauthlib google-api-python-client
 import re
 import time
 import json
+from api.com_res.config import get_settings
 import typer
 from typing import List
 from pathlib import Path
@@ -31,11 +32,11 @@ import pandas
 app = typer.Typer()
 console = Console()
 
-
-PROJECT_ID = "com-res"
-REGION = "us-central1"
-JOB_NAME = "fimserv"
-GCS_BUCKET_NAME = "com_res_fim_output"
+settings = get_settings()
+PROJECT_ID = settings.bigquery_project_id
+REGION = settings.cloud_run_region
+JOB_NAME = settings.cloud_run_job_name
+GCS_BUCKET_NAME = settings.gcs_bucket_name
 
 
 def execute_job(run_client, args: List[str]):

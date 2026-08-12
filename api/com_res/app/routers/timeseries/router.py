@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import date, datetime
 
 import pandas
@@ -9,12 +8,11 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from google.cloud import bigquery
 
 from app.routers.fim.router import get_bigquery_client
+from config import get_settings
 
 from . import unit_conversions as units
 from .forecast import Forecasts, ForecastTypes
 from .historical import AnalysisAssim
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -264,11 +262,13 @@ async def get_quantiles(
     if the BigQuery operation fails or if the feature ID is not found.
     """
     try:
+        settings = get_settings()
         client = get_bigquery_client()
+        table_ref = f"`{settings.bigquery_project_id}.flood_data.quantiles_catalog`"
 
-        query = """
+        query = f"""
         SELECT *
-        FROM `com-res.flood_data.quantiles_catalog`
+        FROM {table_ref}
         WHERE feature_id = @feature_id
         ORDER BY doy ASC
         """

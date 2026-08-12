@@ -1,36 +1,34 @@
-volumes:
-  mongo_data:
-    driver: local
-
 services:
   api:
     platform: linux/amd64
     image: api
     ports:
       - 8000:8000
-      - 5678:5678
-      - 8181:8181
     restart: unless-stopped
     volumes:
       - ./api/com_res:/com_res
       # https://cloud.google.com/docs/authentication/external/set-up-adc
-      - $HOME/.config/gcloud/application_default_credentials.json:/app/key.json
+      #- $HOME/.config/gcloud/application_default_credentials.json:/app/key.json
+      - ./api/key.json:/app/key.json
     build:
       context: ./api/
       dockerfile: Dockerfile
     working_dir: /com_res
-    command: python -m debugpy --listen 0.0.0.0:5678 -m uvicorn --host 0.0.0.0 --port 8000 --proxy-headers main:app --reload
+    command: uvicorn --host 0.0.0.0 --port 8000 --proxy-headers main:app
     env_file:
       - .env
-    depends_on:
-      - mongodb
 
-  mongodb:
-    image: mongo:5.0
+  frontend:
+    platform: linux/amd64
+    image: frontend
     ports:
-      - '27017:27017'
+      - 8080:8080
+    restart: unless-stopped
     volumes:
-      - mongo_data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=password
+      - ./frontend:/app
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    command: caddy run --config /etc/caddy/Caddyfile
+    env_file:
+      - .env
