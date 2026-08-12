@@ -1,0 +1,24 @@
+project_id          = "floodsavvy"
+region              = "us-central1"
+bigquery_project_id = "floodsavvy"
+gcs_bucket_name     = "floodsavvy_fim_output"
+
+# Build and push these images first. Example tags:
+# us-central1-docker.pkg.dev/floodsavvy/floodsavvy/floodsavvy-api:latest
+# us-central1-docker.pkg.dev/floodsavvy/floodsavvy/floodsavvy-frontend:latest
+api_image      = "us-central1-docker.pkg.dev/floodsavvy/floodsavvy/floodsavvy-api:latest"
+frontend_image = "us-central1-docker.pkg.dev/floodsavvy/floodsavvy/floodsavvy-frontend:latest"
+
+# Required by API
+nwm_bigquery_key = "replace-me"
+nwm_bigquery_url = "https://nwm-api.ciroh.org"
+
+# Optional overrides
+api_allow_origins                    = ".*"
+cloud_run_region                     = "us-central1"
+cloud_run_job_name                   = "fimserv"
+google_application_credentials_path  = ""
+frontend_vite_app_base               = "/"
+frontend_vite_app_full_url           = ""
+allow_unauthenticated_api            = true
+allow_unauthenticated_frontend       = true
